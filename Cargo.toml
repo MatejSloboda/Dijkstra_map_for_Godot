@@ -1,5 +1,5 @@
 [package]
-name = "Dijkstra_map"
+name = "dijkstra_map_for_godot"
 version = "0.1.0"
 authors = ["Matej Sloboda"]
 edition = "2018"
@@ -7,3 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+gdnative = "0.8"
+
+[lib]
+crate-type = ["cdylib"]

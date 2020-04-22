@@ -8,9 +8,14 @@
 
 config_version=4
 
-_global_script_classes=[  ]
+_global_script_classes=[ {
+"base": "Node",
+"class": "DijkstraMap",
+"language": "NativeScript",
+"path": "res://dijkstra_map.gdns"
+} ]
 _global_script_class_icons={
-
+"DijkstraMap": ""
 }
 
 [application]

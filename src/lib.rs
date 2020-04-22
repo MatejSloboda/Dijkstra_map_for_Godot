@@ -125,8 +125,11 @@ impl DijkstraMap {
     unsafe fn connect_points(&mut self, mut _owner: gdnative::Node, source: i32, target: i32, cost: f32, bidirectional: bool) -> bool{
         if bidirectional{
             let a=self.connect_points(_owner, source, target, cost, false);
-            let b=self.connect_points(_owner, source, target, cost, false);
+            let b=self.connect_points(_owner, target, source, cost, false);
             return a||b
+        }
+        if !self.connections.contains_key(&source) || !self.reverse_connections.contains_key(&target) {
+            return false
         }
         let cost_got_updated:bool;
         match self.connections.get_mut(&source){
@@ -181,7 +184,7 @@ impl DijkstraMap {
     #[export]
     fn recalculate_for_target(&mut self, mut _owner: gdnative::Node, target: i32, max_cost: f32, reversed: bool){
         let mut targets: Vec<i32> =Vec::new();
-        targets[0]=target;
+        targets.push(target);
         self.recalculate_map_intern(&mut targets,None, max_cost,reversed);
     }
 
@@ -358,14 +361,27 @@ impl DijkstraMap {
         //switches direction of connections
         let connections = if reversed {&self.connections}else{ &self.reverse_connections};
         
+        
+
         //add targets to open_set
-        for (src,i) in open_set.iter().zip(0..){
-            self.direction_map.insert(*src, *src);
-            self.cost_map.insert(*src, match initial_costs{None=>0.0,Some(t)=>*t.get(i).unwrap_or(&0.0)});
-            
-            open_set_set.insert(*src);
+        {
+            let mut invalid_targets:Vec<usize>=Vec::new();
+
+            for (src,i) in open_set.iter().zip(0..){
+                if connections.contains_key(src){
+                    self.direction_map.insert(*src, *src);
+                    self.cost_map.insert(*src, match initial_costs{None=>0.0,Some(t)=>*t.get(i).unwrap_or(&0.0)});
+                    open_set_set.insert(*src);
+                }else{
+                    invalid_targets.push(i); //mark invalid targets for removal
+                }
+            }
+            for i in invalid_targets{
+                open_set.remove(i);
+            }
         }
         open_set.sort_unstable_by(|a,b| self.compare_cost(*a, *b) );
+
         
         let mut c=connections.len() as i32;
         //iterrate over open_set

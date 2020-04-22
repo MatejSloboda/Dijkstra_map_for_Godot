@@ -1,0 +1,9 @@
+[gd_resource type="GDNativeLibrary" format=2]
+
+[resource]
+config_file = Object(ConfigFile,"script":null)
+
+entry/UWP.64 = "res://target/release/dijkstra_map_for_godot.dll"
+entry/Windows.64 = "res://target/release/dijkstra_map_for_godot.dll"
+dependency/UWP.64 = [  ]
+dependency/Windows.64 = [  ]

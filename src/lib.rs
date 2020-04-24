@@ -47,7 +47,7 @@ impl DijkstraMap {
 
     //Adds new point with given ID into the graph and returns true. If point with that ID already exists, does nothing and returns false.
     #[export]
-    unsafe fn add_point(&mut self, mut _owner: gdnative::Node, id: i32)->bool{
+    fn add_point(&mut self, mut _owner: gdnative::Node, id: i32)->bool{
         if self.has_point(_owner, id){
             return false
         }else{
@@ -60,7 +60,7 @@ impl DijkstraMap {
 
     //Removes point from graph along with all of its connections and returns true. If point doesn't exist, returns false.
     #[export]
-    unsafe fn remove_point(&mut self, mut _owner: gdnative::Node, point: i32) -> bool{
+    fn remove_point(&mut self, mut _owner: gdnative::Node, point: i32) -> bool{
         self.disabled_points.remove(&point);
         //remove this point's entry from connections
         match self.connections.remove(&point){ 
@@ -83,14 +83,14 @@ impl DijkstraMap {
     }
     //Returns true if point exists.
     #[export]
-    unsafe fn has_point(&mut self, mut _owner: gdnative::Node, id: i32)->bool{
+    fn has_point(&mut self, mut _owner: gdnative::Node, id: i32)->bool{
         return self.connections.contains_key(&id);
     }
 
     //Disables point from pathfinding and returns true. If point doesn't exist, returns false.
     //Note: points are enabled by default.
     #[export]
-    unsafe fn disable_point(&mut self, mut _owner: gdnative::Node, point: i32) -> bool{
+    fn disable_point(&mut self, mut _owner: gdnative::Node, point: i32) -> bool{
         if self.connections.contains_key(&point){
             self.disabled_points.insert(point);
             return true
@@ -101,7 +101,7 @@ impl DijkstraMap {
     //Enables point for pathfinding and returns true. If point doesn't exist, returns false.
     //Note: points are enabled by default.
     #[export]
-    unsafe fn enable_point(&mut self, mut _owner: gdnative::Node, point: i32) -> bool{
+    fn enable_point(&mut self, mut _owner: gdnative::Node, point: i32) -> bool{
         if self.connections.contains_key(&point){
             self.disabled_points.remove(&point);
             return true
@@ -111,7 +111,7 @@ impl DijkstraMap {
 
     //Returns true if point exists and is disabled. Returns false otherwise.
     #[export]
-    unsafe fn is_point_disabled(&mut self, mut _owner: gdnative::Node, point: i32) -> bool{
+    fn is_point_disabled(&mut self, mut _owner: gdnative::Node, point: i32) -> bool{
         if self.connections.contains_key(&point) && self.disabled_points.contains(&point){
             return true
         }
@@ -122,7 +122,7 @@ impl DijkstraMap {
     //Returns true if connection already existed.  
     //If bidirectional is true, it also adds connection from target to source too. Returns true if connection existed in at least one direction.
     #[export]
-    unsafe fn connect_points(&mut self, mut _owner: gdnative::Node, source: i32, target: i32, cost: f32, bidirectional: bool) -> bool{
+    fn connect_points(&mut self, mut _owner: gdnative::Node, source: i32, target: i32, cost: f32, bidirectional: bool) -> bool{
         if bidirectional{
             let a=self.connect_points(_owner, source, target, cost, false);
             let b=self.connect_points(_owner, target, source, cost, false);
@@ -146,7 +146,7 @@ impl DijkstraMap {
     //Removes connection between source point and target point. Returns true if both points and their connection existed.
     //If bidirectional is true, it also removes connection from target to source. Returns true connection existed in at least one direction.
     #[export]
-    unsafe fn remove_connection(&mut self, mut _owner: gdnative::Node, source: i32, target: i32,bidirectional:bool) -> bool{
+    fn remove_connection(&mut self, mut _owner: gdnative::Node, source: i32, target: i32,bidirectional:bool) -> bool{
         if bidirectional==true{
             let a=self.remove_connection(_owner, source, target, false);
             let b=self.remove_connection(_owner, target, source, false);
@@ -163,7 +163,7 @@ impl DijkstraMap {
 
     //Returns true if source point and target point both exist and there's connection from source to target.
     #[export]
-    unsafe fn has_connection(&mut self, mut _owner: gdnative::Node, source: i32, target: i32) -> bool{
+    fn has_connection(&mut self, mut _owner: gdnative::Node, source: i32, target: i32) -> bool{
         match self.connections.get(&source){
             None => return false,
             Some(src) => {

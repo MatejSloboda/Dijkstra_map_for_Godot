@@ -45,6 +45,15 @@ impl DijkstraMap {
         self.disabled_points.clear();
     }
 
+    //returns next ID not associated with any point
+    #[export]
+    unsafe fn get_available_point_id(&mut self, mut _owner: gdnative::Node)->i32{
+        let mut id:i32=0;
+        while self.has_point(_owner, id) {
+            id=id+1;
+        }
+        return id;
+    }
     //Adds new point with given ID into the graph and returns true. If point with that ID already exists, does nothing and returns false.
     #[export]
     unsafe fn add_point(&mut self, mut _owner: gdnative::Node, id: i32)->bool{
@@ -416,7 +425,55 @@ impl DijkstraMap {
         } 
     }
     
+
     
+    //initializes map as a 2D grid. Walkable tiles are specified by BitMap (true=>point gets added, false=>point gets ignored).
+    //point IDs are setup such that ID=(x+w*width)+initial_offset. Conversely x=(ID-initial_offset)%width and y=(ID-initial_offset)/width
+    //warning: If points with reqired IDs already exist, this method will treat them as part of the grid. 
+    //second argument is a Dictionary, that defines connections. Keys are relative positions of points in the grid and values are costs.
+    //Example for orthogonal (4-directional) movement {Vector2(1,0): 1.0, Vector(0,1): 1.0, Vector2(-1,0): 1.0, Vector(0,-1): 1.0}
+    #[export]
+    unsafe fn initialize_as_grid(&mut self, mut _owner: gdnative::Node, bitmap: gdnative::BitMap, relative_connections_in: gdnative::Dictionary, initial_offset: i32){
+        let vec_size=bitmap.get_size();
+        let width=vec_size.x as i32;
+        let height=vec_size.y as i32;
+        let mut relative_connections: HashMap<i32,f32>=HashMap::new();
+
+        //extract relative connections to rust types.
+        for dirs in relative_connections_in.keys().iter(){
+            match dirs.try_to_vector2(){
+                None=>continue,
+                Some(vec2)=>{
+                    let cost=relative_connections_in.get(dirs);
+                    relative_connections.insert((vec2.x as i32)+(vec2.y as i32)*width ,cost.to_f64() as f32);
+                }
+            }  
+        }
+
+        let mut grid=std::collections::HashSet::<i32>::new();
+        for y in 0..height{
+            for x in 0..width{
+                if bitmap.get_bit(gdnative::Vector2::new(x as f32,y as f32)){
+                    self.add_point(_owner, x+y*width+initial_offset);
+                    grid.insert(x+y*width+initial_offset);
+                }
+        
+            }
+        }
+        
+        for y in 0..height{
+            for x in 0..width{
+                let id=y*x;
+                for (offs,cost) in relative_connections.iter(){
+                    if grid.contains(&(id+offs+initial_offset)){
+                        self.connect_points(_owner, id+initial_offset, id+offs+initial_offset, *cost, false);
+                    }
+                }
+            }
+        }
+
+
+    }
    
    
 }

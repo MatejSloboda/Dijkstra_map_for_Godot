@@ -1,7 +1,6 @@
 extends TileMap
 
 # warning-ignore:unused_class_variable
-var dmap=preload("res://dijkstra_map.gdns")
 var dijkstra_map_for_pikemen
 var dijkstra_map_for_archers
 

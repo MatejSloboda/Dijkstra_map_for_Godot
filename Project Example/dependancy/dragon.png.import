@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/pikeman_32x32.png-2dae538924ea4beb3e1ecd80f73b0b2f.stex"
+path="res://.import/dragon.png-9c39b6ad6cbd4cf1469105e805276e29.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://example/pikeman_32x32.png"
-dest_files=[ "res://.import/pikeman_32x32.png-2dae538924ea4beb3e1ecd80f73b0b2f.stex" ]
+source_file="res://Project Example/dependancy/dragon.png"
+dest_files=[ "res://.import/dragon.png-9c39b6ad6cbd4cf1469105e805276e29.stex" ]
 
 [params]
 

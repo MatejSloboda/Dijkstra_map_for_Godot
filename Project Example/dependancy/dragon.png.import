@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/tileset_32x32.png-d69e1ab435ed88947846913826f5ca98.stex"
+path="res://.import/dragon.png-9c39b6ad6cbd4cf1469105e805276e29.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://example/tileset_32x32.png"
-dest_files=[ "res://.import/tileset_32x32.png-d69e1ab435ed88947846913826f5ca98.stex" ]
+source_file="res://Project Example/dependancy/dragon.png"
+dest_files=[ "res://.import/dragon.png-9c39b6ad6cbd4cf1469105e805276e29.stex" ]
 
 [params]
 

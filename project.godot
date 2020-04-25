@@ -9,19 +9,30 @@
 config_version=4
 
 _global_script_classes=[ {
-"base": "Node",
+"base": "",
 "class": "DijkstraMap",
 "language": "NativeScript",
 "path": "res://dijkstra_map.gdns"
+}, {
+"base": "Node",
+"class": "wDijkstraMap",
+"language": "GDScript",
+"path": "res://APIi demo/basic_wrapper.gd"
 } ]
 _global_script_class_icons={
-"DijkstraMap": ""
+"DijkstraMap": "",
+"wDijkstraMap": ""
 }
 
 [application]
 
 config/name="Dijkstra Map"
+run/main_scene="res://Tests/Gut.tscn"
 config/icon="res://icon.png"
+
+[editor_plugins]
+
+enabled=PoolStringArray( "gut" )
 
 [rendering]
 

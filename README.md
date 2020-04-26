@@ -24,7 +24,7 @@ After having followed *Installing* direction, open the godot project and open an
 *  /Project Example/dragon_attack.tscn
 * /API demo/demo.tscn
 
-toy around with it, the code of dragon_attack is ehavily commented
+toy around with it, the code of dragon_attack is heavily commented
 the code of demo.tscn is still a little immature and shouldnt be taken as example ... (especially the ugly wrapper I put there)
 
 ### Notes

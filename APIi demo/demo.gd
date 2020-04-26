@@ -1,25 +1,17 @@
 extends Node2D
 """
-buttons to illustrates function in the API
-cost_map #labels on top of the case
-direction map : little arrows
-connect disconnect points
-connect all neighbour points
-disconnect all
+this was coded rapidly with the sole purpose of illustrating the API
 
-point under cost
-
-adding source/ target
-
-automatic recalculate djisktramap
-	recalculate for target(s) with cost
+it uses very non idiomatic code : for all label, label.free()
+						and so on
+	which cost performance 
 	
-select points
-->add source or target?
-2points? connect disconnect
-unselect points
+so this example does not honor the speed gain thanks to rust
+and you can have way better performance yourself
 """
 const arrow = preload("res://APIi demo/dependancy/arrow.tscn")
+export(float) var maxcost = INF
+export(float) var cost = 1
 
 const vect_to_ArrowRotation= {
 	Vector2.UP : 0,
@@ -51,9 +43,9 @@ var sources_id  = [1]
 func _ready() -> void:
 	#initiate cost map with connections
 	wrapDjk.creating_square_map(_len)
-	wrapDjk.connect_all_points_to_neighbours()
+	wrapDjk.connect_all_points_to_neighbours(cost)
 	__calculate_and_show()
-	
+	DijkstraMap.add_point()
 	#bind buttons
 	for b in $buttons.get_children():
 		var bind_function = "not implemented"
@@ -75,15 +67,15 @@ func _ready() -> void:
 
 func __recalculate():
 	
-	wrapDjk.map.recalculate_for_targets( PoolIntArray(sources_id),INF,true)
-	if len(sources_id) == 1: wrapDjk.map.recalculate_for_target(sources_id[0],INF,true)
+	wrapDjk.map.recalculate_for_targets( PoolIntArray(sources_id),maxcost,true)
+	if len(sources_id) == 1: wrapDjk.map.recalculate_for_target(sources_id[0],maxcost,true)
 
 func __show_cost_map():
 	cleanUI()
 	var costmap = wrapDjk.map.get_cost_map()
 	var max_cost = costmap.values().max() # TODO report syntaxcolor to github
 		
-	for each_id in wrapDjk.point_id_to_position.keys():
+	for each_id in costmap.keys():
 		var each_pos =  wrapDjk.point_id_to_position[each_id]
 		var each_cost = costmap[each_id]
 		
@@ -98,7 +90,7 @@ func __show_cost_map():
 		var color #range from pale blue to bright red from 0 to max cost
 
 		var r = __cost_to_color(each_cost,max_cost)
-		r = max(r,1)
+		r = max(r,2)
 #		var b = 255 - r
 		#a in 0.3 ; 1
 		var a = min(r/255,0.75)

@@ -3,7 +3,7 @@
 [resource]
 entry/UWP.64 = "res://target/release/dijkstra_map_for_godot.dll"
 entry/Windows.64 = "res://target/release/dijkstra_map_for_godot.dll"
-entry/X11.64 = "res://target/debug/libdijkstra_map_for_godot.so"
+entry/X11.64 = "res://target/release/libdijkstra_map_for_godot.so"
 dependency/UWP.64 = [  ]
 dependency/Windows.64 = [  ]
 dependency/X11.64 = [  ]

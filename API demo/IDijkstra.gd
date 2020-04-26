@@ -29,15 +29,20 @@ func add_point(id : int):
 func connect_points(source: int, target: int, cost: float, bidirectional: bool = true):
 	return NativeMap.connect_points(source, target, cost, bidirectional)
 
-func recalculate_for_targets(id_source : int, max_cost : float = INF, reversed := true):
+func recalculate_for_targets(id_source : PoolIntArray, max_cost : float = INF, reversed := true):
 	return NativeMap.recalculate_for_targets(id_source,max_cost,reversed)
 	
-func recalculate_for_target(ids_source : PoolIntArray, max_cost : float = INF, reversed := true):
+func recalculate_for_target(ids_source : int, max_cost : float = INF, reversed := true):
 	return NativeMap.recalculate_for_target(ids_source,max_cost,reversed)
 
 func recalculate_for_targets_with_costs(_min : float,_max : float):
 	return NativeMap.get_all_points_with_cost_between(_min,_max)
 
+func id_to_position(id : int):
+	return point_id_to_position.get(id,ABSENT)
+	
+func position_to_id(pos : Vector2):
+	return point_position_to_id.get(pos,ABSENT)
 
 func connect_to_neighbors(id, cost:=1.0 ):
 	var pos = point_id_to_position[id]

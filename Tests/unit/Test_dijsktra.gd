@@ -28,6 +28,13 @@ func test_creating_square():
 	
 #----------------------------------#
 func test_connect_points_with_cost_int():
+	DjkWrap.clear()
+	assert_true(DjkWrap.map.add_point(1),"point added success")
+	assert_true(DjkWrap.map.add_point(2))
+	
+	
+	assert_true(DjkWrap.map.connect_points(1,2,1.0,false))
+	assert_true(DjkWrap.map.get_cost_at_point(1))
 	pending("this needs to be fixed in the gdnative code ;)")
 	
 func test_connect_point_uni():

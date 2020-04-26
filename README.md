@@ -1,6 +1,3 @@
-# Dijkstra_map_for_Godot
-
-
 # Dijkstra Algorithm for Godot
 
 

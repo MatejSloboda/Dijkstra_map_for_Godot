@@ -18,16 +18,10 @@ _global_script_classes=[ {
 "class": "IDijkstraMap",
 "language": "GDScript",
 "path": "res://API demo/IDijkstra.gd"
-}, {
-"base": "Node",
-"class": "wDijkstraMap",
-"language": "GDScript",
-"path": "res://API demo/basic_wrapper.gd"
 } ]
 _global_script_class_icons={
 "DijkstraMap": "",
-"IDijkstraMap": "",
-"wDijkstraMap": ""
+"IDijkstraMap": ""
 }
 
 [application]

@@ -4,8 +4,7 @@
 
 [node name="Node2D" type="Node2D"]
 script = ExtResource( 1 )
-maxcost = 50.0
-cost = 7.0
+cost = 1.0
 highlight_color = Color( 0, 0.203922, 1, 0.443137 )
 
 [node name="TileMap" type="TileMap" parent="."]

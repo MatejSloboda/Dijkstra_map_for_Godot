@@ -4,6 +4,8 @@
 
 [node name="Node2D" type="Node2D"]
 script = ExtResource( 1 )
+maxcost = 50.0
+cost = 7.0
 highlight_color = Color( 0, 0.203922, 1, 0.443137 )
 
 [node name="TileMap" type="TileMap" parent="."]
@@ -19,9 +21,15 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="labels" type="Node" parent="."]
+[node name="labels" type="Control" parent="."]
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
-[node name="color_rects" type="Node" parent="."]
+[node name="color_rects" type="Control" parent="."]
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="cost_min" type="SpinBox" parent="."]
 margin_left = 634.899

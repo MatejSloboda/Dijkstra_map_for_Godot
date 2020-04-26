@@ -15,19 +15,25 @@ _global_script_classes=[ {
 "path": "res://dijkstra_map.gdns"
 }, {
 "base": "Node",
+"class": "IDijkstraMap",
+"language": "GDScript",
+"path": "res://APIi demo/IDijkstra.gd"
+}, {
+"base": "Node",
 "class": "wDijkstraMap",
 "language": "GDScript",
 "path": "res://APIi demo/basic_wrapper.gd"
 } ]
 _global_script_class_icons={
 "DijkstraMap": "",
+"IDijkstraMap": "",
 "wDijkstraMap": ""
 }
 
 [application]
 
 config/name="Dijkstra Map"
-run/main_scene="res://Tests/Gut.tscn"
+run/main_scene="res://APIi demo/demo.tscn"
 config/icon="res://icon.png"
 
 [editor_plugins]
@@ -36,7 +42,6 @@ enabled=PoolStringArray( "gut" )
 
 [rendering]
 
-quality/driver/driver_name="GLES2"
 vram_compression/import_etc=true
 vram_compression/import_etc2=false
 environment/default_environment="res://default_env.tres"

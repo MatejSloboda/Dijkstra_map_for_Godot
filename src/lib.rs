@@ -13,6 +13,7 @@ pub struct DijkstraMap {
     direction_map: HashMap<i32,i32>,
     sorted_points: Vec<i32>,
     disabled_points: std::collections::HashSet<i32>,
+    terrain_map: HashMap<i32,i32>,
 }
 
 
@@ -31,6 +32,7 @@ impl DijkstraMap {
             direction_map: HashMap::new(),
             sorted_points: Vec::new(),
             disabled_points: std::collections::HashSet::new(),
+            terrain_map: HashMap::new(),
         }
     }
     
@@ -43,29 +45,50 @@ impl DijkstraMap {
         self.direction_map.clear();
         self.sorted_points.clear();
         self.disabled_points.clear();
+        self.terrain_map.clear();
     }
 
     //returns next ID not associated with any point
     #[export]
-    unsafe fn get_available_point_id(&mut self, mut _owner: gdnative::Node)->i32{
+    fn get_available_point_id(&mut self, mut _owner: gdnative::Node)->i32{
         let mut id:i32=0;
         while self.has_point(_owner, id) {
             id=id+1;
         }
         return id;
     }
-    //Adds new point with given ID into the graph and returns true. If point with that ID already exists, does nothing and returns false.
+    //Adds new point with given ID and terrain ID into the graph and returns true. If point with that ID already exists, does nothing and returns false.
     #[export]
-    fn add_point(&mut self, mut _owner: gdnative::Node, id: i32)->bool{
+    fn add_point(&mut self, mut _owner: gdnative::Node, id: i32, terrain_id: i32)->bool{
         if self.has_point(_owner, id){
             return false
         }else{
             self.connections.insert(id, HashMap::new());
             self.reverse_connections.insert(id, HashMap::new());
+            self.terrain_map.insert(id, terrain_id);
             return true
         }
         
     }
+    
+    //sets terrain ID for given point and returns true. If point doesn't exist, returns false
+    #[export]
+    fn set_terrain_for_point(&mut self, mut _owner: gdnative::Node, id: i32, terrain_id: i32)->bool{
+        if self.has_point(_owner, id){
+            self.terrain_map.insert(id, terrain_id);
+            return true
+        }else{
+            return false
+        }
+    }
+
+    //gets terrain ID for given point. Returns -1 if given point doesn't exist.
+    #[export]
+    fn get_terrain_for_point(&mut self, mut _owner: gdnative::Node, id: i32)->i32{
+        return *self.terrain_map.get(&id).unwrap_or(&-1)
+    
+    }
+
 
     //Removes point from graph along with all of its connections and returns true. If point doesn't exist, returns false.
     #[export]
@@ -188,6 +211,57 @@ impl DijkstraMap {
     //If all connections in the graph are symmetric (always bidirectional with identical cost), then this option has no effect.
     //max_cost specifies a maximum total cost for a path. Algorithm will terminate after it finds all paths shorter than that.
     //all points with longer paths are treated as inaccessible.
+
+    #[export]
+    fn recalculate(&mut self, mut _owner: gdnative::Node,target: gdnative::Variant, optional_params: gdnative::Dictionary){
+        let mut targets: Vec<i32> =Vec::new();
+        //convert target variant to appropriate value(s) and push onto the targets stack.
+        match target.get_type(){
+            gdnative::VariantType::I64=>
+                targets.push(target.to_i64() as i32),
+            gdnative::VariantType::Int32Array=>
+                targets.extend(target.to_int32_array().read().iter()),
+            gdnative::VariantType::VariantArray=>{
+                    for i in target.to_array().iter(){
+                        match i.try_to_i64(){
+                            Some(intval)=>targets.push(intval as i32),
+                            None=>targets.push(-1) //if entry is not int, use default -1 invalid ID
+                        }
+                    }
+                    
+                }
+            _=>godot_error!("Invalid argument type. Expected int, Array (of ints) or PoolIntArray")
+        }
+        
+
+        //extract optional parameters
+        let reversed:bool = optional_params.get(&gdnative::Variant::from_str("reversed")).try_to_bool().unwrap_or(false);
+        let max_cost:f32 = optional_params.get(&gdnative::Variant::from_str("maximum cost")).try_to_f64().unwrap_or(std::f64::INFINITY) as f32;
+        let mut initial_costs :Vec<f32>=Vec::new();
+            {
+                let val=optional_params.get(&gdnative::Variant::from_str("initial costs"));
+                match val.get_type(){
+                    gdnative::VariantType::Float32Array=>{
+                        initial_costs.extend(val.to_float32_array().read().iter());
+                    },
+                    gdnative::VariantType::VariantArray=>{
+                        initial_costs.reserve(targets.len());
+                        for i in val.to_array().iter(){
+                            match i.try_to_f64(){
+                                Some(fval)=>initial_costs.push(fval as f32),
+                                None=>initial_costs.push(0.0)
+                            }
+                        }
+                        
+                    },
+                    _=>{},
+                }
+                
+            }
+
+        self.recalculate_map_intern(&mut targets, Some(&initial_costs), max_cost, reversed);
+    }
+
 
     //receives a single point as target. 
     #[export]
@@ -454,7 +528,7 @@ impl DijkstraMap {
         for y in 0..height{
             for x in 0..width{
                 if bitmap.get_bit(gdnative::Vector2::new(x as f32,y as f32)){
-                    self.add_point(_owner, x+y*width+initial_offset);
+                    self.add_point(_owner, x+y*width+initial_offset,0);
                     grid.insert(x+y*width+initial_offset);
                 }
         

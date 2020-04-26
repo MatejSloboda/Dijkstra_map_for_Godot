@@ -1,21 +1,9 @@
 # Dijkstra_map_for_Godot
 
 
-
-  
-  
-  
-
-
-If you are on x64 windows, the example should just work from there. Otherwise, you will have to update the "dijkstra_map_library.tres" file. (It tells godot which file to use for the library for each system.)
-
-To do so, click on that file in the godot editor, and fill the section corresponding your OS with "res://target/release/libdijkstra_map_for_godot.so" for instance
-
-The following example demonstrates the use of Dijksta_map with heavily commented code.
-_____________________
 # Dijkstra Algorithm for Godot
 
-One Paragraph of project description goes here
+
 
 ### What it does
 
@@ -68,4 +56,3 @@ If you're familiar with the gut API, you can launch the Gut.tscn and run some te
 
 
 ## Acknowledgments
-

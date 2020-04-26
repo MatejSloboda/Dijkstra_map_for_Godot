@@ -18,6 +18,8 @@ You will have to :
 
 It will compile the rust executable and put it into "res://target/release/" directory (first time around, it may take several minutes, because it has to automatically download and compile all the dependencies). 
 
+If you are on x64 windows, the example should just work from there. Otherwise, you will have to update the "dijkstra_map_library.tres" file. (It tells godot which file to use for the library for each system.)
+
 ## Getting Started
 
 After having followed *Installing* direction, open the godot project and open and run one of the demo scenes 

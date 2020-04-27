@@ -53,34 +53,34 @@ impl DijkstraMap {
         while self.has_point(_owner, id) {
             id = id + 1;
         }
-        return id;
+        id
     }
-    //Adds new point with given ID and terrain ID into the graph and returns true. If point with that ID already exists, does nothing and returns false.
+    //Adds new point with given ID and terrain ID into the graph and returns OK. If point with that ID already exists, does nothing and returns FAILED.
     #[export]
-    fn add_point(&mut self, mut _owner: gdnative::Node, id: i32, terrain_id: i32) -> bool {
+    fn add_point(&mut self, mut _owner: gdnative::Node, id: i32, terrain_id: i32) -> i64 {
         if self.has_point(_owner, id) {
-            return false;
+            gdnative::GlobalConstants::FAILED
         } else {
             self.connections.insert(id, FnvHashMap::default());
             self.reverse_connections.insert(id, FnvHashMap::default());
             self.terrain_map.insert(id, terrain_id);
-            return true;
+            gdnative::GlobalConstants::OK
         }
     }
 
-    //sets terrain ID for given point and returns true. If point doesn't exist, returns false
+    //sets terrain ID for given point and returns OK. If point doesn't exist, returns FAILED
     #[export]
     fn set_terrain_for_point(
         &mut self,
         mut _owner: gdnative::Node,
         id: i32,
         terrain_id: i32,
-    ) -> bool {
+    ) -> i64 {
         if self.has_point(_owner, id) {
             self.terrain_map.insert(id, terrain_id);
-            return true;
+            gdnative::GlobalConstants::OK
         } else {
-            return false;
+            gdnative::GlobalConstants::FAILED
         }
     }
 
@@ -90,13 +90,13 @@ impl DijkstraMap {
         return *self.terrain_map.get(&id).unwrap_or(&-1);
     }
 
-    //Removes point from graph along with all of its connections and returns true. If point doesn't exist, returns false.
+    //Removes point from graph along with all of its connections and returns OK. If point doesn't exist, returns FAILED.
     #[export]
-    fn remove_point(&mut self, mut _owner: gdnative::Node, point: i32) -> bool {
+    fn remove_point(&mut self, mut _owner: gdnative::Node, point: i32) -> i64 {
         self.disabled_points.remove(&point);
         //remove this point's entry from connections
         match self.connections.remove(&point) {
-            None => return false,
+            None => gdnative::GlobalConstants::FAILED,
             Some(neighbours) => {
                 //remove reverse connections to this point from neighbours
                 for nbr in neighbours.keys() {
@@ -111,50 +111,53 @@ impl DijkstraMap {
                 for nbr in nbrs2.keys() {
                     self.connections.get_mut(nbr).unwrap().remove(&point);
                 }
-                return true;
+                gdnative::GlobalConstants::OK
             }
         }
     }
     //Returns true if point exists.
     #[export]
     fn has_point(&mut self, mut _owner: gdnative::Node, id: i32) -> bool {
-        return self.connections.contains_key(&id);
+        self.connections.contains_key(&id)
     }
 
     //Disables point from pathfinding and returns true. If point doesn't exist, returns false.
     //Note: points are enabled by default.
     #[export]
-    fn disable_point(&mut self, mut _owner: gdnative::Node, point: i32) -> bool {
+    fn disable_point(&mut self, mut _owner: gdnative::Node, point: i32) -> i64 {
         if self.connections.contains_key(&point) {
             self.disabled_points.insert(point);
-            return true;
+            gdnative::GlobalConstants::OK
+        } else {
+            gdnative::GlobalConstants::FAILED
         }
-        return false;
     }
 
-    //Enables point for pathfinding and returns true. If point doesn't exist, returns false.
+    //Enables point for pathfinding and returns OK. If point doesn't exist, returns FAILED.
     //Note: points are enabled by default.
     #[export]
-    fn enable_point(&mut self, mut _owner: gdnative::Node, point: i32) -> bool {
+    fn enable_point(&mut self, mut _owner: gdnative::Node, point: i32) -> i64 {
         if self.connections.contains_key(&point) {
-            self.disabled_points.remove(&point);
-            return true;
+            self.disabled_points.remove(&point); //assumes it works
+            gdnative::GlobalConstants::OK
+        } else {
+            gdnative::GlobalConstants::FAILED
         }
-        return false;
     }
 
     //Returns true if point exists and is disabled. Returns false otherwise.
     #[export]
     fn is_point_disabled(&mut self, mut _owner: gdnative::Node, point: i32) -> bool {
         if self.connections.contains_key(&point) && self.disabled_points.contains(&point) {
-            return true;
+            true
+        } else {
+            false
         }
-        return false;
     }
 
     //Adds connection with given cost (or cost of existing existing connection) between a source point and target point if they exist.
     //Returns true if connection already existed.
-    //If bidirectional is true, it also adds connection from target to source too. Returns true if connection existed in at least one direction.
+    //If bidirectional is true, it also adds connection from target to source too. Returns OK if connection existed in at least one direction.
     #[export]
     fn connect_points(
         &mut self,
@@ -163,34 +166,40 @@ impl DijkstraMap {
         target: i32,
         cost: f32,
         bidirectional: bool,
-    ) -> bool {
+    ) -> i64 {
         if bidirectional {
             let a = self.connect_points(_owner, source, target, cost, false);
             let b = self.connect_points(_owner, target, source, cost, false);
-            return a || b;
-        }
-        if !self.connections.contains_key(&source)
+            match a == gdnative::GlobalConstants::OK || b == gdnative::GlobalConstants::OK {
+                true => gdnative::GlobalConstants::OK,
+                false => gdnative::GlobalConstants::FAILED,
+            }
+        } else if !self.connections.contains_key(&source)
             || !self.reverse_connections.contains_key(&target)
         {
-            return false;
-        }
-        let cost_got_updated: bool;
-        match self.connections.get_mut(&source) {
-            None => return false,
-            Some(cons) => {
-                let prev = cons.insert(target, cost);
-                cost_got_updated = prev.is_some();
+            gdnative::GlobalConstants::FAILED
+        } else {
+            let cost_got_updated: i64;
+            match self.connections.get_mut(&source) {
+                None => return gdnative::GlobalConstants::FAILED,
+                Some(cons) => {
+                    let prev = cons.insert(target, cost);
+                    cost_got_updated = match prev.is_some() {
+                        true => gdnative::GlobalConstants::OK,
+                        false => gdnative::GlobalConstants::FAILED,
+                    }
+                }
             }
+            self.reverse_connections
+                .get_mut(&target)
+                .unwrap()
+                .insert(source, cost);
+            cost_got_updated
         }
-        self.reverse_connections
-            .get_mut(&target)
-            .unwrap()
-            .insert(source, cost);
-        return cost_got_updated;
     }
 
-    //Removes connection between source point and target point. Returns true if both points and their connection existed.
-    //If bidirectional is true, it also removes connection from target to source. Returns true connection existed in at least one direction.
+    //Removes connection between source point and target point. Returns OK if both points and their connection existed.
+    //If bidirectional is true, it also removes connection from target to source. Returns OK if connection existed in at least one direction.
     #[export]
     fn remove_connection(
         &mut self,
@@ -198,18 +207,19 @@ impl DijkstraMap {
         source: i32,
         target: i32,
         bidirectional: bool,
-    ) -> bool {
+    ) -> i64 {
         if bidirectional == true {
             let a = self.remove_connection(_owner, source, target, false);
             let b = self.remove_connection(_owner, target, source, false);
-            return a || b;
-        }
-
-        if self.has_connection(_owner, source, target) {
+            match a == gdnative::GlobalConstants::OK || b == gdnative::GlobalConstants::OK {
+                true => gdnative::GlobalConstants::OK,
+                false => gdnative::GlobalConstants::FAILED,
+            }
+        } else if self.has_connection(_owner, source, target) {
             self.connections.get_mut(&target).unwrap().remove(&source);
-            return true;
+            gdnative::GlobalConstants::OK
         } else {
-            return false;
+            gdnative::GlobalConstants::FAILED
         }
     }
 
@@ -217,8 +227,8 @@ impl DijkstraMap {
     #[export]
     fn has_connection(&mut self, mut _owner: gdnative::Node, source: i32, target: i32) -> bool {
         match self.connections.get(&source) {
-            None => return false,
-            Some(src) => return src.contains_key(&target),
+            None => false,
+            Some(src) => src.contains_key(&target),
         }
     }
 
@@ -484,7 +494,7 @@ impl DijkstraMap {
                 path_write[i] = path[i];
             }
         }
-        return out_array;
+        out_array
     }
 
     fn cost_of(&self, a: i32) -> f32 {
@@ -493,9 +503,9 @@ impl DijkstraMap {
 
     fn compare_cost(&self, a: i32, b: i32) -> std::cmp::Ordering {
         if self.cost_of(a) < self.cost_of(b) {
-            return std::cmp::Ordering::Greater;
+            std::cmp::Ordering::Greater
         } else {
-            return std::cmp::Ordering::Less;
+            std::cmp::Ordering::Less
         }
     }
 

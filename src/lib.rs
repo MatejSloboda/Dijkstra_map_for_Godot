@@ -350,12 +350,12 @@ impl DijkstraMap {
     //If given point is the target, returns ID of itself. Returns -1, if target is inaccessible from this point.
     #[export]
     fn get_direction_at_point(&mut self, mut _owner: gdnative::Node, point: i32) -> i32 {
-        return *self.direction_map.get(&point).unwrap_or(&-1);
+        *self.direction_map.get(&point).unwrap_or(&-1)
     }
     //Returns cost of the shortest path from this point to the target.
     #[export]
     fn get_cost_at_point(&mut self, mut _owner: gdnative::Node, point: i32) -> f32 {
-        return *self.cost_map.get(&point).unwrap_or(&std::f32::INFINITY);
+        *self.cost_map.get(&point).unwrap_or(&std::f32::INFINITY)
     }
 
     //Given a PoolIntArray of point IDs, returns PoolIntArray of IDs of points along respective shortest paths.
@@ -374,7 +374,7 @@ impl DijkstraMap {
                 dirs_write[i] = *self.direction_map.get(&points_read[i]).unwrap_or(&-1)
             }
         }
-        return dirs;
+        dirs
     }
     //Given a PoolIntArray of point IDs, returns PoolRealArray of costs of shortest paths from those points.
     #[export]
@@ -395,7 +395,7 @@ impl DijkstraMap {
                     .unwrap_or(&std::f32::INFINITY);
             }
         }
-        return costs;
+        costs
     }
 
     //Returns the entire Dijktra map of costs in form of a dictionary. Keys are points' IDs and values are costs.
@@ -409,7 +409,7 @@ impl DijkstraMap {
                 &gdnative::Variant::from_f64(self.cost_of(*id) as f64),
             );
         }
-        return dict;
+        dict
     }
 
     //Returns the entire Dijkstra map of directions
@@ -422,7 +422,7 @@ impl DijkstraMap {
                 &gdnative::Variant::from_i64(*self.direction_map.get(id).unwrap() as i64),
             );
         }
-        return dict;
+        dict
     }
 
     //returns all points with costs between min_cost and max_cost (inclusive), in sorted order.
@@ -465,7 +465,7 @@ impl DijkstraMap {
                 pool_write_access[i - start_point] = self.sorted_points[i];
             }
         }
-        return poolintarray;
+        poolintarray
     }
 
     //returns PoolIntArray of point IDs corresponding to a shortest path from given point (note: given point isn't included).

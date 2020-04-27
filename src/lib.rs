@@ -1,19 +1,20 @@
 #[macro_use]
 extern crate gdnative;
 
-use std::collections::HashMap;
+//use std::collections::HashMap;
+use fnv::FnvHashMap;
 
 #[derive(gdnative::NativeClass)]
 #[inherit(gdnative::Node)]
 //#[user_data(gdnative::user_data::ArcData<DijkstraMap>)]
 pub struct DijkstraMap {
-    connections: HashMap<i32,HashMap<i32,f32>>, //for point1 stores weights of connections going from point1 to point2
-    reverse_connections: HashMap<i32,HashMap<i32,f32>>, //for point1 stores weights of connections going from point2 to point1
-    cost_map: HashMap<i32,f32>,
-    direction_map: HashMap<i32,i32>,
+    connections: FnvHashMap<i32,FnvHashMap<i32,f32>>, //for point1 stores weights of connections going from point1 to point2
+    reverse_connections: FnvHashMap<i32,FnvHashMap<i32,f32>>, //for point1 stores weights of connections going from point2 to point1
+    cost_map: FnvHashMap<i32,f32>,
+    direction_map: FnvHashMap<i32,i32>,
     sorted_points: Vec<i32>,
     disabled_points: std::collections::HashSet<i32>,
-    terrain_map: HashMap<i32,i32>,
+    terrain_map: FnvHashMap<i32,i32>,
 }
 
 
@@ -26,13 +27,13 @@ impl DijkstraMap {
     /// The "constructor" of the class.
     fn _init(_owner: gdnative::Node) -> Self {
         DijkstraMap{
-            connections: HashMap::new(),
-            reverse_connections: HashMap::new(),
-            cost_map: HashMap::new(),
-            direction_map: HashMap::new(),
+            connections: FnvHashMap::default(),
+            reverse_connections: FnvHashMap::default(),
+            cost_map: FnvHashMap::default(),
+            direction_map: FnvHashMap::default(),
             sorted_points: Vec::new(),
             disabled_points: std::collections::HashSet::new(),
-            terrain_map: HashMap::new(),
+            terrain_map: FnvHashMap::default(),
         }
     }
     
@@ -63,8 +64,8 @@ impl DijkstraMap {
         if self.has_point(_owner, id){
             return false
         }else{
-            self.connections.insert(id, HashMap::new());
-            self.reverse_connections.insert(id, HashMap::new());
+            self.connections.insert(id, FnvHashMap::default());
+            self.reverse_connections.insert(id, FnvHashMap::default());
             self.terrain_map.insert(id, terrain_id);
             return true
         }
@@ -511,7 +512,7 @@ impl DijkstraMap {
         let vec_size=bitmap.get_size();
         let width=vec_size.x as i32;
         let height=vec_size.y as i32;
-        let mut relative_connections: HashMap<i32,f32>=HashMap::new();
+        let mut relative_connections: FnvHashMap<i32,f32>=FnvHashMap::default();
 
         //extract relative connections to rust types.
         for dirs in relative_connections_in.keys().iter(){

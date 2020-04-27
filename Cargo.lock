@@ -85,6 +85,7 @@ dependencies = [
 name = "dijkstra_map_for_godot"
 version = "0.1.0"
 dependencies = [
+ "fnv",
  "gdnative",
 ]
 
@@ -96,6 +97,12 @@ checksum = "0c6a5b0c779cd0b744c73a1d2083faf181080d696903cdad99a3b03d015d7030"
 dependencies = [
  "num-traits",
 ]
+
+[[package]]
+name = "fnv"
+version = "1.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2fad85553e09a6f881f739c29f0b00b0f01357c743266d478b68951ce23285f3"
 
 [[package]]
 name = "gdnative"

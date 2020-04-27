@@ -295,8 +295,26 @@ impl DijkstraMap {
                 _ => {}
             }
         }
+        let mut terrain_costs=FnvHashMap::<i32,f32>::default();
+        {
+            let val = optional_params.get(&gdnative::Variant::from_str("terrain weights"));
+            match val.try_to_dictionary(){
+                None=>{},
+                Some(dict)=>{
+                    for key in dict.keys().iter(){
+                        match key.try_to_i64(){
+                            None=>{},
+                            Some(id)=>{
+                                terrain_costs.insert(id as i32, dict.get(key).try_to_f64().unwrap_or(1.0) as f32);
+                            }
+                        }
 
-        self.recalculate_map_intern(&mut targets, Some(&initial_costs), max_cost, reversed);
+                    }
+                }
+            }
+        }
+
+        self.recalculate_map_intern(&mut targets, Some(&initial_costs), max_cost, reversed, &terrain_costs);
     }
 
     //receives a single point as target.
@@ -310,7 +328,7 @@ impl DijkstraMap {
     ) {
         let mut targets: Vec<i32> = Vec::new();
         targets.push(target);
-        self.recalculate_map_intern(&mut targets, None, max_cost, reversed);
+        self.recalculate_map_intern(&mut targets, None, max_cost, reversed, &FnvHashMap::default());
     }
 
     //receives multiple points as targets in form of PoolIntArray of IDs.
@@ -324,7 +342,7 @@ impl DijkstraMap {
     ) {
         let mut targets = targets_in.read().to_vec();
 
-        self.recalculate_map_intern(&mut targets, None, max_cost, reversed);
+        self.recalculate_map_intern(&mut targets, None, max_cost, reversed, &FnvHashMap::default());
     }
 
     //receives multiple points as targets along with initial costs.
@@ -341,7 +359,7 @@ impl DijkstraMap {
     ) {
         let mut targets = targets_in.read().to_vec();
         let costs = costs_in.read().to_vec();
-        self.recalculate_map_intern(&mut targets, Some(&costs), max_cost, reversed);
+        self.recalculate_map_intern(&mut targets, Some(&costs), max_cost, reversed, &FnvHashMap::default());
     }
 
     //functions for acccessing results
@@ -519,6 +537,7 @@ impl DijkstraMap {
         initial_costs: Option<&Vec<f32>>,
         max_cost: f32,
         reversed: bool,
+        terrain_costs: &FnvHashMap<i32,f32>,
     ) {
         //initialize containers
         self.cost_map.clear();
@@ -572,9 +591,10 @@ impl DijkstraMap {
             open_set_set.remove(&point1);
             self.sorted_points.push(point1);
             let point1_cost = self.cost_of(point1);
+            let weight_of_point1 = terrain_costs.get(&self.terrain_map.get(&point1).unwrap_or(&-1)).unwrap_or(&1.0);
             //iterrate over it's neighbours
             for (&point2, dir_cost) in connections.get(&point1).unwrap().iter() {
-                let cost = dir_cost + point1_cost;
+                let cost = point1_cost + dir_cost * 0.5 *(weight_of_point1 + terrain_costs.get(&self.terrain_map.get(&point2).unwrap_or(&-1)).unwrap_or(&1.0));
                 //add to the open set (or update values if already present)
                 //if point is enabled and new cost is better than old one, but not bigger than maximum cost
                 if cost < self.cost_of(point2)

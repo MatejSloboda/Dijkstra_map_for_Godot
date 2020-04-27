@@ -34,46 +34,55 @@ func _ready():
 		id=id+1
 		point_id_to_position[id]=pos
 		point_position_to_id[pos]=id
-		dijkstra_map_for_archers.add_point(id)
-		dijkstra_map_for_pikemen.add_point(id)
+		#we also need to specify a terrain type for the tile.
+		#terrain types can then have different weights, when DijkstraMap is recalculated
+		var terrain_type=self.get_cellv(pos)
+		dijkstra_map_for_archers.add_point(id,terrain_type)
+		dijkstra_map_for_pikemen.add_point(id,terrain_type)
 		
 	#now we need to connect the points with connections
 	#each connection has a source point, target point and a cost
-	
-	#since we have multiple tile types and want different speed modifiers for them,
-	#we will have to reflect that in costs of connections.
-	speed_modifiers[tile_set.find_tile_by_name("grass")]=1.0
-	speed_modifiers[tile_set.find_tile_by_name("bushes")]=0.5
-	speed_modifiers[tile_set.find_tile_by_name("road")]=1.5
 	
 	var orthogonal=[Vector2.DOWN,Vector2.UP,Vector2.LEFT,Vector2.RIGHT]
 	var diagonal=[Vector2.DOWN+Vector2.LEFT,Vector2.UP+Vector2.LEFT,
 	Vector2.DOWN+Vector2.RIGHT,Vector2.UP+Vector2.RIGHT]
 	
+	
 	for pos in walkable_tiles:
 		#NOTE: costs are a measure of time. they are distance/speed
-		var cost_of_current_tile=1.0/speed_modifiers[get_cellv(pos)]
 		var id_of_current_tile=point_position_to_id[pos]
 		#we loop through orthogonal tiles
+		var cost=1.0
 		for offset in orthogonal:
-			#note neighbour might not exist, so we need some default values indicating absence
-			var cost_of_neighbour=1.0/speed_modifiers.get(get_cellv(pos+offset),INF)
-			var id_of_neighbour=point_position_to_id.get(pos+offset,-1) #ID=-1 represents absent point
-			#we will set the cost as average of costs of tiles
-			var cost=(cost_of_current_tile+cost_of_neighbour)/2.0
-			#NOTE: if points dont exist, .connect_points does nothing
+			
+			var pos_of_neighbour=pos+offset
+			var id_of_neighbour=point_position_to_id.get(pos_of_neighbour,-1)
+			#we skip adding connection if point doesnt exist
+			if id_of_neighbour==-1:
+				continue
+			#now we make the connection.
+			#Note: last parameter specifies whether to also make the reverse connection too.
+			#since we loop through all points and their neighbours in both directions anyway, this would be unnecessary. 
 			dijkstra_map_for_archers.connect_points(id_of_current_tile,id_of_neighbour,cost,false)
 			dijkstra_map_for_pikemen.connect_points(id_of_current_tile,id_of_neighbour,cost,false)
 		
 		#we do the same for diagonal tiles, except cost is further multiplied by sqrt(2)
+		cost=sqrt(2.0)
 		for offset in diagonal:
-			var cost_of_neighbour=1.0/speed_modifiers.get(get_cellv(pos+offset),INF)
-			var id_of_neighbour=point_position_to_id.get(pos+offset,-1)
-			var cost=sqrt(2.0)*(cost_of_current_tile+cost_of_neighbour)/2.0
+			var pos_of_neighbour=pos+offset
+			var id_of_neighbour=point_position_to_id.get(pos_of_neighbour,-1)
+			#we skip adding connection if point doesnt exist
+			if id_of_neighbour==-1:
+				continue
 			dijkstra_map_for_archers.connect_points(id_of_current_tile,id_of_neighbour,cost,false)
 			dijkstra_map_for_pikemen.connect_points(id_of_current_tile,id_of_neighbour,cost,false)
 	
-	
+	#lastly, we specify the weights for different terrain types:
+	#note: higher value means slower movement.
+	speed_modifiers={
+		tile_set.find_tile_by_name("grass"):1.0,
+		tile_set.find_tile_by_name("bushes"):2.0,
+		tile_set.find_tile_by_name("road"):0.5}
 	#now that points are added and properly connected, we can calculate the dijkstra maps
 	recalculate_dijkstra_maps()
 	
@@ -84,28 +93,36 @@ func recalculate_dijkstra_maps():
 	var dragon=point_position_to_id.get(world_to_map(get_node("dragon").position),0)
 	
 	#we want pikemen to charge the dragon head on
-	#We recalculate the DijkstraMap.
-	#As target we set the ID of the point closest to dragon.
-	#We want the DijkstraMap to calculate as far as it can, so we pass INF.
-	#We want the dragon to be a target, not a source, so we pass false.
-	dijkstra_map_for_pikemen.recalculate_for_target(dragon,INF,false)
+	#We .recalculate the DijkstraMap.
+	#First argument is the target (ie. the ID of the point where dragon is).
+	#Second argument is a dictionary of optional parameters. For absent entries, default values are used.
+	#We will only specify the terrain weights.
+	dijkstra_map_for_pikemen.recalculate(dragon,{"terrain weights":speed_modifiers})
 	#now the map has recalculated for pikemen and we can access the data.
 	
+	
 	#we want archers to stand at safe distance from the dragon, but within firing range.
+	#dragon flies, so terrain doesnt matter
 	#first we recalculate their Dijkstra map with dragon as the source.
-	#we calculate only distance 7 since we dont need more.
-	dijkstra_map_for_archers.recalculate_for_target(dragon,INF,true)
+	#we do this by providing optional parameter "reversed":true
+	#we also do not need to calculate entire DijkstraMap, only until we have points at required distance
+	#this can be achieved by providing optional parameter "maximum cost"
+	var optional_parameters={
+		"reversed":true,
+		"maximum cost":7.0
+	}
+	dijkstra_map_for_archers.recalculate(dragon,optional_parameters)
 	#now we get IDs of all points safe distance from dragon, but within firing range
-	var stand_over_here=dijkstra_map_for_archers.get_all_points_with_cost_between(3.0,4.0)
+	var stand_over_here=dijkstra_map_for_archers.get_all_points_with_cost_between(4.0,5.0)
 	
 	#and we pass those points as new targets for the archers to walk towards
-	dijkstra_map_for_archers.recalculate_for_targets(stand_over_here,INF,false)
+	dijkstra_map_for_archers.recalculate(stand_over_here,{"terrain weights":speed_modifiers})
 	#BTW yes, Dijkstra map works for multiple target points too.
 	#The path will simply lead towards the nearest target point.
 	
 	
 func get_speed_modifier(pos):
-	return speed_modifiers.get(get_cellv(world_to_map(pos)),0.5)
+	return 1.0/speed_modifiers.get(get_cellv(world_to_map(pos)),0.5)
 
 #given position of a pikeman,
 #this method will look up the indented direction of movement for the pikeman.

@@ -14,7 +14,7 @@ pub struct DijkstraMap {
     direction_map: FnvHashMap<i32,i32>,
     sorted_points: Vec<i32>,
     disabled_points: std::collections::HashSet<i32>,
-    terrain_map: HashMap<i32,i32>,
+    terrain_map: FnvHashMap<i32,i32>,
 }
 
 
@@ -33,7 +33,7 @@ impl DijkstraMap {
             direction_map: FnvHashMap::default(),
             sorted_points: Vec::new(),
             disabled_points: std::collections::HashSet::new(),
-            terrain_map: HashMap::new(),
+            terrain_map: FnvHashMap::default(),
         }
     }
     
@@ -64,8 +64,8 @@ impl DijkstraMap {
         if self.has_point(_owner, id){
             return false
         }else{
-            self.connections.insert(id, HashMap::new());
-            self.reverse_connections.insert(id, HashMap::new());
+            self.connections.insert(id, FnvHashMap::default());
+            self.reverse_connections.insert(id, FnvHashMap::default());
             self.terrain_map.insert(id, terrain_id);
             return true
         }

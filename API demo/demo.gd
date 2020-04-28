@@ -29,9 +29,10 @@ var map_interface = IDijkstraMap.new()
 
 var pos_to_label = {}
 var pos_to_colorRect = {}
+var pos_to_arrow = {}
 
 const arrow = preload("res://API demo/dependancy/arrow.tscn")
-const vect_to_ArrowRotation= {
+const vect_to_ArrowRotation := {
 	Vector2.UP : 0,
 	Vector2.DOWN :180,
 	Vector2.LEFT :-90,
@@ -42,9 +43,10 @@ const vect_to_ArrowRotation= {
 #--------------DEMO NODE DEPENDANCY-----------------#
 
 onready var tilemap = $TileMap
+
 onready var color_rects = $UIs/color_rects
 onready var labels = $UIs/labels
-
+onready var arrows = $UIs/arrows
 
 #------------Add_source_button----------------#
 #---------------------------------------#
@@ -60,6 +62,37 @@ var sources_id  = [1]
 
 #---------------------------------------#
 #-------------Buttons Bind-----------------#
+
+func button_show_cost_map():
+	hideUI()
+	var costmap = map_interface.NativeMap.get_cost_map()
+	var max_cost = costmap.values().max() # TODO report bad syntaxcolor to godotengine
+		
+	for each_id in costmap.keys():
+		var each_pos =  map_interface.id_to_position(each_id)
+		var each_cost = costmap[each_id]
+		
+		var label_pos = tilemap.map_to_world(each_pos) + tilemap.cell_size/2
+		var crect_pos = tilemap.map_to_world(each_pos) 
+		
+		var label = pos_to_label.get(each_pos)
+		var colorRect = pos_to_colorRect.get(each_pos)
+		
+		label.text = str(each_cost)
+
+		var color #range from pale blue to bright red from 0 to max cost
+		var r = __cost_to_color(each_cost,max_cost)
+		r = max(r,2)
+		var a = min(r/255,0.75)
+		a = max(0.3,a) 
+		if a == INF: a = 1
+		color = Color(r,0,0,a)
+		
+		colorRect.color = color
+		
+		for cost_map_ui in (labels.get_children() + color_rects.get_children()):
+			cost_map_ui.show()
+#			print(cost_map_ui.name, cost_map_ui.visible)
 
 func button_remove_all_sources_but_last():
 	sources_id = PoolIntArray([last_id_selected])
@@ -81,7 +114,7 @@ func button_highlight_under_cost():
 func button_direction_map():
 	for arr in $UIs/arrows.get_children():
 		arr.free()#Im to lazy to set up the right abstraction
-		
+	push_error('fixme')
 	var dirMap = map_interface.NativeMap.get_direction_map() #dict id -> should_go_to_id
 	for k in dirMap.keys():
 		var pos = map_interface.id_to_position(k)
@@ -108,7 +141,35 @@ func _ready() -> void:
 		b.text = b.name
 		b.connect("button_down",self,'button_'+b.name)
 		if not self.has_method('button_'+b.name) : printerr("button not implemented : ",b.name)
+	#creates UI
+	#lab arrow rects
+	#for all case in grid
+	for each_map_pos in map_interface.point_id_to_position.values():
+		var each_label := Label.new()
+		var each_colorRect = ColorRect.new()
+		var each_arrow = get_arrow() #deals size
 		
+		var listUIs = [each_label,each_colorRect,each_arrow]
+		var ui_to_parent = {each_label: labels,each_colorRect: color_rects, each_arrow: arrows}
+		
+		pos_to_arrow[each_map_pos] = each_arrow
+		pos_to_colorRect[each_map_pos]= each_colorRect
+		pos_to_label[each_map_pos] = each_label
+		
+		for unsized in [each_colorRect,each_label]:
+			unsized.set_size(tilemap.cell_size)
+		
+		var each_world_pos = tilemap.map_to_world(each_map_pos)
+		each_label.set_position(each_world_pos)
+		each_colorRect.set_position(each_world_pos)
+		each_arrow.position = each_world_pos + tilemap.cell_size/2
+		
+		for ui in listUIs:
+			ui.hide()
+			ui_to_parent[ui].add_child(ui)
+	__recalculate()
+	show_appropriate()
+
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
@@ -127,47 +188,11 @@ func _input(event: InputEvent) -> void:
 
 #---------------------------------------#
 #--------------UI--------------------#
-func __show_cost_map():
-	hideUI()
-	var costmap = map_interface.NativeMap.get_cost_map()
-	var max_cost = costmap.values().max() # TODO report bad syntaxcolor to godotengine
-		
-	for each_id in costmap.keys():
-		var each_pos =  map_interface.id_to_position(each_id)
-		var each_cost = costmap[each_id]
-		
-		var label_pos = tilemap.map_to_world(each_pos) + tilemap.cell_size/2
-		var crect_pos = tilemap.map_to_world(each_pos) 
-		
-		var label = pos_to_label.get(each_pos,null)
-		var colorRect = pos_to_colorRect.get(each_pos,null)
-		
-		if not label:
-			label = get_default_label()
-			label.set_position(label_pos)
-			labels.add_child(label)
-		if not colorRect:
-			colorRect = get_default_colorRect()
-			colorRect.set_position(crect_pos)
-			color_rects.add_child(colorRect)
-			
-		label.text = str(each_cost)
 
-		var color #range from pale blue to bright red from 0 to max cost
-		var r = __cost_to_color(each_cost,max_cost)
-		r = max(r,2)
-		var a = min(r/255,0.75)
-		a = max(0.3,a) 
-		color = Color(r,0,0,a)
-		
-		colorRect.color = color
-		
-		for cost_map_ui in labels.get_children() + color_rects.get_children():
-			cost_map_ui.show()
 
 func show_appropriate():
 	if $buttons/direction_map.pressed: button_direction_map()
-	else: __show_cost_map()
+	else: button_show_cost_map()
 
 
 func __highlight(map_id_list : Array):
@@ -187,29 +212,21 @@ func hideUI():
 			each_ui_nodes.hide()	
 	 
 
-func get_default_label():
-	var l := Label.new()
-	l.hide()
-	return l 
 
-func get_default_colorRect():
-	var cr := ColorRect.new()
-	cr.set_size($TileMap.cell_size)
-	return cr
 
-func get_arrow(dir):
+func get_arrow(dir = null):
 	var ar : Sprite = arrow.instance()
 	var rect = ar.get_rect()
 	var size = 1 * rect.size
 	var ratio  = tilemap.cell_size / size
 	ar.scale = ratio
 	ar.centered = true
-	if dir in vect_to_ArrowRotation.keys(): ar.rotation_degrees = vect_to_ArrowRotation[dir]
-	else: ar.modulate = Color.black
+	ar.rotation_degrees = vect_to_ArrowRotation.get(dir,0)
 	return ar
 	
 
 func __cost_to_color(_cost,_maxcost):
+	if cost == INF: return 1
 	var ratio = inverse_lerp(0,_maxcost,_cost)
 	return lerp(0,255,ratio)
 
@@ -222,5 +239,5 @@ func __recalculate():
 	"""
 	var options = map_interface.default_options
 	options['maximum cost'] = maxcost
-	map_interface.NativeMap.recalculate_for_targets(sources_id,options)
+	map_interface.recalculate(sources_id,options)
 	push_error('not here yet')

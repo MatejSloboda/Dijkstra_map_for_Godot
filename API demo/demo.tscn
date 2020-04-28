@@ -19,12 +19,22 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="labels" type="Control" parent="."]
+[node name="UIs" type="Control" parent="."]
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="color_rects" type="Control" parent="."]
+[node name="labels" type="Control" parent="UIs"]
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="color_rects" type="Control" parent="UIs"]
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="arrows" type="Control" parent="UIs"]
 __meta__ = {
 "_edit_use_anchors_": false
 }

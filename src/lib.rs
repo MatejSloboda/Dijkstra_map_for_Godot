@@ -379,18 +379,18 @@ impl DijkstraMap {
     ///Given a point, returns ID of the next point along the shortest path toward target or from source.
     ///If given point is the target, returns ID of itself. Returns -1, if target is inaccessible from this point.
     #[export]
-    fn get_direction_at_point(&mut self, mut _owner: gdnative::Node, point: i32) -> i32 {
+    pub fn get_direction_at_point(&mut self, mut _owner: gdnative::Node, point: i32) -> i32 {
         *self.direction_map.get(&point).unwrap_or(&-1)
     }
     ///Returns cost of the shortest path from this point to the target.
     #[export]
-    fn get_cost_at_point(&mut self, mut _owner: gdnative::Node, point: i32) -> f32 {
+    pub fn get_cost_at_point(&mut self, mut _owner: gdnative::Node, point: i32) -> f32 {
         *self.cost_map.get(&point).unwrap_or(&std::f32::INFINITY)
     }
 
     ///Given a `PoolIntArray` of point IDs, returns `PoolIntArray` of IDs of points along respective shortest paths.
     #[export]
-    fn get_direction_at_points(
+    pub fn get_direction_at_points(
         &mut self,
         mut _owner: gdnative::Node,
         points: gdnative::Int32Array,
@@ -408,7 +408,7 @@ impl DijkstraMap {
     }
     ///Given a `PoolIntArray` of point IDs, returns `PoolRealArray` of costs of shortest paths from those points.
     #[export]
-    fn get_cost_at_points(
+    pub fn get_cost_at_points(
         &mut self,
         mut _owner: gdnative::Node,
         points: gdnative::Int32Array,
@@ -431,7 +431,7 @@ impl DijkstraMap {
     ///Returns the entire Dijktra map of costs in form of a `Dictionary`. Keys are points' IDs and values are costs.
     ///Inaccessible points are not present in the dictionary.
     #[export]
-    fn get_cost_map(&mut self, mut _owner: gdnative::Node) -> gdnative::Dictionary {
+    pub fn get_cost_map(&mut self, mut _owner: gdnative::Node) -> gdnative::Dictionary {
         let mut dict = gdnative::Dictionary::new();
         for id in self.sorted_points.iter() {
             dict.set(
@@ -444,7 +444,7 @@ impl DijkstraMap {
 
     ///Returns the entire Dijkstra map of directions in form of a `Dictionary`
     #[export]
-    fn get_direction_map(&mut self, mut _owner: gdnative::Node) -> gdnative::Dictionary {
+    pub fn get_direction_map(&mut self, mut _owner: gdnative::Node) -> gdnative::Dictionary {
         let mut dict = gdnative::Dictionary::new();
         for id in self.sorted_points.iter() {
             dict.set(
@@ -457,7 +457,7 @@ impl DijkstraMap {
 
     ///returns `PoolIntArray` of IDs of all points with costs between `min_cost` and `max_cost` (inclusive), sorted by cost.
     #[export]
-    fn get_all_points_with_cost_between(
+    pub fn get_all_points_with_cost_between(
         &mut self,
         mut _owner: gdnative::Node,
         min_cost: f32,
@@ -501,7 +501,7 @@ impl DijkstraMap {
     ///returns `PoolIntArray` of point IDs corresponding to a shortest path from given point (note: given point isn't included).
     ///If point is a target or is inaccessible, returns empty array.
     #[export]
-    fn get_shortest_path_from_point(
+    pub fn get_shortest_path_from_point(
         &mut self,
         mut _owner: gdnative::Node,
         point: i32,
@@ -640,7 +640,7 @@ impl DijkstraMap {
     ///second argument is a `Dictionary`, that defines connections. Keys are relative positions of points in the grid and values are costs.
     ///Example for orthogonal (4-directional) movement `{Vector2(1,0): 1.0, Vector(0,1): 1.0, Vector2(-1,0): 1.0, Vector(0,-1): 1.0}`
     #[export]
-    unsafe fn initialize_as_grid(
+    pub fn initialize_as_grid(
         &mut self,
         mut _owner: gdnative::Node,
         bitmap: gdnative::BitMap,

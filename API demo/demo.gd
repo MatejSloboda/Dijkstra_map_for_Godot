@@ -13,151 +13,165 @@ and you can have way better performance yourself
 
 
 
-
+#--------------EXPORTS----------------#
+#---------------------------------------#
 export(float) var maxcost = INF
+export var reversed := true
 export(float) var cost = 1
 export var _len := 20
 export(Color) var highlight_color = Color.aqua
+#---------------------------------------#
+#----------------INTERFACES-----------------#
 
 var map_interface = IDijkstraMap.new()
 
+#---------------------------------------#
+#---------------UI DEPENDANCY-----------------#
+
+var pos_to_label = {}
+var pos_to_colorRect = {}
+var pos_to_arrow = {}
+
 const arrow = preload("res://API demo/dependancy/arrow.tscn")
-const vect_to_ArrowRotation= {
+const vect_to_ArrowRotation := {
 	Vector2.UP : 0,
 	Vector2.DOWN :180,
 	Vector2.LEFT :-90,
 	Vector2.RIGHT :90,
-}
+	}
+
+#---------------------------------------------------#
+#--------------DEMO NODE DEPENDANCY-----------------#
 
 onready var tilemap = $TileMap
 
+onready var color_rects = $UIs/color_rects
+onready var labels = $UIs/labels
+onready var arrows = $UIs/arrows
 
-var sources_id  = [1]
+#------------Add_source_button----------------#
+#---------------------------------------#
+var last_id_selected = 0
+var sources_id  = [0]
+#---------------------------------------#
 
-func _ready() -> void:
-	#initiate cost map with connections
-	map_interface.creating_square_map(_len)
-	map_interface.connect_all_points_to_neighbours(cost)
-	__calculate_and_show()
-	
-	#bind buttons
-	for b in $buttons.get_children():
-		var bind_function = "not implemented"
-		b.text = b.name
-		match b.name:
-			"show_cost_map":
-				bind_function = "__show_cost_map"
-			"direction_map":
-				bind_function = "show_direction_map"
-			"direction_map":
-				bind_function = "show_direction_map"
-			"highlight_under_cost":
-				bind_function = "highlight_under_cost"
-			"remove_all_sources_but_last":
-				bind_function = "remove_all_sources_but_last"
-		
-		b.connect("button_down",self,bind_function)
-		
 
-func __recalculate():
-	
-	map_interface.recalculate_for_targets( PoolIntArray(sources_id),maxcost,true)
-	if len(sources_id) == 1: map_interface.recalculate_for_target(sources_id[0],maxcost,true)
 
-func __show_cost_map():
-	cleanUI()
+#---------------------------------------#
+#--------------FONCTIONS----------------#
+
+
+#---------------------------------------#
+#-------------Buttons Bind-----------------#
+
+func button_show_cost_map():
+	hideUI()
 	var costmap = map_interface.NativeMap.get_cost_map()
-	var max_cost = costmap.values().max() # TODO report syntaxcolor to github
+	var max_cost = costmap.values().max() # TODO report bad syntaxcolor to godotengine
 		
 	for each_id in costmap.keys():
 		var each_pos =  map_interface.id_to_position(each_id)
 		var each_cost = costmap[each_id]
 		
-		var label_pos = tilemap.map_to_world(each_pos) + tilemap.cell_size/2
-		var crect_pos = tilemap.map_to_world(each_pos) 
+		var label = pos_to_label.get(each_pos)
+		var colorRect = pos_to_colorRect.get(each_pos)
 		
-		var label = Label.new()
-		label.set_position(label_pos)
 		label.text = str(each_cost)
-		$labels.add_child(label)
-		
-		var color #range from pale blue to bright red from 0 to max cost
 
-		var r = __cost_to_color(each_cost,max_cost)
-		r = max(r,2)
-#		var b = 255 - r
-		#a in 0.3 ; 1
-		var a = min(r/255,0.75)
-		a = max(0.3,a) 
-		
-		color = Color(r,0,0,a)
-		
-		var color_rect := ColorRect.new()
-		color_rect.set_position(crect_pos)
-		color_rect.color = color
-		color_rect.set_size($TileMap.cell_size)
-		$color_rects.add_child(color_rect)
+		var color : Color#range from pale blue to bright red from 0 to max cost
+#		print(each_cost,INF,each_cost == INF)
+		if each_cost == INF:
+			color = Color.black
+		else:
+			var r = __cost_to_color(each_cost,max_cost)
+			r = max(r,2)
+			var a 
+			a = min(r/255,0.75)
+			a = max(0.3,a)
+			a = min(a, 1)
+			color = Color(r,0,0,a)
+		colorRect.color = color
 		
 
-func cleanUI():
-	for lab in $labels.get_children():
-		lab.free()
-	for cr in $color_rects.get_children():
-		cr.free()
+		for cost_map_ui in (labels.get_children() + color_rects.get_children()):
+			cost_map_ui.show()
 
-func remove_all_sources_but_last():
-#	var last = int(sources_id.pop_back())
-#	print(last)
-#	sources_id = [last]
-	#dont work otherwise, dont know why, its calculatewithtargets that bug but dont crashes :/ silent fail are not a good thing
-	sources_id = [1]
-	cleanUI()
-	__calculate_and_show()
+func button_remove_all_sources_but_last():
+	sources_id.clear()
+	sources_id = [last_id_selected]
+	__recalculate()
+	hideUI()
+	show_appropriate()
 
+func button_add_source():
+	pass #look in _input
 
-func hide_cost_map():
-	cleanUI()
-
-func __highlight(map_id_list : Array):
-	#pos to world
-	for each_id in map_id_list:
-		if each_id == -1:continue
-		var each_map_pos = map_interface.id_to_position(each_id)
-		var each_world_pos = tilemap.map_to_world(each_map_pos)
-		var Rec = ColorRect.new()
-		Rec.set_position(each_world_pos)
-		Rec.color = highlight_color
-		Rec.set_size(tilemap.cell_size)
-		$color_rects.add_child(Rec)
-	
-func __cost_to_color(cost,maxcost):
-	var ratio = inverse_lerp(0,maxcost,cost)
-	return lerp(0,255,ratio)
-
-func highlight_under_cost():
-	__calculate_and_show()
+func button_highlight_under_cost():
+	hideUI()
+	show_appropriate()
 	var _min = $cost_min.value
 	var _max = $cost_max.value
 	var ids = map_interface.NativeMap.get_all_points_with_cost_between(float(_min),float(_max))
 	__highlight(ids)
 
-func show_direction_map():
+func button_direction_map():
+	hideUI()
 	var dirMap = map_interface.NativeMap.get_direction_map() #dict id -> should_go_to_id
-	var pos_should_go_to_pos = {}
 	for k in dirMap.keys():
-		var pos = map_interface.id_to_position(k)
-		var SGTpos = map_interface.id_to_position(dirMap[k])
-		var dir = SGTpos - pos
-		var world_pos = tilemap.map_to_world(pos) + tilemap.cell_size/2
-		var arrow = get_arrow(dir)
-		arrow.position = world_pos
-		$color_rects.add_child(arrow)
+		var map_pos = map_interface.id_to_position(k)
+		var GOTOpos = map_interface.id_to_position(dirMap[k])
+		var dir = - GOTOpos + map_pos
+		
+		var arrow = pos_to_arrow[map_pos]
+		var rotation = vect_to_ArrowRotation.get(dir)
+		print(dir)
+		if rotation:
+			arrow.rotation_degrees = rotation + 180
+			arrow.show()
 
-func __calculate_and_show():
+
+#---------------------------------------#
+#----------------NODE-------------------#
+
+func _ready() -> void:
+	#initiate cost map with connections
+	map_interface.creating_square_map(_len) #bind this to gdnative
+	map_interface.connect_all_points_to_neighbours(cost)
+#	__calculate_and_show_appropriate()
+
+	#bind buttons
+	for b in $buttons.get_children():
+		b.text = b.name
+		b.connect("button_down",self,'button_'+b.name)
+		if not self.has_method('button_'+b.name) : printerr("button not implemented : ",b.name)
+	#creates UI
+	#lab arrow rects
+	#for all case in grid
+	for each_map_pos in map_interface.point_id_to_position.values():
+		var each_label := Label.new()
+		var each_colorRect = ColorRect.new()
+		var each_arrow = get_arrow() #deals size
+		
+		var listUIs = [each_label,each_colorRect,each_arrow]
+		var ui_to_parent = {each_label: labels,each_colorRect: color_rects, each_arrow: arrows}
+		
+		pos_to_arrow[each_map_pos] = each_arrow
+		pos_to_colorRect[each_map_pos]= each_colorRect
+		pos_to_label[each_map_pos] = each_label
+		
+		for unsized in [each_colorRect,each_label]:
+			unsized.set_size(tilemap.cell_size)
+		
+		var each_world_pos = tilemap.map_to_world(each_map_pos)
+		each_label.set_position(each_world_pos)
+		each_colorRect.set_position(each_world_pos)
+		each_arrow.position = each_world_pos + tilemap.cell_size/2
+		
+		for ui in listUIs:
+			ui.hide()
+			ui_to_parent[ui].add_child(ui)
 	__recalculate()
-	cleanUI()
-	if $buttons/direction_map.pressed: show_direction_map()
-	else: __show_cost_map()
+	show_appropriate()
 
 
 func _input(event: InputEvent) -> void:
@@ -166,18 +180,68 @@ func _input(event: InputEvent) -> void:
 			if $buttons/add_source.pressed:
 				var map_pos = tilemap.world_to_map(event.position)
 				var map_id = map_interface.position_to_id(map_pos)
+				last_id_selected = map_id
 				if not map_id in sources_id:
 					sources_id.append(map_id)
-					__calculate_and_show()
-			
-func get_arrow(dir):
+					hideUI()
+				__recalculate()
+				show_appropriate()
+
+
+
+#---------------------------------------#
+#--------------UI--------------------#
+
+
+func show_appropriate():
+	if $buttons/direction_map.pressed: button_direction_map()
+	else: button_show_cost_map()
+
+
+func __highlight(map_id_list : Array):
+	#pos to world
+	for each_id in map_id_list:
+		if each_id == -1:continue
+		var each_map_pos = map_interface.id_to_position(each_id)
+		var Rec = pos_to_colorRect.get(each_map_pos,null)
+		if not Rec: return
+		Rec.color = highlight_color
+		Rec.show()
+
+
+func hideUI():
+	for parentui in $UIs.get_children():
+		for each_ui_nodes in parentui.get_children():
+			each_ui_nodes.hide()	
+	 
+
+
+
+func get_arrow(dir = null):
 	var ar : Sprite = arrow.instance()
 	var rect = ar.get_rect()
 	var size = 1 * rect.size
 	var ratio  = tilemap.cell_size / size
 	ar.scale = ratio
 	ar.centered = true
-	if dir in vect_to_ArrowRotation.keys(): ar.rotation_degrees = vect_to_ArrowRotation[dir]
-	else: ar.modulate = Color.black
+	ar.rotation_degrees = vect_to_ArrowRotation.get(dir,0)
 	return ar
 	
+
+func __cost_to_color(_cost,_maxcost):
+	if cost == INF: return 1
+	var ratio = inverse_lerp(0,_maxcost,_cost)
+	return lerp(0,255,ratio)
+
+#---------------------------------------#
+#--------------Dijkstra------------------#
+
+func __recalculate():
+	"""
+	recalculates Dmap
+	"""
+	var options = map_interface.default_options
+	options['maximum cost'] = maxcost
+	options['reversed'] = reversed
+	map_interface.recalculate(sources_id,options)
+	push_error('not here yet')

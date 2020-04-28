@@ -4,6 +4,7 @@
 
 [node name="Node2D" type="Node2D"]
 script = ExtResource( 1 )
+_len = 30
 highlight_color = Color( 0, 0.203922, 1, 0.443137 )
 
 [node name="TileMap" type="TileMap" parent="."]
@@ -19,12 +20,22 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="labels" type="Control" parent="."]
+[node name="UIs" type="Control" parent="."]
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="color_rects" type="Control" parent="."]
+[node name="labels" type="Control" parent="UIs"]
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="color_rects" type="Control" parent="UIs"]
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="arrows" type="Control" parent="UIs"]
 __meta__ = {
 "_edit_use_anchors_": false
 }

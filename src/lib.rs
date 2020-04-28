@@ -34,9 +34,9 @@ impl DijkstraMap {
         }
     }
 
-    //clears the DijkstraMap.
+    ///clears the DijkstraMap.
     #[export]
-    fn clear(&mut self, mut _owner: gdnative::Node) {
+    pub fn clear(&mut self, mut _owner: gdnative::Node) {
         self.connections.clear();
         self.reverse_connections.clear();
         self.cost_map.clear();
@@ -46,18 +46,18 @@ impl DijkstraMap {
         self.terrain_map.clear();
     }
 
-    //returns next ID not associated with any point
+    ///returns next ID not associated with any point
     #[export]
-    fn get_available_point_id(&mut self, mut _owner: gdnative::Node) -> i32 {
+    pub fn get_available_point_id(&mut self, mut _owner: gdnative::Node) -> i32 {
         let mut id: i32 = 0;
         while self.has_point(_owner, id) {
             id = id + 1;
         }
         id
     }
-    //Adds new point with given ID and terrain ID into the graph and returns OK. If point with that ID already exists, does nothing and returns FAILED.
+    ///Adds new point with given ID and terrain ID into the graph and returns OK. If point with that ID already exists, does nothing and returns FAILED.
     #[export]
-    fn add_point(&mut self, mut _owner: gdnative::Node, id: i32, terrain_id: i32) -> i64 {
+    pub fn add_point(&mut self, mut _owner: gdnative::Node, id: i32, terrain_id: i32) -> i64 {
         if self.has_point(_owner, id) {
             gdnative::GlobalConstants::FAILED
         } else {
@@ -68,9 +68,9 @@ impl DijkstraMap {
         }
     }
 
-    //sets terrain ID for given point and returns OK. If point doesn't exist, returns FAILED
+    ///sets terrain ID for given point and returns OK. If point doesn't exist, returns FAILED
     #[export]
-    fn set_terrain_for_point(
+    pub fn set_terrain_for_point(
         &mut self,
         mut _owner: gdnative::Node,
         id: i32,
@@ -84,15 +84,15 @@ impl DijkstraMap {
         }
     }
 
-    //gets terrain ID for given point. Returns -1 if given point doesn't exist.
+    ///gets terrain ID for given point. Returns -1 if given point doesn't exist.
     #[export]
-    fn get_terrain_for_point(&mut self, mut _owner: gdnative::Node, id: i32) -> i32 {
+    pub fn get_terrain_for_point(&mut self, mut _owner: gdnative::Node, id: i32) -> i32 {
         return *self.terrain_map.get(&id).unwrap_or(&-1);
     }
 
     //Removes point from graph along with all of its connections and returns OK. If point doesn't exist, returns FAILED.
     #[export]
-    fn remove_point(&mut self, mut _owner: gdnative::Node, point: i32) -> i64 {
+    pub fn remove_point(&mut self, mut _owner: gdnative::Node, point: i32) -> i64 {
         self.disabled_points.remove(&point);
         //remove this point's entry from connections
         match self.connections.remove(&point) {
@@ -117,14 +117,14 @@ impl DijkstraMap {
     }
     //Returns true if point exists.
     #[export]
-    fn has_point(&mut self, mut _owner: gdnative::Node, id: i32) -> bool {
+    pub fn has_point(&mut self, mut _owner: gdnative::Node, id: i32) -> bool {
         self.connections.contains_key(&id)
     }
 
-    //Disables point from pathfinding and returns true. If point doesn't exist, returns false.
-    //Note: points are enabled by default.
+    ///Disables point from pathfinding and returns true. If point doesn't exist, returns false.
+    ///Note: points are enabled by default.
     #[export]
-    fn disable_point(&mut self, mut _owner: gdnative::Node, point: i32) -> i64 {
+    pub fn disable_point(&mut self, mut _owner: gdnative::Node, point: i32) -> i64 {
         if self.connections.contains_key(&point) {
             self.disabled_points.insert(point);
             gdnative::GlobalConstants::OK
@@ -133,10 +133,10 @@ impl DijkstraMap {
         }
     }
 
-    //Enables point for pathfinding and returns OK. If point doesn't exist, returns FAILED.
-    //Note: points are enabled by default.
+    ///Enables point for pathfinding and returns OK. If point doesn't exist, returns FAILED.
+    ///Note: points are enabled by default.
     #[export]
-    fn enable_point(&mut self, mut _owner: gdnative::Node, point: i32) -> i64 {
+    pub fn enable_point(&mut self, mut _owner: gdnative::Node, point: i32) -> i64 {
         if self.connections.contains_key(&point) {
             self.disabled_points.remove(&point); //assumes it works
             gdnative::GlobalConstants::OK
@@ -145,9 +145,9 @@ impl DijkstraMap {
         }
     }
 
-    //Returns true if point exists and is disabled. Returns false otherwise.
+    ///Returns true if point exists and is disabled. Returns false otherwise.
     #[export]
-    fn is_point_disabled(&mut self, mut _owner: gdnative::Node, point: i32) -> bool {
+    pub fn is_point_disabled(&mut self, mut _owner: gdnative::Node, point: i32) -> bool {
         if self.connections.contains_key(&point) && self.disabled_points.contains(&point) {
             true
         } else {
@@ -155,11 +155,11 @@ impl DijkstraMap {
         }
     }
 
-    //Adds connection with given cost (or cost of existing existing connection) between a source point and target point if they exist.
-    //Returns true if connection already existed.
-    //If bidirectional is true, it also adds connection from target to source too. Returns OK if connection existed in at least one direction.
+    ///Adds connection with given cost (or cost of existing existing connection) between a source point and target point if they exist.
+    ///Returns true if connection already existed.
+    ///If bidirectional is true, it also adds connection from target to source too. Returns OK if connection existed in at least one direction.
     #[export]
-    fn connect_points(
+    pub fn connect_points(
         &mut self,
         mut _owner: gdnative::Node,
         source: i32,
@@ -198,10 +198,10 @@ impl DijkstraMap {
         }
     }
 
-    //Removes connection between source point and target point. Returns OK if both points and their connection existed.
-    //If bidirectional is true, it also removes connection from target to source. Returns OK if connection existed in at least one direction.
+    ///Removes connection between source point and target point. Returns OK if both points and their connection existed.
+    ///If bidirectional is true, it also removes connection from target to source. Returns OK if connection existed in at least one direction.
     #[export]
-    fn remove_connection(
+    pub fn remove_connection(
         &mut self,
         mut _owner: gdnative::Node,
         source: i32,
@@ -223,25 +223,37 @@ impl DijkstraMap {
         }
     }
 
-    //Returns true if source point and target point both exist and there's connection from source to target.
+    ///Returns true if source point and target point both exist and there's connection from source to target.
     #[export]
-    fn has_connection(&mut self, mut _owner: gdnative::Node, source: i32, target: i32) -> bool {
+    pub fn has_connection(&mut self, mut _owner: gdnative::Node, source: i32, target: i32) -> bool {
         match self.connections.get(&source) {
             None => false,
             Some(src) => src.contains_key(&target),
         }
     }
 
-    //methods for recalculating Dijkstra map
-    //recalculate_* methods recalculate cost and direction information for each point, overriding previous results.
-    //if reversed option is true, provided target will be treated as a source (ie. shortest paths are assumed to start at the source)
-    //and directions will point towards that source.
-    //If all connections in the graph are symmetric (always bidirectional with identical cost), then this option has no effect.
-    //max_cost specifies a maximum total cost for a path. Algorithm will terminate after it finds all paths shorter than that.
-    //all points with longer paths are treated as inaccessible.
-
+    //pub const OPTIONAL_ARGUMENT_MAXIMUM_COST: u64=1;
+    //pub const OPTIONAL_ARGUMENT_INITIAL_WEIGHTS: u64=2;
+    //pub const OPTIONAL_ARGUMENT_TERRAIN_WEIGHTS: u64=3;
+    //pub const OPTIONAL_ARGUMENT_TARGET_AS_SOURCE: u64=4;
+    
+    ///Recalculates cost map and direction map information fo each point, overriding previous results.  
+    ///First argument is ID of the target point or array of IDs (preferably `PoolIntArray`).
+    /// 
+    ///Second argument is a `Dictionary`, specifying optional arguments.Possibilities:
+    /// * `"reversed"`->`bool`:
+    /// if true treats the target as the source (matters only if connections are not bidirectionally symmetric). Default value: `false`
+    /// * `"maximum cost"`->`float`:
+    /// Specifies maximum cost. Once all shortest paths no longer than maximum cost are found, algorithm terminates.
+    /// All points with cost bigger than this are treated as inaccessible. Default value: `INFINITY`
+    /// * `"initial costs"`->`PoolRealArray` or `Array`:
+    /// Specifies initial costs for given targets. Values are paired with corresponding indices in the targets argument.
+    /// Can be used to weigh the targets with a preference. By default, initial cost is `0.0`.
+    /// * `"terrain weights"`->`Dictionary`:
+    /// Specifies weights for terrain types. Keys are terrain type IDs  and values weights as floats.
+    /// Unspecified values are assumed to be `1.0` by default. 
     #[export]
-    fn recalculate(
+    pub fn recalculate(
         &mut self,
         mut _owner: gdnative::Node,
         target: gdnative::Variant,
@@ -364,19 +376,19 @@ impl DijkstraMap {
 
     //functions for acccessing results
 
-    //Given a point, returns ID of the next point along the shortest path toward target or from source.
-    //If given point is the target, returns ID of itself. Returns -1, if target is inaccessible from this point.
+    ///Given a point, returns ID of the next point along the shortest path toward target or from source.
+    ///If given point is the target, returns ID of itself. Returns -1, if target is inaccessible from this point.
     #[export]
     fn get_direction_at_point(&mut self, mut _owner: gdnative::Node, point: i32) -> i32 {
         *self.direction_map.get(&point).unwrap_or(&-1)
     }
-    //Returns cost of the shortest path from this point to the target.
+    ///Returns cost of the shortest path from this point to the target.
     #[export]
     fn get_cost_at_point(&mut self, mut _owner: gdnative::Node, point: i32) -> f32 {
         *self.cost_map.get(&point).unwrap_or(&std::f32::INFINITY)
     }
 
-    //Given a PoolIntArray of point IDs, returns PoolIntArray of IDs of points along respective shortest paths.
+    ///Given a `PoolIntArray` of point IDs, returns `PoolIntArray` of IDs of points along respective shortest paths.
     #[export]
     fn get_direction_at_points(
         &mut self,
@@ -394,7 +406,7 @@ impl DijkstraMap {
         }
         dirs
     }
-    //Given a PoolIntArray of point IDs, returns PoolRealArray of costs of shortest paths from those points.
+    ///Given a `PoolIntArray` of point IDs, returns `PoolRealArray` of costs of shortest paths from those points.
     #[export]
     fn get_cost_at_points(
         &mut self,
@@ -416,8 +428,8 @@ impl DijkstraMap {
         costs
     }
 
-    //Returns the entire Dijktra map of costs in form of a dictionary. Keys are points' IDs and values are costs.
-    //Inaccessible points are not present in the dictionary.
+    ///Returns the entire Dijktra map of costs in form of a `Dictionary`. Keys are points' IDs and values are costs.
+    ///Inaccessible points are not present in the dictionary.
     #[export]
     fn get_cost_map(&mut self, mut _owner: gdnative::Node) -> gdnative::Dictionary {
         let mut dict = gdnative::Dictionary::new();
@@ -430,7 +442,7 @@ impl DijkstraMap {
         dict
     }
 
-    //Returns the entire Dijkstra map of directions
+    ///Returns the entire Dijkstra map of directions in form of a `Dictionary`
     #[export]
     fn get_direction_map(&mut self, mut _owner: gdnative::Node) -> gdnative::Dictionary {
         let mut dict = gdnative::Dictionary::new();
@@ -443,7 +455,7 @@ impl DijkstraMap {
         dict
     }
 
-    //returns all points with costs between min_cost and max_cost (inclusive), in sorted order.
+    ///returns `PoolIntArray` of IDs of all points with costs between `min_cost` and `max_cost` (inclusive), sorted by cost.
     #[export]
     fn get_all_points_with_cost_between(
         &mut self,
@@ -486,8 +498,8 @@ impl DijkstraMap {
         poolintarray
     }
 
-    //returns PoolIntArray of point IDs corresponding to a shortest path from given point (note: given point isn't included).
-    //If point is a target or is inaccessible, returns empty array.
+    ///returns `PoolIntArray` of point IDs corresponding to a shortest path from given point (note: given point isn't included).
+    ///If point is a target or is inaccessible, returns empty array.
     #[export]
     fn get_shortest_path_from_point(
         &mut self,
@@ -620,11 +632,13 @@ impl DijkstraMap {
         }
     }
 
-    //initializes map as a 2D grid. Walkable tiles are specified by BitMap (true=>point gets added, false=>point gets ignored).
-    //point IDs are setup such that ID=(x+w*width)+initial_offset. Conversely x=(ID-initial_offset)%width and y=(ID-initial_offset)/width
-    //warning: If points with reqired IDs already exist, this method will treat them as part of the grid.
-    //second argument is a Dictionary, that defines connections. Keys are relative positions of points in the grid and values are costs.
-    //Example for orthogonal (4-directional) movement {Vector2(1,0): 1.0, Vector(0,1): 1.0, Vector2(-1,0): 1.0, Vector(0,-1): 1.0}
+    ///initializes map as a 2D grid. Walkable tiles are specified by `BitMap` (`true`=>point gets added, `false`=>point gets ignored).
+    ///point IDs are setup such that `ID=(x+w*width)+initial_offset`. Conversely `x=(ID-initial_offset)%width` and `y=(ID-initial_offset)/width`
+    /// 
+    ///warning: If points with reqired IDs already exist, this method will treat them as part of the grid.
+    /// 
+    ///second argument is a `Dictionary`, that defines connections. Keys are relative positions of points in the grid and values are costs.
+    ///Example for orthogonal (4-directional) movement `{Vector2(1,0): 1.0, Vector(0,1): 1.0, Vector2(-1,0): 1.0, Vector(0,-1): 1.0}`
     #[export]
     unsafe fn initialize_as_grid(
         &mut self,

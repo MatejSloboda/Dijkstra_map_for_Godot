@@ -107,6 +107,8 @@ func recalculate_dijkstra_maps():
 	#we do this by providing optional parameter "reversed":true
 	#we also do not need to calculate entire DijkstraMap, only until we have points at required distance
 	#this can be achieved by providing optional parameter "maximum cost"
+	
+	
 	var optional_parameters={
 		"reversed":true,
 		"maximum cost":7.0

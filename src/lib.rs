@@ -170,9 +170,9 @@ impl DijkstraMap {
         if bidirectional {
             let a = self.connect_points(_owner, source, target, cost, false);
             let b = self.connect_points(_owner, target, source, cost, false);
-            match a == gdnative::GlobalConstants::OK || b == gdnative::GlobalConstants::OK {
-                true => gdnative::GlobalConstants::OK,
-                false => gdnative::GlobalConstants::FAILED,
+            match a == gdnative::GlobalConstants::FAILED || b == gdnative::GlobalConstants::FAILED {
+                true => gdnative::GlobalConstants::FAILED,
+                false => gdnative::GlobalConstants::OK,
             }
         } else if !self.connections.contains_key(&source)
             || !self.reverse_connections.contains_key(&target)

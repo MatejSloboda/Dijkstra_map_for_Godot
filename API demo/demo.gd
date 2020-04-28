@@ -16,6 +16,7 @@ and you can have way better performance yourself
 #--------------EXPORTS----------------#
 #---------------------------------------#
 export(float) var maxcost = INF
+export var reversed := true
 export(float) var cost = 1
 export var _len := 20
 export(Color) var highlight_color = Color.aqua
@@ -50,8 +51,8 @@ onready var arrows = $UIs/arrows
 
 #------------Add_source_button----------------#
 #---------------------------------------#
-var last_id_selected
-var sources_id  = [1]
+var last_id_selected = 0
+var sources_id  = [0]
 #---------------------------------------#
 
 
@@ -72,30 +73,32 @@ func button_show_cost_map():
 		var each_pos =  map_interface.id_to_position(each_id)
 		var each_cost = costmap[each_id]
 		
-		var label_pos = tilemap.map_to_world(each_pos) + tilemap.cell_size/2
-		var crect_pos = tilemap.map_to_world(each_pos) 
-		
 		var label = pos_to_label.get(each_pos)
 		var colorRect = pos_to_colorRect.get(each_pos)
 		
 		label.text = str(each_cost)
 
-		var color #range from pale blue to bright red from 0 to max cost
-		var r = __cost_to_color(each_cost,max_cost)
-		r = max(r,2)
-		var a = min(r/255,0.75)
-		a = max(0.3,a) 
-		if a == INF: a = 1
-		color = Color(r,0,0,a)
-		
+		var color : Color#range from pale blue to bright red from 0 to max cost
+#		print(each_cost,INF,each_cost == INF)
+		if each_cost == INF:
+			color = Color.black
+		else:
+			var r = __cost_to_color(each_cost,max_cost)
+			r = max(r,2)
+			var a 
+			a = min(r/255,0.75)
+			a = max(0.3,a)
+			a = min(a, 1)
+			color = Color(r,0,0,a)
 		colorRect.color = color
 		
+
 		for cost_map_ui in (labels.get_children() + color_rects.get_children()):
 			cost_map_ui.show()
-#			print(cost_map_ui.name, cost_map_ui.visible)
 
 func button_remove_all_sources_but_last():
-	sources_id = PoolIntArray([last_id_selected])
+	sources_id.clear()
+	sources_id = [last_id_selected]
 	__recalculate()
 	hideUI()
 	show_appropriate()
@@ -112,19 +115,19 @@ func button_highlight_under_cost():
 	__highlight(ids)
 
 func button_direction_map():
-	for arr in $UIs/arrows.get_children():
-		arr.free()#Im to lazy to set up the right abstraction
-	push_error('fixme')
+	hideUI()
 	var dirMap = map_interface.NativeMap.get_direction_map() #dict id -> should_go_to_id
 	for k in dirMap.keys():
-		var pos = map_interface.id_to_position(k)
+		var map_pos = map_interface.id_to_position(k)
 		var GOTOpos = map_interface.id_to_position(dirMap[k])
-		var dir = GOTOpos - pos
+		var dir = - GOTOpos + map_pos
 		
-		var world_pos = tilemap.map_to_world(pos) + tilemap.cell_size/2
-		var arrow = get_arrow(dir)
-		arrow.position = world_pos
-		$arrows.add_child(arrow)
+		var arrow = pos_to_arrow[map_pos]
+		var rotation = vect_to_ArrowRotation.get(dir)
+		print(dir)
+		if rotation:
+			arrow.rotation_degrees = rotation + 180
+			arrow.show()
 
 
 #---------------------------------------#
@@ -177,12 +180,12 @@ func _input(event: InputEvent) -> void:
 			if $buttons/add_source.pressed:
 				var map_pos = tilemap.world_to_map(event.position)
 				var map_id = map_interface.position_to_id(map_pos)
+				last_id_selected = map_id
 				if not map_id in sources_id:
-					last_id_selected = map_id
 					sources_id.append(map_id)
 					hideUI()
-					__recalculate()
-					show_appropriate()
+				__recalculate()
+				show_appropriate()
 
 
 
@@ -239,5 +242,6 @@ func __recalculate():
 	"""
 	var options = map_interface.default_options
 	options['maximum cost'] = maxcost
+	options['reversed'] = reversed
 	map_interface.recalculate(sources_id,options)
 	push_error('not here yet')

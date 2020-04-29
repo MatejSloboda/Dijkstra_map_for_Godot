@@ -206,12 +206,13 @@ impl DijkstraMap {
                 .unwrap()
                 .insert(source, cost);
 
-            if _connection_is_valid {
+            gdnative::GlobalConstants::OK
+            /* if _connection_is_valid {
                 gdnative::GlobalConstants::OK
             }
             else {
                 gdnative::GlobalConstants::FAILED
-            }
+            } */
         }
     }
     

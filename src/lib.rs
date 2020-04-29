@@ -156,8 +156,9 @@ impl DijkstraMap {
     }
 
     ///Adds connection with given cost (or cost of existing existing connection) between a source point and target point if they exist.
-    ///Returns true if connection already existed.
-    ///If bidirectional is true, it also adds connection from target to source too. Returns OK if connection existed in at least one direction.
+    /// if the connection is added successfuly return OK
+    /// if they one of the point dont exist returns FAILED
+    ///If bidirectional is true, it also adds connection from target to source too. if not at least one connection is not successful Returns FAILED.
     #[export]
     pub fn connect_points(
         &mut self,
@@ -170,33 +171,46 @@ impl DijkstraMap {
         if bidirectional {
             let a = self.connect_points(_owner, source, target, cost, false);
             let b = self.connect_points(_owner, target, source, cost, false);
-            match a == gdnative::GlobalConstants::FAILED || b == gdnative::GlobalConstants::FAILED {
-                true => gdnative::GlobalConstants::FAILED,
-                false => gdnative::GlobalConstants::OK,
+            if a == gdnative::GlobalConstants::FAILED || b == gdnative::GlobalConstants::FAILED 
+            {
+                return gdnative::GlobalConstants::FAILED;
             }
-        } else if !self.connections.contains_key(&source)
-            || !self.reverse_connections.contains_key(&target)
-        {
-            gdnative::GlobalConstants::FAILED
-        } else {
-            let cost_got_updated: i64;
+            else {
+                return gdnative::GlobalConstants::OK;
+            }
+        }
+
+/*         else if !self.connections.contains_key(&source)
+            || !self.reverse_connections.contains_key(&target) {
+            gdnative::GlobalConstants::FAILED */
+        else {
+            let _cost_got_updated_or_created: bool = false;
             match self.connections.get_mut(&source) {
                 None => return gdnative::GlobalConstants::FAILED,
                 Some(cons) => {
                     let prev = cons.insert(target, cost);
-                    cost_got_updated = match prev.is_some() {
-                        true => gdnative::GlobalConstants::OK,
-                        false => gdnative::GlobalConstants::FAILED,
+                    let _cost_got_updated_or_created = if prev.is_some() {
+                            prev == Some(cost)
+                        }
+                        else {
+                            true
+                        };
                     }
                 }
-            }
             self.reverse_connections
                 .get_mut(&target)
                 .unwrap()
                 .insert(source, cost);
-            cost_got_updated
+
+            if _cost_got_updated_or_created {
+                gdnative::GlobalConstants::OK
+            }
+            else {
+                gdnative::GlobalConstants::FAILED
+            }
         }
     }
+    
 
     ///Removes connection between source point and target point. Returns OK if both points and their connection existed.
     ///If bidirectional is true, it also removes connection from target to source. Returns OK if connection existed in at least one direction.

@@ -158,7 +158,7 @@ impl DijkstraMap {
     ///Adds connection with given cost (or cost of existing existing connection) between a source point and target point if they exist.
     /// if the connection is added successfuly return OK
     /// if they one of the point dont exist returns FAILED
-    ///If bidirectional is true, it also adds connection from target to source too. if not at least one connection is not successful Returns FAILED.
+    ///If bidirectional is true, it also adds connection from target to source too.
     #[export]
     pub fn connect_points(
         &mut self,
@@ -171,12 +171,12 @@ impl DijkstraMap {
         if bidirectional {
             let a = self.connect_points(_owner, source, target, cost, false);
             let b = self.connect_points(_owner, target, source, cost, false);
-            if a == gdnative::GlobalConstants::FAILED || b == gdnative::GlobalConstants::FAILED 
+            if a == gdnative::GlobalConstants::OK || b == gdnative::GlobalConstants::OK 
             {
-                return gdnative::GlobalConstants::FAILED;
+                return gdnative::GlobalConstants::OK;
             }
             else {
-                return gdnative::GlobalConstants::OK;
+                return gdnative::GlobalConstants::FAILED;
             }
         }
 
@@ -184,12 +184,16 @@ impl DijkstraMap {
             || !self.reverse_connections.contains_key(&target) {
             gdnative::GlobalConstants::FAILED */
         else {
-            let _cost_got_updated_or_created: bool = false;
+            if !self.connections.contains_key(&source) || !self.connections.contains_key(&target) {
+                return gdnative::GlobalConstants::FAILED
+            }
+
+            let _connection_is_valid: bool = false;
             match self.connections.get_mut(&source) {
                 None => return gdnative::GlobalConstants::FAILED,
                 Some(cons) => {
                     let prev = cons.insert(target, cost);
-                    let _cost_got_updated_or_created = if prev.is_some() {
+                    let _connection_is_valid : bool = if prev.is_some() {
                             prev == Some(cost)
                         }
                         else {
@@ -202,7 +206,7 @@ impl DijkstraMap {
                 .unwrap()
                 .insert(source, cost);
 
-            if _cost_got_updated_or_created {
+            if _connection_is_valid {
                 gdnative::GlobalConstants::OK
             }
             else {

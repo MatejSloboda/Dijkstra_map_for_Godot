@@ -171,21 +171,14 @@ impl DijkstraMap {
         if bidirectional {
             let a = self.connect_points(_owner, source, target, cost, false);
             let b = self.connect_points(_owner, target, source, cost, false);
-            if a == gdnative::GlobalConstants::OK || b == gdnative::GlobalConstants::OK 
-            {
+            if a == gdnative::GlobalConstants::OK || b == gdnative::GlobalConstants::OK {
                 return gdnative::GlobalConstants::OK;
-            }
-            else {
+            } else {
                 return gdnative::GlobalConstants::FAILED;
             }
-        }
-
-/*         else if !self.connections.contains_key(&source)
-            || !self.reverse_connections.contains_key(&target) {
-            gdnative::GlobalConstants::FAILED */
-        else {
+        } else {
             if !self.connections.contains_key(&source) || !self.connections.contains_key(&target) {
-                return gdnative::GlobalConstants::FAILED
+                return gdnative::GlobalConstants::FAILED;
             }
 
             let _connection_is_valid: bool = false;
@@ -193,29 +186,21 @@ impl DijkstraMap {
                 None => return gdnative::GlobalConstants::FAILED,
                 Some(cons) => {
                     let prev = cons.insert(target, cost);
-                    let _connection_is_valid : bool = if prev.is_some() {
-                            prev == Some(cost)
-                        }
-                        else {
-                            true
-                        };
-                    }
+                    let _connection_is_valid: bool = if prev.is_some() {
+                        prev == Some(cost)
+                    } else {
+                        true
+                    };
                 }
+            }
             self.reverse_connections
                 .get_mut(&target)
                 .unwrap()
                 .insert(source, cost);
 
             gdnative::GlobalConstants::OK
-            /* if _connection_is_valid {
-                gdnative::GlobalConstants::OK
-            }
-            else {
-                gdnative::GlobalConstants::FAILED
-            } */
         }
     }
-    
 
     ///Removes connection between source point and target point. Returns OK if both points and their connection existed.
     ///If bidirectional is true, it also removes connection from target to source. Returns OK if connection existed in at least one direction.
@@ -255,10 +240,10 @@ impl DijkstraMap {
     //pub const OPTIONAL_ARGUMENT_INITIAL_WEIGHTS: u64=2;
     //pub const OPTIONAL_ARGUMENT_TERRAIN_WEIGHTS: u64=3;
     //pub const OPTIONAL_ARGUMENT_TARGET_AS_SOURCE: u64=4;
-    
+
     ///Recalculates cost map and direction map information fo each point, overriding previous results.  
     ///First argument is ID of the target point or array of IDs (preferably `PoolIntArray`).
-    /// 
+    ///
     ///Second argument is a `Dictionary`, specifying optional arguments.Possibilities:
     /// * `"reversed"`->`bool`:
     /// if true treats the target as the source (matters only if connections are not bidirectionally symmetric). Default value: `false`
@@ -270,7 +255,7 @@ impl DijkstraMap {
     /// Can be used to weigh the targets with a preference. By default, initial cost is `0.0`.
     /// * `"terrain weights"`->`Dictionary`:
     /// Specifies weights for terrain types. Keys are terrain type IDs  and values weights as floats.
-    /// Unspecified values are assumed to be `1.0` by default. 
+    /// Unspecified values are assumed to be `1.0` by default.
     #[export]
     pub fn recalculate(
         &mut self,
@@ -326,26 +311,34 @@ impl DijkstraMap {
                 _ => {}
             }
         }
-        let mut terrain_costs=FnvHashMap::<i32,f32>::default();
+        let mut terrain_costs = FnvHashMap::<i32, f32>::default();
         {
             let val = optional_params.get(&gdnative::Variant::from_str("terrain weights"));
-            match val.try_to_dictionary(){
-                None=>{},
-                Some(dict)=>{
-                    for key in dict.keys().iter(){
-                        match key.try_to_i64(){
-                            None=>{},
-                            Some(id)=>{
-                                terrain_costs.insert(id as i32, dict.get(key).try_to_f64().unwrap_or(1.0) as f32);
+            match val.try_to_dictionary() {
+                None => {}
+                Some(dict) => {
+                    for key in dict.keys().iter() {
+                        match key.try_to_i64() {
+                            None => {}
+                            Some(id) => {
+                                terrain_costs.insert(
+                                    id as i32,
+                                    dict.get(key).try_to_f64().unwrap_or(1.0) as f32,
+                                );
                             }
                         }
-
                     }
                 }
             }
         }
 
-        self.recalculate_map_intern(&mut targets, Some(&initial_costs), max_cost, reversed, &terrain_costs);
+        self.recalculate_map_intern(
+            &mut targets,
+            Some(&initial_costs),
+            max_cost,
+            reversed,
+            &terrain_costs,
+        );
     }
 
     //receives a single point as target.
@@ -359,7 +352,13 @@ impl DijkstraMap {
     ) {
         let mut targets: Vec<i32> = Vec::new();
         targets.push(target);
-        self.recalculate_map_intern(&mut targets, None, max_cost, reversed, &FnvHashMap::default());
+        self.recalculate_map_intern(
+            &mut targets,
+            None,
+            max_cost,
+            reversed,
+            &FnvHashMap::default(),
+        );
     }
 
     //receives multiple points as targets in form of PoolIntArray of IDs.
@@ -373,7 +372,13 @@ impl DijkstraMap {
     ) {
         let mut targets = targets_in.read().to_vec();
 
-        self.recalculate_map_intern(&mut targets, None, max_cost, reversed, &FnvHashMap::default());
+        self.recalculate_map_intern(
+            &mut targets,
+            None,
+            max_cost,
+            reversed,
+            &FnvHashMap::default(),
+        );
     }
 
     //receives multiple points as targets along with initial costs.
@@ -390,7 +395,13 @@ impl DijkstraMap {
     ) {
         let mut targets = targets_in.read().to_vec();
         let costs = costs_in.read().to_vec();
-        self.recalculate_map_intern(&mut targets, Some(&costs), max_cost, reversed, &FnvHashMap::default());
+        self.recalculate_map_intern(
+            &mut targets,
+            Some(&costs),
+            max_cost,
+            reversed,
+            &FnvHashMap::default(),
+        );
     }
 
     //functions for acccessing results
@@ -568,7 +579,7 @@ impl DijkstraMap {
         initial_costs: Option<&Vec<f32>>,
         max_cost: f32,
         reversed: bool,
-        terrain_costs: &FnvHashMap<i32,f32>,
+        terrain_costs: &FnvHashMap<i32, f32>,
     ) {
         //initialize containers
         self.cost_map.clear();
@@ -622,10 +633,18 @@ impl DijkstraMap {
             open_set_set.remove(&point1);
             self.sorted_points.push(point1);
             let point1_cost = self.cost_of(point1);
-            let weight_of_point1 = terrain_costs.get(&self.terrain_map.get(&point1).unwrap_or(&-1)).unwrap_or(&1.0);
+            let weight_of_point1 = terrain_costs
+                .get(&self.terrain_map.get(&point1).unwrap_or(&-1))
+                .unwrap_or(&1.0);
             //iterrate over it's neighbours
             for (&point2, dir_cost) in connections.get(&point1).unwrap().iter() {
-                let cost = point1_cost + dir_cost * 0.5 *(weight_of_point1 + terrain_costs.get(&self.terrain_map.get(&point2).unwrap_or(&-1)).unwrap_or(&1.0));
+                let cost = point1_cost
+                    + dir_cost
+                        * 0.5
+                        * (weight_of_point1
+                            + terrain_costs
+                                .get(&self.terrain_map.get(&point2).unwrap_or(&-1))
+                                .unwrap_or(&1.0));
                 //add to the open set (or update values if already present)
                 //if point is enabled and new cost is better than old one, but not bigger than maximum cost
                 if cost < self.cost_of(point2)
@@ -653,9 +672,9 @@ impl DijkstraMap {
 
     ///initializes map as a 2D grid. Walkable tiles are specified by `BitMap` (`true`=>point gets added, `false`=>point gets ignored).
     ///point IDs are setup such that `ID=(x+w*width)+initial_offset`. Conversely `x=(ID-initial_offset)%width` and `y=(ID-initial_offset)/width`
-    /// 
+    ///
     ///warning: If points with reqired IDs already exist, this method will treat them as part of the grid.
-    /// 
+    ///
     ///second argument is a `Dictionary`, that defines connections. Keys are relative positions of points in the grid and values are costs.
     ///Example for orthogonal (4-directional) movement `{Vector2(1,0): 1.0, Vector(0,1): 1.0, Vector2(-1,0): 1.0, Vector(0,-1): 1.0}`
     #[export]

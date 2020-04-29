@@ -21,7 +21,17 @@ func test_add_point():
 	assert_eq(res,OK,"you can add a point once")
 	res = map.add_point(3,0)
 	assert_eq(res,FAILED,"but not twice")
+	res = map.add_point(3,1)
+	assert_eq(res,FAILED,"you cannot even change the terrain this way")
 
+func test_set_terrain():
+	res = map.set_terrain_for_point(0,1)
+	assert_eq(res,OK,"you can set the point terrain")
+	assert_eq(map.get_terrain_for_point(0),1,"the terrain corresponds")
+
+	res = map.set_terrain_for_point(0,2)
+	assert_eq(res,OK,"has much as you want")
+	assert_eq(map.get_terrain_for_point(0),2,"the terrain corresponds")
 
 func test_has_points():
 	assert_true(map.has_point(1))
@@ -30,27 +40,25 @@ func test_has_points():
 
 
 func test_connect_points():
-	gut.p("not reversed")
+	gut.p("reversed, unilateral : point as target from which you start")
 	res = map.connect_points(1,2,1.0,false)
 	assert_eq(res,OK,"connected 1 -> 2 succesfully")
 	
-	map.recalculate(1,{})
+	map.recalculate(1,{'reversed':true}) #this throws a gdnative error if it fails, 
+							#the only way i can see it is by opening godot in the terminal and watching it...
 	
 	res = map.get_cost_at_point(1)
-	assert_eq(res,1.0,"cost corresponds")
+	assert_eq(res,1.0,"1 is target where the search starts 1->2 costs 1")
 	
-	gut.p(map.get_cost_map())
 	
-	gut.p("reversed :")
+	gut.p("reversed, unilateral : point as target from which you start")
+	map.recalculate(2,{"reversed":false})
 	
-	res = map.connect_points(2,1,5.0,false)
-	assert_eq(res,OK,"reverse connection worked")
+	res = map.get_cost_at_point(1)
+	assert_eq(res,1.0,"2 is where you want to go\n1->2 costs 1.0")
 	
-	map.recalculate(1,{"reversed":true})
-
-	assert_eq(map.get_cost_at_point(2),5.0,"the cost is of the reversed connection")
-	gut.p(map.get_cost_map())
-
+	res = map.get_cost_at_point(2)
+	assert_eq(res,0.0,"2 is where you want to be, cost 0.0")
 
 func test_disable_enables():
 	map.add_point(3,0)

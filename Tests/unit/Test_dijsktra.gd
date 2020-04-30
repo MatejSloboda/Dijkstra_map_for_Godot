@@ -48,6 +48,19 @@ func test_connect_points():
 	res = map.connect_points(1,2,1.0,false)
 	assert_eq(res,OK,"id both exist, connects ok")
 	
+func test_connect_defaut_args():
+	res = map.connect_points(1,3)
+	assert_eq(res,FAILED,"id absent should failed")
+	
+	res = map.connect_points(1,4)
+	assert_eq(res,FAILED,"id absent should failed")
+	
+	res = map.connect_points(1,2)
+	assert_eq(res,OK,"id both exist, connects ok")
+	
+
+
+
 func test_connect_points_recalculate():
 	gut.p("reversed, unilateral : point as target from which you start")
 	res = map.connect_points(1,2,1.0,false)
@@ -70,6 +83,17 @@ func test_connect_points_recalculate():
 	res = map.get_cost_at_point(2)
 	assert_eq(res,0.0,"2 is where you want to be, cost 0.0")
 	gut.p(map.get_cost_map())
+
+func test_connect_points_recalculate_default_args():
+	res = map.connect_points(1,2,1.0,false)
+	map.recalculate(2)
+	
+	res = map.get_cost_at_point(1)
+	assert_eq(res,1.0,"2 is where you want to go\n1->2 costs 1.0")
+	
+	res = map.get_cost_at_point(2)
+	assert_eq(res,0.0,"2 is where you want to be, cost 0.0")
+
 
 func test_disable_enables():
 	map.add_point(3,0)

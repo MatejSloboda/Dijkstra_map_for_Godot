@@ -107,8 +107,7 @@ checksum = "2fad85553e09a6f881f739c29f0b00b0f01357c743266d478b68951ce23285f3"
 [[package]]
 name = "gdnative"
 version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "051b67ef51102e79e5dfb15e898c8b5d4897479f1d1106a5dc210a4745993958"
+source = "git+https://github.com/GodotNativeTools/godot-rust?rev=4195027a74fc46f20c33d74a92e15494217a2d1c#4195027a74fc46f20c33d74a92e15494217a2d1c"
 dependencies = [
  "gdnative-bindings",
  "gdnative-core",
@@ -118,8 +117,7 @@ dependencies = [
 [[package]]
 name = "gdnative-bindings"
 version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d5f09a798692d8af199db5a5ebc4c853deb4df3f213df055d7efb824158fb6f8"
+source = "git+https://github.com/GodotNativeTools/godot-rust?rev=4195027a74fc46f20c33d74a92e15494217a2d1c#4195027a74fc46f20c33d74a92e15494217a2d1c"
 dependencies = [
  "bitflags",
  "gdnative-core",
@@ -131,8 +129,7 @@ dependencies = [
 [[package]]
 name = "gdnative-core"
 version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b62dda39ac1ad1da82ade2469252ea3484256da544b8b032c00fe80c6eb8defa"
+source = "git+https://github.com/GodotNativeTools/godot-rust?rev=4195027a74fc46f20c33d74a92e15494217a2d1c#4195027a74fc46f20c33d74a92e15494217a2d1c"
 dependencies = [
  "bitflags",
  "euclid",
@@ -145,8 +142,7 @@ dependencies = [
 [[package]]
 name = "gdnative-derive"
 version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "54554ceb5d515a0ff42cef103efc1626a87f56dd8541003038d035a4e48d897d"
+source = "git+https://github.com/GodotNativeTools/godot-rust?rev=4195027a74fc46f20c33d74a92e15494217a2d1c#4195027a74fc46f20c33d74a92e15494217a2d1c"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -156,8 +152,7 @@ dependencies = [
 [[package]]
 name = "gdnative-sys"
 version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df4ea008bcf8ea400d45d741f9cfd4efb816f6b4a6cc4a483d2ad952be991a34"
+source = "git+https://github.com/GodotNativeTools/godot-rust?rev=4195027a74fc46f20c33d74a92e15494217a2d1c#4195027a74fc46f20c33d74a92e15494217a2d1c"
 dependencies = [
  "bindgen",
  "libc",
@@ -170,8 +165,7 @@ dependencies = [
 [[package]]
 name = "gdnative_bindings_generator"
 version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "841db50d922d9c050b1807743bc921df3576d153cbdb961cb8ad0a53357d7823"
+source = "git+https://github.com/GodotNativeTools/godot-rust?rev=4195027a74fc46f20c33d74a92e15494217a2d1c#4195027a74fc46f20c33d74a92e15494217a2d1c"
 dependencies = [
  "heck",
  "serde",

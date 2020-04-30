@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-gdnative = "0.8"
+gdnative = { git = "https://github.com/GodotNativeTools/godot-rust", rev = "4195027a74fc46f20c33d74a92e15494217a2d1c"}
 fnv = "1.0.3"
 
 [lib]

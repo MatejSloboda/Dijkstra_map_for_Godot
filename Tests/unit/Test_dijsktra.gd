@@ -73,8 +73,10 @@ func test_connect_points_recalculate():
 
 func test_disable_enables():
 	map.add_point(3,0)
-	map.connect_points(1,2,1.0,false)
-	map.connect_points(2,3,1.0,false)
+	map.connect_points(1,2)
+#	map.connect_points(1,2,1.0,false)
+	map.connect_points(2,3)
+#	map.connect_points(2,3,1.0,false)
 	
 	gut.p("recalculate")
 	map.recalculate(1,{"reversed":true})

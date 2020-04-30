@@ -74,7 +74,7 @@ impl DijkstraMap {
         &mut self,
         mut _owner: gdnative::Node,
         id: i32,
-        terrain_id: i32,
+        terrain_id: i32, //TODO OPTION -1 AND BASIC TERRAIN FEATURES
     ) -> i64 {
         if self.has_point(_owner, id) {
             self.terrain_map.insert(id, terrain_id);
@@ -165,8 +165,8 @@ impl DijkstraMap {
         mut _owner: gdnative::Node,
         source: i32,
         target: i32,
-        cost: f32,
-        bidirectional: bool,
+        cost: f32 , //TODO OPTION 1.0
+        bidirectional: bool ,//TODO OPTION TRUE
     ) -> i64 {
         if bidirectional {
             let a = self.connect_points(_owner, source, target, cost, false);
@@ -261,7 +261,7 @@ impl DijkstraMap {
         &mut self,
         mut _owner: gdnative::Node,
         target: gdnative::Variant,
-        optional_params: gdnative::Dictionary,
+        optional_params: gdnative::Dictionary, //TODO EMPTY DICT
     ) {
         let mut targets: Vec<i32> = Vec::new();
         //convert target variant to appropriate value(s) and push onto the targets stack.
@@ -284,6 +284,7 @@ impl DijkstraMap {
         }
 
         //extract optional parameters
+        //TODO crash if key provided not in "reversed", "maximum cost", ...
         let reversed: bool = optional_params
             .get(&gdnative::Variant::from_str("reversed"))
             .try_to_bool()

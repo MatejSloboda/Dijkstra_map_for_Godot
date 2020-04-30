@@ -38,7 +38,7 @@ func _ready():
 		#terrain types can then have different weights, when DijkstraMap is recalculated
 		var terrain_type=self.get_cellv(pos)
 		dijkstra_map_for_archers.add_point(id,terrain_type)
-		dijkstra_map_for_pikemen.add_point(id,terrain_type)
+		#dijkstra_map_for_pikemen.add_point(id,terrain_type)
 		
 	#now we need to connect the points with connections
 	#each connection has a source point, target point and a cost
@@ -64,7 +64,7 @@ func _ready():
 			#Note: last parameter specifies whether to also make the reverse connection too.
 			#since we loop through all points and their neighbours in both directions anyway, this would be unnecessary. 
 			dijkstra_map_for_archers.connect_points(id_of_current_tile,id_of_neighbour,cost,false)
-			dijkstra_map_for_pikemen.connect_points(id_of_current_tile,id_of_neighbour,cost,false)
+			#dijkstra_map_for_pikemen.connect_points(id_of_current_tile,id_of_neighbour,cost,false)
 		
 		#we do the same for diagonal tiles, except cost is further multiplied by sqrt(2)
 		cost=sqrt(2.0)
@@ -75,8 +75,12 @@ func _ready():
 			if id_of_neighbour==-1:
 				continue
 			dijkstra_map_for_archers.connect_points(id_of_current_tile,id_of_neighbour,cost,false)
-			dijkstra_map_for_pikemen.connect_points(id_of_current_tile,id_of_neighbour,cost,false)
+			#dijkstra_map_for_pikemen.connect_points(id_of_current_tile,id_of_neighbour,cost,false)
 	
+	#now we will duplicate the points and connections into dijkstra_map_for_pikemen
+	#This way we dont have to manually add them in, each time we need independent dijkstra map with the same graph.
+	dijkstra_map_for_pikemen.duplicate_graph_from(dijkstra_map_for_archers)
+		
 	#lastly, we specify the weights for different terrain types:
 	#note: higher value means slower movement.
 	speed_modifiers={

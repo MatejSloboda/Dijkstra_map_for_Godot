@@ -45,6 +45,24 @@ impl DijkstraMap {
         self.disabled_points.clear();
         self.terrain_map.clear();
     }
+    
+    ///duplicates graph from other DijkstraMap. 
+    #[export]
+    pub fn duplicate_graph_from(&mut self, mut _owner: gdnative::Node, source: gdnative::Node) -> i64 {
+        let source_instance: Option<gdnative::Instance<DijkstraMap>>=gdnative::Instance::try_from_base(source);
+        match source_instance{
+            None=>gdnative::GlobalConstants::FAILED,
+            Some(source_instance)=>source_instance.map(
+                |dmap,_node|{
+                self.connections=dmap.connections.clone();
+                self.reverse_connections=dmap.reverse_connections.clone();
+                self.disabled_points=dmap.disabled_points.clone();
+                self.terrain_map=dmap.terrain_map.clone();
+
+                gdnative::GlobalConstants::OK
+            }).unwrap_or(gdnative::GlobalConstants::FAILED)
+        }
+    }
 
     ///returns next ID not associated with any point
     #[export]
@@ -223,7 +241,8 @@ impl DijkstraMap {
                 false => gdnative::GlobalConstants::FAILED,
             }
         } else if self.has_connection(_owner, source, target) {
-            self.connections.get_mut(&target).unwrap().remove(&source);
+            self.connections.get_mut(&source).unwrap().remove(&target);
+            self.reverse_connections.get_mut(&target).unwrap().remove(&source);
             gdnative::GlobalConstants::OK
         } else {
             gdnative::GlobalConstants::FAILED

@@ -3,6 +3,7 @@ extern crate gdnative;
 
 //use std::collections::HashMap;
 use fnv::FnvHashMap;
+use fnv::FnvHashSet;
 
 #[derive(gdnative::NativeClass)]
 #[inherit(gdnative::Node)]
@@ -13,7 +14,7 @@ pub struct DijkstraMap {
     cost_map: FnvHashMap<i32, f32>,
     direction_map: FnvHashMap<i32, i32>,
     sorted_points: Vec<i32>,
-    disabled_points: std::collections::HashSet<i32>,
+    disabled_points: FnvHashSet<i32>,
     terrain_map: FnvHashMap<i32, i32>,
 }
 
@@ -29,7 +30,7 @@ impl DijkstraMap {
             cost_map: FnvHashMap::default(),
             direction_map: FnvHashMap::default(),
             sorted_points: Vec::new(),
-            disabled_points: std::collections::HashSet::new(),
+            disabled_points: FnvHashSet::default(),
             terrain_map: FnvHashMap::default(),
         }
     }
@@ -354,6 +355,26 @@ impl DijkstraMap {
                 }
             }
         }
+        let mut termination_points = FnvHashSet::<i32>::default();
+        {
+            let val = optional_params.get(&gdnative::Variant::from_str("initial costs"));
+            match val.get_type() {
+                gdnative::VariantType::I64=>{termination_points.insert(val.to_i64() as i32);},
+                gdnative::VariantType::Int32Array => {
+                    termination_points.extend(val.to_int32_array().read().iter());
+                }
+                gdnative::VariantType::VariantArray => {
+                    termination_points.reserve(origins.len());
+                    for i in val.to_array().iter() {
+                        match i.try_to_i64() {
+                            Some(ival) =>{termination_points.insert(ival as i32);},
+                            None => {},
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
 
         self.recalculate_map_intern(
             &mut origins,
@@ -361,71 +382,73 @@ impl DijkstraMap {
             max_cost,
             reversed,
             &terrain_costs,
+            Some(&termination_points),
         );
     }
+    /* 
+        //receives a single point as target.
+        #[export]
+        fn recalculate_for_target(
+            &mut self,
+            mut _owner: gdnative::Node,
+            target: i32,
+            max_cost: f32,
+            reversed: bool,
+        ) {
+            let mut targets: Vec<i32> = Vec::new();
+            targets.push(target);
+            self.recalculate_map_intern(
+                &mut targets,
+                None,
+                max_cost,
+                reversed,
+                &FnvHashMap::default(),
+            );
+        }
 
-    //receives a single point as target.
-    #[export]
-    fn recalculate_for_target(
-        &mut self,
-        mut _owner: gdnative::Node,
-        target: i32,
-        max_cost: f32,
-        reversed: bool,
-    ) {
-        let mut targets: Vec<i32> = Vec::new();
-        targets.push(target);
-        self.recalculate_map_intern(
-            &mut targets,
-            None,
-            max_cost,
-            reversed,
-            &FnvHashMap::default(),
-        );
-    }
+        //receives multiple points as targets in form of PoolIntArray of IDs.
+        #[export]
+        fn recalculate_for_targets(
+            &mut self,
+            mut _owner: gdnative::Node,
+            targets_in: gdnative::Int32Array,
+            max_cost: f32,
+            reversed: bool,
+        ) {
+            let mut targets = targets_in.read().to_vec();
 
-    //receives multiple points as targets in form of PoolIntArray of IDs.
-    #[export]
-    fn recalculate_for_targets(
-        &mut self,
-        mut _owner: gdnative::Node,
-        targets_in: gdnative::Int32Array,
-        max_cost: f32,
-        reversed: bool,
-    ) {
-        let mut targets = targets_in.read().to_vec();
+            self.recalculate_map_intern(
+                &mut targets,
+                None,
+                max_cost,
+                reversed,
+                &FnvHashMap::default(),
+            );
+        }
 
-        self.recalculate_map_intern(
-            &mut targets,
-            None,
-            max_cost,
-            reversed,
-            &FnvHashMap::default(),
-        );
-    }
-
-    //receives multiple points as targets along with initial costs.
-    //Input takes form of a dictionary with points' IDs as keys and initial costs as values.
-    //Initial cost may be thought of as a biased preference. Paths will preferentially lead towards targets with lower initial cost.
-    #[export]
-    fn recalculate_for_targets_with_costs(
-        &mut self,
-        mut _owner: gdnative::Node,
-        targets_in: gdnative::Int32Array,
-        costs_in: gdnative::Float32Array,
-        max_cost: f32,
-        reversed: bool,
-    ) {
-        let mut targets = targets_in.read().to_vec();
-        let costs = costs_in.read().to_vec();
-        self.recalculate_map_intern(
-            &mut targets,
-            Some(&costs),
-            max_cost,
-            reversed,
-            &FnvHashMap::default(),
-        );
-    }
+        //receives multiple points as targets along with initial costs.
+        //Input takes form of a dictionary with points' IDs as keys and initial costs as values.
+        //Initial cost may be thought of as a biased preference. Paths will preferentially lead towards targets with lower initial cost.
+        #[export]
+        fn recalculate_for_targets_with_costs(
+            &mut self,
+            mut _owner: gdnative::Node,
+            targets_in: gdnative::Int32Array,
+            costs_in: gdnative::Float32Array,
+            max_cost: f32,
+            reversed: bool,
+        ) {
+            let mut targets = targets_in.read().to_vec();
+            let costs = costs_in.read().to_vec();
+            self.recalculate_map_intern(
+                &mut targets,
+                Some(&costs),
+                max_cost,
+                reversed,
+                &FnvHashMap::default(),
+            );
+        }
+    */
 
     //functions for acccessing results
 
@@ -603,6 +626,7 @@ impl DijkstraMap {
         max_cost: f32,
         reversed: bool,
         terrain_costs: &FnvHashMap<i32, f32>,
+        termination_points: Option<&FnvHashSet<i32>>,
     ) {
         //initialize containers
         self.cost_map.clear();
@@ -613,7 +637,7 @@ impl DijkstraMap {
             open_set.len(),
         );
         open_set.reserve(capacity - open_set.len());
-        let mut open_set_set = std::collections::HashSet::<i32>::with_capacity(capacity);
+        let mut open_set_set = FnvHashSet::<i32>::with_capacity_and_hasher(capacity,Default::default());
 
         //switches direction of connections
         let connections = if reversed {
@@ -655,6 +679,11 @@ impl DijkstraMap {
             let point1 = open_set.pop().unwrap();
             open_set_set.remove(&point1);
             self.sorted_points.push(point1);
+            //stop if termination point was fond
+            if termination_points.is_some() && termination_points.unwrap().contains(&point1) {
+                break
+            }
+
             let point1_cost = self.cost_of(point1);
             let weight_of_point1 = terrain_costs
                 .get(&self.terrain_map.get(&point1).unwrap_or(&-1))
@@ -727,7 +756,7 @@ impl DijkstraMap {
             }
         }
 
-        let mut grid = std::collections::HashSet::<i32>::new();
+        let mut grid = FnvHashSet::<i32>::default();
         for y in 0..height {
             for x in 0..width {
                 if bitmap.get_bit(gdnative::Vector2::new(x as f32, y as f32)) {

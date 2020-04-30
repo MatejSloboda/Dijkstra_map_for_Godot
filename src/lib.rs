@@ -74,8 +74,9 @@ impl DijkstraMap {
         &mut self,
         mut _owner: gdnative::Node,
         id: i32,
-        terrain_id: i32, //TODO OPTION -1 AND BASIC TERRAIN FEATURES
+        #[opt] terrain_id: Option<i32>, //TODO BASIC TERRAIN cost always == 1.0
     ) -> i64 {
+        let terrain_id = terrain_id.unwrap_or(-1);
         if self.has_point(_owner, id) {
             self.terrain_map.insert(id, terrain_id);
             gdnative::GlobalConstants::OK

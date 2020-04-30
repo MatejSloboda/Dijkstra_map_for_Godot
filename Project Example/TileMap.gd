@@ -94,33 +94,40 @@ func recalculate_dijkstra_maps():
 	
 	#we want pikemen to charge the dragon head on
 	#We .recalculate the DijkstraMap.
-	#First argument is the target (ie. the ID of the point where dragon is).
+	#First argument is the origin (be default) or destination (ie. the ID of the point where dragon is).
 	#Second argument is a dictionary of optional parameters. For absent entries, default values are used.
-	#We will only specify the terrain weights.
-	dijkstra_map_for_pikemen.recalculate(dragon,{"terrain weights":speed_modifiers})
+	#We will specify the terrain weights and specify that input is the destination, not origin
+	var optional_parameters={
+		"terrain weights":speed_modifiers,
+		"input is destination":true
+		}
+	
+	dijkstra_map_for_pikemen.recalculate(dragon,optional_parameters)
 	#now the map has recalculated for pikemen and we can access the data.
 	
 	
 	#we want archers to stand at safe distance from the dragon, but within firing range.
 	#dragon flies, so terrain doesnt matter
-	#first we recalculate their Dijkstra map with dragon as the source.
-	#we do this by providing optional parameter "reversed":true
+	#first we recalculate their Dijkstra map with dragon as the origin.
 	#we also do not need to calculate entire DijkstraMap, only until we have points at required distance
 	#this can be achieved by providing optional parameter "maximum cost"
 	
 	
-	var optional_parameters={
-		"reversed":true,
+	optional_parameters={
 		"maximum cost":7.0
 	}
 	dijkstra_map_for_archers.recalculate(dragon,optional_parameters)
 	#now we get IDs of all points safe distance from dragon, but within firing range
 	var stand_over_here=dijkstra_map_for_archers.get_all_points_with_cost_between(4.0,5.0)
 	
-	#and we pass those points as new targets for the archers to walk towards
+	optional_parameters={
+		"terrain weights":speed_modifiers,
+		"input is destination":true
+		}
+	#and we pass those points as new destinations for the archers to walk towards
 	dijkstra_map_for_archers.recalculate(stand_over_here,{"terrain weights":speed_modifiers})
-	#BTW yes, Dijkstra map works for multiple target points too.
-	#The path will simply lead towards the nearest target point.
+	#BTW yes, Dijkstra map works for multiple destination points too.
+	#The path will simply lead towards the nearest destination point.
 	
 	
 func get_speed_modifier(pos):

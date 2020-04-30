@@ -66,7 +66,7 @@ func test_connect_points_recalculate():
 	res = map.connect_points(1,2,1.0,false)
 	assert_eq(res,OK,"connected 1 -> 2 succesfully")
 	
-	map.recalculate(1,{'reversed':true}) #this throws a gdnative error if it fails, 
+	map.recalculate(1,{"input is destination":false}) #this throws a gdnative error if it fails, 
 							#the only way i can see it is by opening godot in the terminal and watching it...
 	
 	res = map.get_cost_at_point(2)
@@ -75,7 +75,7 @@ func test_connect_points_recalculate():
 	gut.p(map.get_cost_map())
 	
 	gut.p("reversed, unilateral : point as target from which you start")
-	map.recalculate(2,{"reversed":false})
+	map.recalculate(2,{"input is destination":true})
 	
 	res = map.get_cost_at_point(1)
 	assert_eq(res,1.0,"2 is where you want to go\n1->2 costs 1.0")
@@ -86,13 +86,13 @@ func test_connect_points_recalculate():
 
 func test_connect_points_recalculate_default_args():
 	res = map.connect_points(1,2,1.0,false)
-	map.recalculate(2)
-	
-	res = map.get_cost_at_point(1)
-	assert_eq(res,1.0,"2 is where you want to go\n1->2 costs 1.0")
+	map.recalculate(1)
 	
 	res = map.get_cost_at_point(2)
-	assert_eq(res,0.0,"2 is where you want to be, cost 0.0")
+	assert_eq(res,1.0,"2 is where you want to go\n1->2 costs 1.0")
+	
+	res = map.get_cost_at_point(1)
+	assert_eq(res,0.0,"1 is where you want to be, cost 0.0")
 
 
 func test_disable_enables():
@@ -101,16 +101,16 @@ func test_disable_enables():
 	map.connect_points(2,3,1.0,false)
 	
 	gut.p("recalculate")
-	map.recalculate(1,{"reversed":true})
+	map.recalculate(1,{'input is destination':false})
 	gut.p("end_recalculate")
 	
 	assert_eq(map.get_cost_at_point(3),2.0,"point is enabled, you can go from 1 to 3 via 2")
 	map.disable_point(2)
-	map.recalculate(1,{"reversed":true})
+	map.recalculate(1,{'input is destination':false})
 	
 	assert_eq(map.get_cost_at_point(3),INF,"2 is disabled")
 	map.enable_point(2)
-	map.recalculate(1,{"reversed":true})
+	map.recalculate(1,{'input is destination':false})
 	
 	assert_eq(map.get_cost_at_point(3),2.0,"back to ok")
 	
@@ -130,13 +130,14 @@ func test_connect_point_unilateral():
 	assert_true(map.has_connection(1,2),"1 to 2 should be connected")
 	assert_false(map.has_connection(2,1),"reverse connection doesnt exist")
 	
-	map.recalculate(1,{"reversed":true})
+	map.recalculate(1,{'input is destination':false})
 	assert_eq(map.get_cost_at_point(2),1.0,"")
 	
 func test_connect_point_bilateral():
 	pending()
 	map.connect_points(1,2,1.0,true)
-	map.recalculate_for_target(1,INF,false)
+	#map.recalculate_for_target(1,INF,false)
+	map.recalculate(1,{'input is destination':true})
 	
 	assert_true(map.has_point(1))
 	assert_true(map.has_point(2))

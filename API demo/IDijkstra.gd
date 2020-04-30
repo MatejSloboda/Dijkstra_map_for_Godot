@@ -6,7 +6,7 @@ const ABSENT = -1
 
 var default_options = \
 {
-'reversed' : false,
+'input is destination' : false,
 'maximum cost' : INF,
 'initial costs' : 0.0,
 'terrain weights' : {},

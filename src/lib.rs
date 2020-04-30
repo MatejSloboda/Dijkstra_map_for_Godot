@@ -57,7 +57,7 @@ impl DijkstraMap {
     }
     ///Adds new point with given ID and terrain ID into the graph and returns OK. If point with that ID already exists, does nothing and returns FAILED.
     #[export]
-    pub fn add_point(&mut self, mut _owner: gdnative::Node, id: i32, terrain_id: i32) -> i64 {
+    pub fn add_point(&mut self, mut _owner: gdnative::Node, id: i32, #[opt] terrain_id: i32) -> i64 {
         if self.has_point(_owner, id) {
             gdnative::GlobalConstants::FAILED
         } else {
@@ -245,17 +245,17 @@ impl DijkstraMap {
     //pub const OPTIONAL_ARGUMENT_TARGET_AS_SOURCE: u64=4;
 
     ///Recalculates cost map and direction map information fo each point, overriding previous results.  
-    ///First argument is ID of the target point or array of IDs (preferably `PoolIntArray`).
+    ///First argument is ID of the origin point or array of IDs (preferably `PoolIntArray`).
     ///
     ///Second argument is a `Dictionary`, specifying optional arguments.Possibilities:
-    /// * `"reversed"`->`bool`:
-    /// if true treats the target as the source (matters only if connections are not bidirectionally symmetric). Default value: `false`
+    /// * `"input is destination"`->`bool`:
+    /// if true treats the origin as the destination (matters only if connections are not bidirectionally symmetric). Default value: `false`
     /// * `"maximum cost"`->`float`:
     /// Specifies maximum cost. Once all shortest paths no longer than maximum cost are found, algorithm terminates.
     /// All points with cost bigger than this are treated as inaccessible. Default value: `INFINITY`
     /// * `"initial costs"`->`PoolRealArray` or `Array`:
-    /// Specifies initial costs for given targets. Values are paired with corresponding indices in the targets argument.
-    /// Can be used to weigh the targets with a preference. By default, initial cost is `0.0`.
+    /// Specifies initial costs for given origins. Values are paired with corresponding indices in the origin argument.
+    /// Can be used to weigh the origins with a preference. By default, initial cost is `0.0`.
     /// * `"terrain weights"`->`Dictionary`:
     /// Specifies weights for terrain types. Keys are terrain type IDs  and values weights as floats.
     /// Unspecified values are assumed to be `1.0` by default.
@@ -263,21 +263,21 @@ impl DijkstraMap {
     pub fn recalculate(
         &mut self,
         mut _owner: gdnative::Node,
-        target: gdnative::Variant,
+        origin: gdnative::Variant,
         #[opt] optional_params: gdnative::Dictionary,
     ) {
-        let mut targets: Vec<i32> = Vec::new();
+        let mut origins: Vec<i32> = Vec::new();
         //convert target variant to appropriate value(s) and push onto the targets stack.
-        match target.get_type() {
-            gdnative::VariantType::I64 => targets.push(target.to_i64() as i32),
+        match origin.get_type() {
+            gdnative::VariantType::I64 => origins.push(origin.to_i64() as i32),
             gdnative::VariantType::Int32Array => {
-                targets.extend(target.to_int32_array().read().iter())
+                origins.extend(origin.to_int32_array().read().iter())
             }
             gdnative::VariantType::VariantArray => {
-                for i in target.to_array().iter() {
+                for i in origin.to_array().iter() {
                     match i.try_to_i64() {
-                        Some(intval) => targets.push(intval as i32),
-                        None => targets.push(-1), //if entry is not int, use default -1 invalid ID
+                        Some(intval) => origins.push(intval as i32),
+                        None => origins.push(-1), //if entry is not int, use default -1 invalid ID
                     }
                 }
             }
@@ -289,7 +289,7 @@ impl DijkstraMap {
         //extract optional parameters
         //TODO crash if exist key provided not in "reversed", "maximum cost", ...
         let reversed: bool = optional_params
-            .get(&gdnative::Variant::from_str("reversed"))
+            .get(&gdnative::Variant::from_str("input is destination"))
             .try_to_bool()
             .unwrap_or(false);
         let max_cost: f32 = optional_params
@@ -304,7 +304,7 @@ impl DijkstraMap {
                     initial_costs.extend(val.to_float32_array().read().iter());
                 }
                 gdnative::VariantType::VariantArray => {
-                    initial_costs.reserve(targets.len());
+                    initial_costs.reserve(origins.len());
                     for i in val.to_array().iter() {
                         match i.try_to_f64() {
                             Some(fval) => initial_costs.push(fval as f32),
@@ -337,7 +337,7 @@ impl DijkstraMap {
         }
 
         self.recalculate_map_intern(
-            &mut targets,
+            &mut origins,
             Some(&initial_costs),
             max_cost,
             reversed,
@@ -598,9 +598,9 @@ impl DijkstraMap {
 
         //switches direction of connections
         let connections = if reversed {
-            &self.connections
-        } else {
             &self.reverse_connections
+        } else {
+            &self.connections
         };
 
         //add targets to open_set

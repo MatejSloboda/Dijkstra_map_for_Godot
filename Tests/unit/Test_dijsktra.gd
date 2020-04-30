@@ -75,7 +75,8 @@ func test_connect_points_recalculate():
 	gut.p(map.get_cost_map())
 	
 	gut.p("reversed, unilateral : point as target from which you start")
-	map.recalculate(2,{"reversed":false})
+#	map.recalculate(2,{"reversed":false})
+	map.recalculate(2)
 	
 	res = map.get_cost_at_point(1)
 	assert_eq(res,1.0,"2 is where you want to go\n1->2 costs 1.0")
@@ -84,7 +85,8 @@ func test_connect_points_recalculate():
 	assert_eq(res,0.0,"2 is where you want to be, cost 0.0")
 	gut.p(map.get_cost_map())
 
-
+func test_connect_points_recalculate_default_args():
+	pass
 
 
 func test_disable_enables():

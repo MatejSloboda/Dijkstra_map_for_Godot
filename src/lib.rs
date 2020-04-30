@@ -261,7 +261,7 @@ impl DijkstraMap {
         &mut self,
         mut _owner: gdnative::Node,
         target: gdnative::Variant,
-        optional_params: gdnative::Dictionary, //TODO EMPTY DICT
+        #[opt] optional_params: gdnative::Dictionary, //TODO EMPTY DICT
     ) {
         let mut targets: Vec<i32> = Vec::new();
         //convert target variant to appropriate value(s) and push onto the targets stack.

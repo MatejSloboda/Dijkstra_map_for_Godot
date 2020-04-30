@@ -287,7 +287,7 @@ impl DijkstraMap {
         }
 
         //extract optional parameters
-        //TODO crash if key provided not in "reversed", "maximum cost", ...
+        //TODO crash if exist key provided not in "reversed", "maximum cost", ...
         let reversed: bool = optional_params
             .get(&gdnative::Variant::from_str("reversed"))
             .try_to_bool()

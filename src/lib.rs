@@ -165,12 +165,14 @@ impl DijkstraMap {
         mut _owner: gdnative::Node,
         source: i32,
         target: i32,
-        cost: f32 , //TODO OPTION 1.0
-        bidirectional: bool ,//TODO OPTION TRUE
+        #[opt] cost: Option<f32> , 
+        #[opt] bidirectional: Option<bool> ,
     ) -> i64 {
+        let cost = cost.unwrap_or(1.0);
+        let bidirectional = bidirectional.unwrap_or(true);
         if bidirectional {
-            let a = self.connect_points(_owner, source, target, cost, false);
-            let b = self.connect_points(_owner, target, source, cost, false);
+            let a = self.connect_points(_owner, source, target, Some(cost), Some(false));
+            let b = self.connect_points(_owner, target, source, Some(cost), Some(false));
             if a == gdnative::GlobalConstants::OK || b == gdnative::GlobalConstants::OK {
                 return gdnative::GlobalConstants::OK;
             } else {
@@ -261,7 +263,7 @@ impl DijkstraMap {
         &mut self,
         mut _owner: gdnative::Node,
         target: gdnative::Variant,
-        #[opt] optional_params: gdnative::Dictionary, //TODO EMPTY DICT
+        #[opt] optional_params: gdnative::Dictionary,
     ) {
         let mut targets: Vec<i32> = Vec::new();
         //convert target variant to appropriate value(s) and push onto the targets stack.
@@ -724,8 +726,8 @@ impl DijkstraMap {
                             _owner,
                             id + initial_offset,
                             id + offs + initial_offset,
-                            *cost,
-                            false,
+                            Some(*cost),
+                            Some(false),
                         );
                     }
                 }

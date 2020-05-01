@@ -759,9 +759,15 @@ impl DijkstraMap {
         let mut grid = FnvHashSet::<i32>::default();
         for y in 0..height {
             for x in 0..width {
-                if bitmap.get_bit(gdnative::Vector2::new(x as f32, y as f32)) {
-                    self.add_point(_owner, x + y * width + initial_offset, 0);
-                    grid.insert(x + y * width + initial_offset);
+                let pos :gdnative::Vector2  = gdnative::Vector2::new(x as f32, y as f32);
+                if bitmap.get_bit(pos) {
+                    let id =  x + y * width + initial_offset;
+                    self.add_point(_owner,id, 0);
+                    grid.insert(id);
+                    id_to_pos.set(
+                        &gdnative::Variant::from_i64(id as i64),
+                        //TODO set the vector here but its type must be variant
+                    );
                 }
             }
         }
@@ -782,6 +788,7 @@ impl DijkstraMap {
                 }
             }
         }
+        return id_to_pos;
     }
 }
 

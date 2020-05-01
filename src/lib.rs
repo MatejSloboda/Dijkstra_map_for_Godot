@@ -741,7 +741,7 @@ impl DijkstraMap {
         let width = vec_size.x as i32;
         let height = vec_size.y as i32;
         let mut relative_connections: FnvHashMap<i32, f32> = FnvHashMap::default();
-        let mut id_to_pos : gdnative::Dictionary;
+        let mut id_to_pos : gdnative::Dictionary = gdnative::Dictionary::new();
         //extract relative connections to rust types.
         for dirs in relative_connections_in.keys().iter() {
             if let Some(vec2) = dirs.try_to_vector2() {
@@ -766,7 +766,7 @@ impl DijkstraMap {
                     grid.insert(id);
                     id_to_pos.set(
                         &gdnative::Variant::from_i64(id as i64),
-                        //TODO set the vector here but its type must be variant
+                        &gdnative::Variant::from_vector2(&pos)  //TODO set the vector here but its type must be variant
                     );
                 }
             }

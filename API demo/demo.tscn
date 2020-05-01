@@ -2,30 +2,27 @@
 
 [ext_resource path="res://API demo/demo.gd" type="Script" id=1]
 
-[node name="Node2D" type="Node2D"]
+[node name="Node2D" type="HBoxContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
 script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 _len = 30
+sources = [ Vector2( 1, 1 ) ]
 highlight_color = Color( 0, 0.203922, 1, 0.443137 )
 
 [node name="TileMap" type="TileMap" parent="."]
 cell_size = Vector2( 32, 32 )
 format = 1
 
-[node name="selected_points" type="Node2D" parent="."]
-
-[node name="selection" type="RichTextLabel" parent="."]
-margin_right = 40.0
-margin_bottom = 40.0
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
 [node name="UIs" type="Control" parent="."]
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="labels" type="Control" parent="UIs"]
+margin_right = 765.0
+margin_bottom = 600.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 3.0
 __meta__ = {
 "_edit_use_anchors_": false
 }
@@ -35,90 +32,23 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[node name="labels" type="Control" parent="UIs"]
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
 [node name="arrows" type="Control" parent="UIs"]
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="cost_min" type="SpinBox" parent="."]
-margin_left = 634.899
-margin_top = 213.04
-margin_right = 708.899
-margin_bottom = 237.04
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="cost_max" type="SpinBox" parent="."]
-margin_left = 726.545
-margin_top = 210.176
-margin_right = 800.545
-margin_bottom = 234.176
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
 [node name="buttons" type="VBoxContainer" parent="."]
 modulate = Color( 0.709804, 0.572549, 0.572549, 1 )
-anchor_right = 1.0
-anchor_bottom = 1.0
-margin_left = 803.0
-margin_top = 11.0
-margin_right = 996.0
-margin_bottom = 347.0
-size_flags_horizontal = 2
-size_flags_vertical = 2
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="show_cost_map" type="Button" parent="buttons"]
-margin_right = 193.0
-margin_bottom = 20.0
+margin_left = 769.0
+margin_right = 1024.0
+margin_bottom = 600.0
 size_flags_horizontal = 3
-size_flags_vertical = 2
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="add_source" type="Button" parent="buttons"]
-margin_top = 68.0
-margin_right = 193.0
-margin_bottom = 88.0
-size_flags_horizontal = 3
-size_flags_vertical = 2
-toggle_mode = true
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="remove_all_sources_but_last" type="Button" parent="buttons"]
-margin_top = 136.0
-margin_right = 193.0
-margin_bottom = 156.0
-size_flags_horizontal = 3
-size_flags_vertical = 2
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="highlight_under_cost" type="Button" parent="buttons"]
-margin_top = 204.0
-margin_right = 193.0
-margin_bottom = 224.0
-size_flags_horizontal = 3
-size_flags_vertical = 2
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="direction_map" type="Button" parent="buttons"]
-margin_top = 272.0
-margin_right = 193.0
-margin_bottom = 292.0
-size_flags_horizontal = 3
-size_flags_vertical = 2
-toggle_mode = true
+custom_constants/separation = 20
 __meta__ = {
 "_edit_use_anchors_": false
 }

@@ -31,6 +31,11 @@ func initiate_pos(positions):
 		
 		rect.set_size(tilemap.cell_size)
 		label.set_size(tilemap.cell_size)
+		var ratio  = tilemap.cell_size / arrow.get_rect().size
+		arrow.scale = ratio
+		
+		arrow.centered = true
+		arrow.visible = true
 		
 		pos_to_arrow[pos] = arrow
 		pos_to_colorRect[pos] = rect
@@ -77,28 +82,22 @@ func paint_cost_map(pos_to_cost,max_cost):
 		
 		
 func paint_direction_map(pos_to_dir):
-	pass
-
+	hide_all()
+	for each_pos in pos_to_dir:
+		var arrow = pos_to_arrow[each_pos]
+		var dir = pos_to_dir[each_pos]
+		var rotation = vect_to_ArrowRotation.get(dir,null)
+		if rotation:
+			arrow.rotation_degrees = rotation
+			arrow.visible = true
+		else:
+			highlights([each_pos],Color.chartreuse)
+		
 func highlights(pos_list,highlight_color):
 	for pos in pos_list:
 		var rect = pos_to_colorRect[pos]
 		rect.color = highlight_color
 		rect.show()
-
-#func hide_all():
-#	for parentui in $UIs.get_children():
-#		for each_ui_nodes in parentui.get_children():
-#			each_ui_nodes.hide()	
-
-#func get_arrow(dir = null):
-#	var ar : Sprite = arrow.instance()
-#	var rect = ar.get_rect()
-#	var size = 1 * rect.size
-#	var ratio  = tilemap.cell_size / size
-#	ar.scale = ratio
-#	ar.centered = true
-#	ar.rotation_degrees = vect_to_ArrowRotation.get(dir,0)
-#	return ar
 
 
 

@@ -97,11 +97,16 @@ func button_highlight_under_cost():
 func button_direction_map():
 	recalculate()
 	var dirMap = map_interface.NativeMap.get_direction_map() #dict id -> should_go_to_id
+	var map_pos
+	var GOTOpos
+	var dir
+	
 	var pos_to_dir := {}
 	for k in dirMap.keys():
-		var map_pos = map_interface.id_to_position(k)
-		var GOTOpos = map_interface.id_to_position(dirMap[k])
-		var dir = - GOTOpos + map_pos
+		map_pos = map_interface.id_to_position(k)
+		GOTOpos = map_interface.id_to_position(dirMap[k])
+		dir = - GOTOpos + map_pos
+		pos_to_dir[map_pos] = dir
 	guiManager.paint_direction_map(pos_to_dir)
 	
 
@@ -122,8 +127,6 @@ func _ready() -> void:
 		button.connect("button_down",self,'button_'+name)
 		$buttons.add_child(button)
 	button_show_cost_map()
-	print(map_interface.point_id_to_position,"\n")
-	print(map_interface.NativeMap.get_cost_map())
 ##---------------------------------------#
 ##--------------Dijkstra------------------#
 func recalculate():

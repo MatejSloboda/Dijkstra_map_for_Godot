@@ -2,6 +2,7 @@ extends Node
 
 
 var tilemap : TileMap
+var UIs : Node
 
 const min_cost_color = Color(0,0,0.2,0.3)
 const max_cost_color = Color(1,0,0,0.8) 
@@ -24,7 +25,7 @@ func initiate_pos(positions):
 		var label := Label.new()
 		var rect := ColorRect.new()
 		var arrow := MyArrow.instance()
-		label.set_position(tilemap.map_to_world(pos))
+		label.set_position(tilemap.map_to_world(pos) + tilemap.cell_size/2)
 		rect.set_position(tilemap.map_to_world(pos))
 		arrow.set_position(tilemap.map_to_world(pos) + tilemap.cell_size/2)
 		
@@ -34,6 +35,16 @@ func initiate_pos(positions):
 		pos_to_arrow[pos] = arrow
 		pos_to_colorRect[pos] = rect
 		pos_to_label[pos] = label
+		
+		label.hide()
+		arrow.hide()
+		rect.hide()
+		
+		UIs.get_node("labels").add_child(label)
+		UIs.get_node("arrows").add_child(arrow)
+		UIs.get_node("color_rects").add_child(rect)
+		
+
 
 func hide_all():
 	var elem = []
@@ -53,12 +64,12 @@ func show_arrow(pos,dir):
 func paint_cost_map(pos_to_cost,max_cost):
 	hide_all()
 	for each_pos in pos_to_cost.keys():
-		var each_cost = pos_to_cost[each_pos]
-		var ratio = each_cost/max_cost
+		var each_cost = pos_to_cost.get(each_pos)
+		var ratio = each_cost/max_cost 
 		
-		var text = str(each_cost)
-		var c := min_cost_color.linear_interpolate(max_cost_color,ratio)
-		pos_to_colorRect[each_pos].color = c
+		var text = str(each_cost) if each_cost != INF else "inf"
+		var c = min_cost_color.linear_interpolate(max_cost_color,ratio)
+		pos_to_colorRect[each_pos].color = c if each_cost != INF else Color(0,0,0,0)
 		pos_to_colorRect[each_pos].show()
 		
 		pos_to_label[each_pos].text = text
@@ -69,19 +80,10 @@ func paint_direction_map(pos_to_dir):
 	pass
 
 func highlights(pos_list,highlight_color):
-	pass
-
-
-
-#func __highlight(map_id_list : Array):
-#	#pos to world
-#	for each_id in map_id_list:
-#		if each_id == -1:continue
-#		var each_map_pos = map_interface.id_to_position(each_id)
-#		var Rec = pos_to_colorRect.get(each_map_pos,null)
-#		if not Rec: return
-#		Rec.color = highlight_color
-#		Rec.show()
+	for pos in pos_list:
+		var rect = pos_to_colorRect[pos]
+		rect.color = highlight_color
+		rect.show()
 
 #func hide_all():
 #	for parentui in $UIs.get_children():

@@ -9,12 +9,11 @@ script = ExtResource( 1 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
-_len = 30
-sources = [ Vector2( 1, 1 ) ]
+_len = 7
 highlight_color = Color( 0, 0.203922, 1, 0.443137 )
+highligth_cost_boundaries = Vector2( 0, 9 )
 
 [node name="TileMap" type="TileMap" parent="."]
-cell_size = Vector2( 32, 32 )
 format = 1
 
 [node name="UIs" type="Control" parent="."]

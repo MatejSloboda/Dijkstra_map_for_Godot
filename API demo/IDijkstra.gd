@@ -24,19 +24,20 @@ func clear():
 	point_position_to_id={}
 
 func creating_square_map(
-						_len : int,
-						bitmap : BitMap = null,
+						size : int,
 						relative_connections : Dictionary = {},
 						initial_offset :int = 0
 						)->void:
-	if relative_connections == {}:
+							
+	var bitmap := BitMap.new()
+	bitmap.create(Vector2.ONE * size)
+	bitmap.set_bit_rect(Rect2(Vector2.ZERO,\
+						Vector2.ONE * size),\
+						true
+					)
+	if not relative_connections:
 		for dir in orthogonal:
-			relative_connections[dir] = 1.0
-		
-	if not bitmap:
-		bitmap = BitMap.new()		
-		bitmap.create(Vector2.ONE*_len)
-		bitmap.set_bit_rect(Rect2(Vector2.ZERO,Vector2.ONE*_len),true)
+			relative_connections[dir] = 1.0	
 	
 	point_id_to_position = NativeMap.initialize_as_grid(
 			bitmap,
@@ -47,7 +48,8 @@ func creating_square_map(
 	for id in point_id_to_position.keys():
 		var pos = point_id_to_position[id]
 		point_position_to_id[pos] = id
-		
+	
+
 func add_point(id : int):
 	return NativeMap.add_point(id)
 
@@ -57,7 +59,10 @@ func connect_points(source: int, target: int, cost: float, bidirectional: bool =
 
 #----------------------------------------#
 
-func recalculate(ids,optionals = default_options):
+func recalculate(
+				ids : PoolIntArray,
+				optionals = default_options
+				):
 	NativeMap.recalculate(ids,optionals)
 
 #----------------------------------------#

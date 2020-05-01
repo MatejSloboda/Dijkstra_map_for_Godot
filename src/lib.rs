@@ -18,6 +18,11 @@ pub struct DijkstraMap {
     terrain_map: FnvHashMap<i32, i32>,
 }
 
+enum GridType {
+    SQUARE,
+    HEX,
+}
+
 // __One__ `impl` block can have the `#[methods]` attribute, which will generate
 // code to automatically bind any exported methods to Godot.
 #[gdnative::methods]
@@ -842,74 +847,218 @@ impl DijkstraMap {
 
 
 
-    ///initializes map as a 2D grid. Walkable tiles are specified by `BitMap` (`true`=>point gets added, `false`=>point gets ignored).
-    ///point IDs are setup such that `ID=(x+w*width)+initial_offset`. Conversely `x=(ID-initial_offset)%width` and `y=(ID-initial_offset)/width`
-    ///
-    ///warning: If points with reqired IDs already exist, this method will treat them as part of the grid.
-    ///
-    ///second argument is a `Dictionary`, that defines connections. Keys are relative positions of points in the grid and values are costs.
-    ///Example for orthogonal (4-directional) movement `{Vector2(1,0): 1.0, Vector(0,1): 1.0, Vector2(-1,0): 1.0, Vector(0,-1): 1.0}`
+
+
+    //function for common processing input of add_*grid methods.
+    fn add_grid_internal(
+        &mut self, 
+        mut _owner: gdnative::Node,
+        _gridtype: GridType,
+        initial_offset: i32,
+        bounds: gdnative::Variant,
+        terrain_id_maybe: Option<i32>,
+    ) -> Option<(gdnative::Dictionary,FnvHashMap<(i32,i32),i32>)> {
+        
+
+        let terrain_id=terrain_id_maybe.unwrap_or(-1); //default terrain
+        //extract shape and starting point coordinates
+        let top_left: gdnative::Vector2;
+        let width: usize;
+        let height: usize;
+        let start: gdnative::Vector2;
+        let mut bitmap: Vec<Option<i32>>;
+
+        match bounds.get_type() {
+            
+            //input is a rectangle
+            gdnative::VariantType::Rect2 =>{
+                let rect=bounds.to_rect2();
+                top_left=rect.origin.to_vector();
+                start=gdnative::Vector2::new(0.0,0.0);
+                width=rect.size.width as usize;
+                height=rect.size.height as usize;
+                bitmap=Vec::with_capacity(width*height);
+                for _ in 0..width*height {
+                    bitmap.push(Some(terrain_id))
+                }
+                
+            }
+            _=>{
+                godot_error!("Invalid Argument type for bounds. Expected Rect2.");
+                return None;
+            },
+        }
+        
+        //add points both to DijkstraMap and the output dictionary
+        let mut pos_to_id=gdnative::Dictionary::new();
+        let mut points_in_bounds=FnvHashMap::<(i32,i32),i32>::default();
+
+        let mut id=initial_offset;
+        let mut pos=start;
+        for terrain in bitmap.iter(){
+            while self.has_point(_owner,id) //increase ID by 1 until you find free point ID
+                {id+=1;}
+            match terrain {
+                None=>{},
+                Some(tid)=>{
+                    self.add_point(_owner,id,*tid);
+                    points_in_bounds.insert((pos.x as i32,pos.y as i32),id);
+                    pos_to_id.set(&gdnative::Variant::from_vector2(&(pos+top_left)), &gdnative::Variant::from_i64(id as i64))
+                },
+            }
+
+            pos.x+=1.0;
+            if pos.x>=(width as f32) {
+                pos.x-= width as f32;
+                pos.y+=1.0;
+            }
+        }
+        Some((pos_to_id,points_in_bounds))
+    }
+
+    ///Adds a square grid of connected points. `initial_offset` specifies ID of the first point to be added.
+    /// returns a Dictionary, where keys are coordinates of points (Vector2) and values are their corresponding point IDs.
+    /// 
+    /// `bounds` corresponds to the bounding shape. At the moment, only Rect2 is supported.
+    /// 
+    /// `terrain_id` has default value -1.
+    /// 
+    /// `orthogonal_cost` specifies cost of orthogonal connections. In typical square grid, orthogonal points share a side.
+    ///  Values of `INF` or `NAN` disable orthogonal connections.
+    /// Default value = `1.0`
+    /// 
+    /// `diagonal_cost` specifies cost of diagonal connections. In typical square grid, diagonal points share  corner.
+    /// Values of `INF` or `NAN` disable diagonal connections.
+    /// Default value = `INF` (ie. disabled by default)
+    /// 
     #[export]
-    pub fn initialize_as_grid(
+    pub fn add_square_grid(
         &mut self,
         mut _owner: gdnative::Node,
-        bitmap: gdnative::BitMap,
-        relative_connections_in: gdnative::Dictionary,
         initial_offset: i32,
-    )-> gdnative::Dictionary {
-        let vec_size = bitmap.get_size();
-        let width = vec_size.x as i32;
-        let height = vec_size.y as i32;
-        let mut relative_connections: FnvHashMap<i32, f32> = FnvHashMap::default();
-        let mut id_to_pos : gdnative::Dictionary = gdnative::Dictionary::new();
-        //extract relative connections to rust types.
-        for dirs in relative_connections_in.keys().iter() {
-            if let Some(vec2) = dirs.try_to_vector2() {
-                    let cost = relative_connections_in.get(dirs);
-                    relative_connections.insert(
-                        (vec2.x as i32) + (vec2.y as i32) * width,
-                        cost.to_f64() as f32,
-                    );
-            }
-            else {
-                continue;
+        bounds: gdnative::Variant,
+        #[opt] terrain_id_maybe: Option<i32>,
+        #[opt] orthogonal_cost: Option<f32>,
+        #[opt] diagonal_cost: Option<f32>,
+    ) -> gdnative::Dictionary {
+
+        let pos_to_id:gdnative::Dictionary;
+        let points_in_bounds: FnvHashMap<(i32,i32),i32>;
+
+        //add points covered by bounds
+        match self.add_grid_internal(_owner,GridType::SQUARE,initial_offset,bounds,terrain_id_maybe){
+            None=>{return gdnative::Dictionary::new()}
+            Some((a,b))=>{
+                pos_to_id=a;
+                points_in_bounds=b;
             }
         }
 
-        let mut grid = FnvHashSet::<i32>::default();
-        for y in 0..height {
-            for x in 0..width {
-                let pos :gdnative::Vector2  = gdnative::Vector2::new(x as f32, y as f32);
-                if bitmap.get_bit(pos) {
-                    let id =  x + y * width + initial_offset;
-                    self.add_point(_owner,id, 0);
-                    grid.insert(id);
-                    id_to_pos.set(
-                        &gdnative::Variant::from_i64(id as i64),
-                        &gdnative::Variant::from_vector2(&pos)  //TODO set the vector here but its type must be variant
-                    );
-                }
-            }
-        }
+        //now connect points
+        let orthos=[(1,0),(-1,0),(0,1),(0,-1)];
+        let diags=[(1,1),(-1,1),(1,-1),(-1,-1)];
 
-        for y in 0..height {
-            for x in 0..width {
-                let id = y * x;
-                for (offs, cost) in relative_connections.iter() {
-                    if grid.contains(&(id + offs + initial_offset)) {
-                        self.connect_points(
-                            _owner,
-                            id + initial_offset,
-                            id + offs + initial_offset,
-                            Some(*cost),
-                            Some(false),
-                        );
+        for (pos,id_1) in points_in_bounds.iter(){
+            let cost=orthogonal_cost.unwrap_or(1.0);
+            if cost < std::f32::INFINITY {    
+                for offs in orthos.iter() {
+                    match points_in_bounds.get(&(pos.0+offs.0,pos.1+offs.1)) {
+                        None=>{},
+                        Some(id_2)=>{
+                            self.connect_points(_owner,*id_1,*id_2,Some(cost),Some(false));
+                        }
                     }
                 }
             }
+
+            let cost=diagonal_cost.unwrap_or(std::f32::INFINITY);
+            if cost < std::f32::INFINITY {
+                for offs in diags.iter() {
+                    match points_in_bounds.get(&(pos.0+offs.0,pos.1+offs.1)) {
+                        None=>{},
+                        Some(id_2)=>{
+                            self.connect_points(_owner,*id_1,*id_2,Some(cost),Some(false));
+                        }
+                    }
+                }    
+            }
+            
         }
-        return id_to_pos;
+
+        pos_to_id
     }
+
+    ///Adds a hexagonal grid of connected points. `initial_offset` specifies ID of the first point to be added.
+    /// returns a Dictionary, where keys are coordinates of points (Vector2) and values are their corresponding point IDs.
+    /// `cost` specifies cost of connections (default `1.0`) and `terrain_id` specifies terrain to be used (default `-1`).
+    /// 
+    /// Note: hexgrid is in the "pointy" orentation by default (see example below).
+    /// To switch to "flat" orientation, swap x and y coordinates in the keys of the output dictionary.
+    /// For example, this is what `Rect2(0,0,2,3)` would produce:
+    ///
+    ///```text
+    ///    / \     / \
+    ///  /     \ /     \
+    /// |  0,0  |  1,0  |
+    /// |       |       |
+    ///  \     / \     / \ 
+    ///    \ /     \ /     \
+    ///     |  0,1  |  1,1  |
+    ///     |       |       |
+    ///    / \     / \     /
+    ///  /     \ /     \ /
+    /// |  0,2  |  1,2  |
+    /// |       |       |
+    ///  \     / \     /
+    ///    \ /     \ /
+    ///```
+    /// 
+    #[export]
+    pub fn add_hexagonal_grid(
+        &mut self,
+        mut _owner: gdnative::Node,
+        initial_offset: i32,
+        bounds: gdnative::Variant,
+        #[opt] terrain_id_maybe: Option<i32>,
+        #[opt] cost: Option<f32>,
+    ) -> gdnative::Dictionary {
+
+        let pos_to_id:gdnative::Dictionary;
+        let points_in_bounds: FnvHashMap<(i32,i32),i32>;
+
+        //add points covered by bounds
+        match self.add_grid_internal(_owner,GridType::HEX,initial_offset,bounds,terrain_id_maybe){
+            None=>{return gdnative::Dictionary::new()}
+            Some((a,b))=>{
+                pos_to_id=a;
+                points_in_bounds=b;
+            }
+        }
+
+        //now connect points
+        let connections=[
+            [(-1,-1),(0,-1),(-1,0),(1,0),(-1,1),(0,1)], //for points with even y coordinate
+            [(0,-1),(1,-1),(-1,0),(1,0),(0,1),(1,1)]  //for points with odd y coordinate
+            ];
+
+        for (pos,id_1) in points_in_bounds.iter(){
+            let cost=cost.unwrap_or(1.0);
+            if cost < std::f32::INFINITY {    
+                for offs in connections[(pos.1%2) as usize].iter() {
+                    match points_in_bounds.get(&(pos.0+offs.0,pos.1+offs.1)) {
+                        None=>{},
+                        Some(id_2)=>{
+                            self.connect_points(_owner,*id_1,*id_2,Some(cost),Some(false));
+                        }
+                    }
+                }
+            }
+            
+        }
+
+        pos_to_id
+    }
+
 }
 
 // Function that registers all exposed classes to Godot

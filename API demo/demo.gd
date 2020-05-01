@@ -127,9 +127,16 @@ func _ready() -> void:
 ##---------------------------------------#
 ##--------------Dijkstra------------------#
 func recalculate():
+	var options = \
+	{
+	'input is destination' : false,
+	'maximum cost' : maxcost,
+	'initial costs' : 0.0,
+	'terrain weights' : {},
+	}
 	var pool = PoolIntArray( 
 					map_interface.positions_to_ids(
 								sources
 								)
 						)
-	map_interface.recalculate(pool)
+	map_interface.recalculate(pool,options)

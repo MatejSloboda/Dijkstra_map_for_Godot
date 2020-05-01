@@ -736,32 +736,38 @@ impl DijkstraMap {
         bitmap: gdnative::BitMap,
         relative_connections_in: gdnative::Dictionary,
         initial_offset: i32,
-    ) {
+    )-> gdnative::Dictionary {
         let vec_size = bitmap.get_size();
         let width = vec_size.x as i32;
         let height = vec_size.y as i32;
         let mut relative_connections: FnvHashMap<i32, f32> = FnvHashMap::default();
-
+        let mut id_to_pos : gdnative::Dictionary = gdnative::Dictionary::new();
         //extract relative connections to rust types.
         for dirs in relative_connections_in.keys().iter() {
-            match dirs.try_to_vector2() {
-                None => continue,
-                Some(vec2) => {
+            if let Some(vec2) = dirs.try_to_vector2() {
                     let cost = relative_connections_in.get(dirs);
                     relative_connections.insert(
                         (vec2.x as i32) + (vec2.y as i32) * width,
                         cost.to_f64() as f32,
                     );
-                }
+            }
+            else {
+                continue;
             }
         }
 
         let mut grid = FnvHashSet::<i32>::default();
         for y in 0..height {
             for x in 0..width {
-                if bitmap.get_bit(gdnative::Vector2::new(x as f32, y as f32)) {
-                    self.add_point(_owner, x + y * width + initial_offset, 0);
-                    grid.insert(x + y * width + initial_offset);
+                let pos :gdnative::Vector2  = gdnative::Vector2::new(x as f32, y as f32);
+                if bitmap.get_bit(pos) {
+                    let id =  x + y * width + initial_offset;
+                    self.add_point(_owner,id, 0);
+                    grid.insert(id);
+                    id_to_pos.set(
+                        &gdnative::Variant::from_i64(id as i64),
+                        &gdnative::Variant::from_vector2(&pos)  //TODO set the vector here but its type must be variant
+                    );
                 }
             }
         }
@@ -782,6 +788,7 @@ impl DijkstraMap {
                 }
             }
         }
+        return id_to_pos;
     }
 }
 

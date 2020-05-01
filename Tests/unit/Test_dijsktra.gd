@@ -156,10 +156,12 @@ func test_create_as_grid():
 	var relative_connections := {}
 	var initial_offset := 0
 	map = DijkstraMap.new()
-	for size in 4:
-		gut.p("size : " +str(size))
-		gut.p("id to pos :")
-		gut.p(Tcreate_as_grid(map,relative_connections,initial_offset,size))
+	#UNCOMMENT IF YOU WANT TO SEE SOME DATA
+#	for size in 4:
+#		gut.p("size : " +str(size))
+#		gut.p("id to pos :")
+#		gut.p(Tcreate_as_grid(map,relative_connections,initial_offset,size))
+	#END UNCOMMENT
 	
 	map = DijkstraMap.new()
 	relative_connections = {Vector2.RIGHT : 1.0}
@@ -193,8 +195,8 @@ func Tcreate_as_grid(map,relatvConnect,initaloffset,size):
 	var bitmap := BitMap.new()
 	bitmap.create(Vector2.ONE * size)
 	bitmap.set_bit_rect(Rect2(Vector2.ZERO,\
-						Vector2.ONE * size)\
-						,true
+						Vector2.ONE * size),\
+						true
 					)
 	
 	

@@ -736,23 +736,23 @@ impl DijkstraMap {
         bitmap: gdnative::BitMap,
         relative_connections_in: gdnative::Dictionary,
         initial_offset: i32,
-    ) {
+    )-> gdnative::Dictionary {
         let vec_size = bitmap.get_size();
         let width = vec_size.x as i32;
         let height = vec_size.y as i32;
         let mut relative_connections: FnvHashMap<i32, f32> = FnvHashMap::default();
-
+        let mut id_to_pos : gdnative::Dictionary;
         //extract relative connections to rust types.
         for dirs in relative_connections_in.keys().iter() {
-            match dirs.try_to_vector2() {
-                None => continue,
-                Some(vec2) => {
+            if let Some(vec2) = dirs.try_to_vector2() {
                     let cost = relative_connections_in.get(dirs);
                     relative_connections.insert(
                         (vec2.x as i32) + (vec2.y as i32) * width,
                         cost.to_f64() as f32,
                     );
-                }
+            }
+            else {
+                continue;
             }
         }
 

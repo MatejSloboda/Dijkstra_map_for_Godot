@@ -95,7 +95,7 @@ func _ready():
 func recalculate_dijkstra_maps():
 	#where is the dragon?
 	var dragon=point_position_to_id.get(world_to_map(get_node("dragon").position),0)
-	
+
 	#we want pikemen to charge the dragon head on
 	#We .recalculate the DijkstraMap.
 	#First argument is the origin (be default) or destination (ie. the ID of the point where dragon is).

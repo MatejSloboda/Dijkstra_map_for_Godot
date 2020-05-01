@@ -376,14 +376,28 @@ impl DijkstraMap {
             }
         }
 
-        self.recalculate_map_intern(
-            &mut origins,
-            Some(&initial_costs),
-            max_cost,
-            reversed,
-            &terrain_costs,
-            Some(&termination_points),
-        );
+        //performance testing for possible upgrade
+        let performance_test = optional_params.get(&gdnative::Variant::from_str("performance test"));
+        if performance_test.to_bool(){
+            self._recalculate_map_intern2(
+                &origins,
+                Some(&initial_costs),
+                max_cost,
+                reversed,
+                &terrain_costs,
+                Some(&termination_points),
+            );
+            
+        }else{
+            self.recalculate_map_intern(
+                &mut origins,
+                Some(&initial_costs),
+                max_cost,
+                reversed,
+                &terrain_costs,
+                Some(&termination_points),
+            );
+        }
     }
     /* 
         //receives a single point as target.
@@ -721,6 +735,112 @@ impl DijkstraMap {
             }
         }
     }
+
+
+    //EXPERIMENTAL
+    fn _recalculate_map_intern2(
+        &mut self,
+        open_set: &Vec<i32>,
+        initial_costs: Option<&Vec<f32>>,
+        max_cost: f32,
+        reversed: bool,
+        terrain_costs: &FnvHashMap<i32, f32>,
+        termination_points: Option<&FnvHashSet<i32>>,
+    ) {
+        
+
+        //open_set.reserve(capacity - open_set.len());
+        //let mut open_set_set = FnvHashSet::<i32>::with_capacity_and_hasher(capacity,Default::default());
+
+        //switches direction of connections
+        let connections = if reversed {
+            &self.reverse_connections
+        } else {
+            &self.connections
+        };
+
+        #[derive(Copy, Clone, PartialEq)]
+        struct QueuePriority{
+            id: i32,
+            cost: f32,
+        }
+        impl Ord for QueuePriority{
+            fn cmp(&self,other: &QueuePriority)->std::cmp::Ordering{
+                other.cost.partial_cmp(&self.cost).unwrap_or(std::cmp::Ordering::Equal).then_with(|| other.id.cmp(&self.id))
+            }
+        }
+        impl PartialOrd for QueuePriority{
+            fn partial_cmp(&self,other :&QueuePriority)->Option<std::cmp::Ordering>{
+                Some(self.cmp(other))
+            }
+        }
+        impl Eq for QueuePriority{}
+
+        //initialize containers
+        self.cost_map.clear();
+        self.direction_map.clear();
+        self.sorted_points.clear();
+        let capacity = std::cmp::max(
+            (f32::sqrt(self.connections.len() as f32) as usize) * 6,
+            open_set.len(),
+        );
+        let mut open_queue = priority_queue::PriorityQueue::<i32,QueuePriority>::with_capacity(capacity);
+        
+        //add targets to open_queue
+          
+        for (src, i) in open_set.iter().zip(0..) {
+            if connections.contains_key(src) {
+                self.direction_map.insert(*src, *src);
+                self.cost_map.insert(
+                    *src,
+                    match initial_costs {
+                        None => 0.0,
+                        Some(t) => *t.get(i).unwrap_or(&0.0),
+                    },
+                );
+                open_queue.push(*src, QueuePriority{id:*src, cost:self.cost_of(*src)});
+            }
+        }
+       
+        
+        let mut c = connections.len() as i32;
+        //iterrate over open_set
+        while !open_queue.is_empty() && c>=0{
+            c-=1;
+            let (point1,_) = open_queue.pop().unwrap();
+            self.sorted_points.push(point1);
+            if termination_points.is_some() && termination_points.unwrap().contains(&point1) {
+                break
+            }
+            let point1_cost = self.cost_of(point1);
+            let weight_of_point1 = terrain_costs
+                .get(&self.terrain_map.get(&point1).unwrap_or(&-1))
+                .unwrap_or(&1.0);
+            //iterrate over it's neighbours
+            for (&point2, dir_cost) in connections.get(&point1).unwrap().iter() {
+                let cost = point1_cost
+                    + dir_cost
+                        * 0.5
+                        * (weight_of_point1
+                            + terrain_costs
+                                .get(&self.terrain_map.get(&point2).unwrap_or(&-1))
+                                .unwrap_or(&1.0));
+                //add to the open set (or update values if already present)
+                //if point is enabled and new cost is better than old one, but not bigger than maximum cost
+                if cost < self.cost_of(point2)
+                    && cost <= max_cost
+                    && !self.disabled_points.contains(&point2)
+                {
+                    open_queue.push_increase(point2, QueuePriority{id:point2,cost:cost});
+                    self.direction_map.insert(point2, point1);
+                    self.cost_map.insert(point2, cost);
+                }
+            }
+        }
+            
+    }
+
+
 
     ///initializes map as a 2D grid. Walkable tiles are specified by `BitMap` (`true`=>point gets added, `false`=>point gets ignored).
     ///point IDs are setup such that `ID=(x+w*width)+initial_offset`. Conversely `x=(ID-initial_offset)%width` and `y=(ID-initial_offset)/width`

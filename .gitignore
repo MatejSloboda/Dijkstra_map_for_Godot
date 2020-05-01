@@ -3,3 +3,4 @@ Cargo.lock
 *~
 /.import
 /.vscode
+/performance_test

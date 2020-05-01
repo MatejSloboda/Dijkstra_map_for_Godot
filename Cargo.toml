@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 gdnative = { git = "https://github.com/GodotNativeTools/godot-rust", rev = "4195027a74fc46f20c33d74a92e15494217a2d1c"}
 fnv = "1.0.3"
+priority-queue = "0.7.0"
 
 [lib]
 crate-type = ["cdylib"]

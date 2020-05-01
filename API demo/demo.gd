@@ -20,7 +20,7 @@ export var _len := 20
 export(Array,Vector2) var sources = [Vector2.ZERO]
 
 export(Color) var highlight_color = Color.aqua
-export(Vector2) var highligth_cost_boundaries = Vector2(0.0,3.0)
+export(Vector2) var highligth_cost_boundaries = Vector2(0.0,INF)
 #---------------------------------------#
 #----------------INTERFACES-----------------#
 

@@ -25,29 +25,19 @@ func clear():
 
 func creating_square_map(
 						size : int,
-						relative_connections : Dictionary = {},
 						initial_offset :int = 0
 						)->void:
 							
-	var bitmap := BitMap.new()
-	bitmap.create(Vector2.ONE * size)
-	bitmap.set_bit_rect(Rect2(Vector2.ZERO,\
-						Vector2.ONE * size),\
-						true
-					)
-	if not relative_connections:
-		for dir in orthogonal:
-			relative_connections[dir] = 1.0	
-	
-	point_id_to_position = NativeMap.initialize_as_grid(
-			bitmap,
-			relative_connections,
-			initial_offset
+	var rect = Rect2(Vector2.ZERO,Vector2.ONE * size)
+
+	point_position_to_id = NativeMap.add_square_grid(
+			initial_offset,
+			rect
 			)
 	
-	for id in point_id_to_position.keys():
-		var pos = point_id_to_position[id]
-		point_position_to_id[pos] = id
+	for pos in point_position_to_id.keys():
+		var id = point_position_to_id[pos]
+		point_id_to_position[id] = pos
 	
 
 func add_point(id : int):

@@ -13,10 +13,10 @@ var pos_to_arrow = {}
 
 const MyArrow = preload("res://API demo/dependancy/arrow.tscn")
 const vect_to_ArrowRotation := {
-	Vector2.UP : 0,
-	Vector2.DOWN :180,
-	Vector2.LEFT :-90,
-	Vector2.RIGHT :90,
+	Vector2.UP : 180,
+	Vector2.DOWN :1,#
+	Vector2.LEFT :90,
+	Vector2.RIGHT :-90,#
 	}
 
 

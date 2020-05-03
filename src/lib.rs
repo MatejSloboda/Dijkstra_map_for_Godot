@@ -70,6 +70,31 @@ impl DijkstraMap {
         }
     }
 
+    /* ///duplicates graph from AStar object.
+    /// because of the differences between Astar and DijkstraMap, 
+    /// terrain is set to default and weights are baked into the connection costs.
+    #[export]
+    pub fn duplicate_graph_from_astar(&mut self, mut _owner: gdnative::Node, mut source: gdnative::AStar) -> i64 {
+        
+        for pt in source.get_points().iter(){
+            let point=pt.to_i64() as i32;
+            self.add_point(_owner, point, None);
+        }
+
+
+        for pt in source.get_points().iter(){
+            let point=pt.to_i64();
+            let cons=source.get_point_connections(point);
+            for point2 in cons.read().iter(){
+                let cost=source._compute_cost(point,*point2 as i64);
+                self.connect_points(_owner, point as i32, *point2 as i32, Some(cost as f32), Some(false));
+            }
+
+        }
+
+        gdnative::GlobalConstants::OK
+    } */
+
     ///returns next ID not associated with any point
     #[export]
     pub fn get_available_point_id(&mut self, mut _owner: gdnative::Node) -> i32 {
@@ -81,13 +106,13 @@ impl DijkstraMap {
     }
     ///Adds new point with given ID and terrain ID into the graph and returns OK. If point with that ID already exists, does nothing and returns FAILED.
     #[export]
-    pub fn add_point(&mut self, mut _owner: gdnative::Node, id: i32, #[opt] terrain_id: i32) -> i64 {
+    pub fn add_point(&mut self, mut _owner: gdnative::Node, id: i32, #[opt] terrain_id: Option<i32>) -> i64 {
         if self.has_point(_owner, id) {
             gdnative::GlobalConstants::FAILED
         } else {
             self.connections.insert(id, FnvHashMap::default());
             self.reverse_connections.insert(id, FnvHashMap::default());
-            self.terrain_map.insert(id, terrain_id);
+            self.terrain_map.insert(id, terrain_id.unwrap_or(-1));
             gdnative::GlobalConstants::OK
         }
     }
@@ -98,7 +123,7 @@ impl DijkstraMap {
         &mut self,
         mut _owner: gdnative::Node,
         id: i32,
-        #[opt] terrain_id: Option<i32>, //TODO BASIC TERRAIN cost always == 1.0
+        terrain_id: Option<i32>, //TODO BASIC TERRAIN cost always == 1.0
     ) -> i64 {
         let terrain_id = terrain_id.unwrap_or(-1);
         if self.has_point(_owner, id) {
@@ -381,10 +406,7 @@ impl DijkstraMap {
             }
         }
 
-        //performance testing for possible upgrade
-        let performance_test = optional_params.get(&gdnative::Variant::from_str("performance test"));
-        if performance_test.to_bool(){
-            self._recalculate_map_intern2(
+        self.recalculate_map_intern2(
                 &origins,
                 Some(&initial_costs),
                 max_cost,
@@ -392,17 +414,7 @@ impl DijkstraMap {
                 &terrain_costs,
                 Some(&termination_points),
             );
-            
-        }else{
-            self.recalculate_map_intern(
-                &mut origins,
-                Some(&initial_costs),
-                max_cost,
-                reversed,
-                &terrain_costs,
-                Some(&termination_points),
-            );
-        }
+        
     }
     /* 
         //receives a single point as target.
@@ -626,19 +638,19 @@ impl DijkstraMap {
         *self.cost_map.get(&a).unwrap_or(&std::f32::INFINITY)
     }
 
-    fn compare_cost(&self, a: i32, b: i32) -> std::cmp::Ordering {
+    /* fn compare_cost(&self, a: i32, b: i32) -> std::cmp::Ordering {
         if self.cost_of(a) < self.cost_of(b) {
             std::cmp::Ordering::Greater
         } else {
             std::cmp::Ordering::Less
         }
-    }
+    } */
 
     //internal
     //recalculates the cost map and direction map in given direction
     //receives hashmap of sources with initial costs
     //stops updating once maximum cost is reached
-    fn recalculate_map_intern(
+    /* fn recalculate_map_intern(
         &mut self,
         open_set: &mut Vec<i32>,
         initial_costs: Option<&Vec<f32>>,
@@ -739,11 +751,11 @@ impl DijkstraMap {
                 }
             }
         }
-    }
+    } */
 
 
-    //EXPERIMENTAL
-    fn _recalculate_map_intern2(
+    //actually recalculates the DijkstraMap
+    fn recalculate_map_intern2(
         &mut self,
         open_set: &Vec<i32>,
         initial_costs: Option<&Vec<f32>>,
@@ -846,8 +858,48 @@ impl DijkstraMap {
     }
 
 
+    //returns bounding rectangle of Shape2D
+    /* fn _get_bounding_rectangle(&mut self, shape_in: &Option<gdnative::Shape2D>) -> Option<gdnative::Rect2> {
+        use gdnative::geom::*;
+        match shape_in {
+            None=>return None,
+            Some(shape)=>{
+                match shape.cast::<gdnative::ConcavePolygonShape2D>(){
+                    None=>{},
+                    Some(shape2d)=>{
+                        let points=shape2d.get_segments().read().to_vec();
+                        let mut pts=Vec::<Point2>::new();
+                        for point in points.iter(){
+                            pts.push(Point2::new(point.x,point.y))
+                        }
+                        return Some(Rect2::from_points(pts))    
+                    }
+                }
+                match shape.cast::<gdnative::ConvexPolygonShape2D>(){
+                    None=>{},
+                    Some(shape2d)=>{
+                        let points=shape2d.get_points().read().to_vec();
+                        let mut pts=Vec::<Point2>::new();
+                        for point in points.iter(){
+                            pts.push(Point2::new(point.x,point.y))
+                        }
+                        return Some(Rect2::from_points(pts))    
+                    }
+                }
+                match shape.cast::<gdnative::CircleShape2D>(){
+                    None=>{},
+                    Some(shape2d)=>{
+                        let radius=shape2d.get_radius() as f32;
+                        let pts=[Point2::new(radius,0.0),Point2::new(-radius,0.0),Point2::new(0.0,radius),Point2::new(0.0,-radius)];
+                        return Some(Rect2::from_points(pts.iter()))    
+                    }
+                }
+                return None
 
-
+            }
+        }
+       
+    } */
 
     //function for common processing input of add_*grid methods.
     fn add_grid_internal(
@@ -856,6 +908,7 @@ impl DijkstraMap {
         _gridtype: GridType,
         initial_offset: i32,
         bounds: gdnative::Variant,
+        _custom_tile: Option<(gdnative::Shape2D,gdnative::Vector2,gdnative::Vector2)>, //preparation for potential future upgrade of custom tiles
         terrain_id_maybe: Option<i32>,
     ) -> Option<(gdnative::Dictionary,FnvHashMap<(i32,i32),i32>)> {
         
@@ -869,7 +922,74 @@ impl DijkstraMap {
         let mut bitmap: Vec<Option<i32>>;
 
         match bounds.get_type() {
-            
+            //Shape2D detection doesn't work at the moment
+            /* gdnative::VariantType::Object => {
+                let shape=bounds.try_to_object::<gdnative::Shape2D>();
+                                
+                let rect=self._get_bounding_rectangle(&shape);
+                if rect.is_none(){
+                    godot_error!("Invalid Argument type for bounds. Expected Rect2 or Shape2D.");
+                }
+                let rect=rect.unwrap();
+                top_left=rect.origin.to_vector();
+                start=gdnative::Vector2::new(0.0,0.0);
+                width=rect.size.width as usize;
+                height=rect.size.height as usize;
+                bitmap=Vec::with_capacity(width*height);
+                
+                let (tile,delta,offset_of_odd)=match _gridtype {
+                    GridType::SQUARE=>{
+                        let mut sqr = gdnative::ConvexPolygonShape2D::new();
+                        let mut pts=gdnative::VariantArray::new();
+                        pts.push(&gdnative::Variant::from_vector2(&gdnative::Vector2::new(-0.5,-0.5)));
+                        pts.push(&gdnative::Variant::from_vector2(&gdnative::Vector2::new(0.5,-0.5)));
+                        pts.push(&gdnative::Variant::from_vector2(&gdnative::Vector2::new(0.5,0.5)));
+                        pts.push(&gdnative::Variant::from_vector2(&gdnative::Vector2::new(-0.5,0.5)));
+
+                        sqr.set_point_cloud(gdnative::Vector2Array::from_variant_array(&pts));
+                        (sqr.cast::<gdnative::Shape2D>().unwrap(),gdnative::Vector2::new(1.0,1.0),gdnative::Vector2::new(0.0,0.0))
+                    }
+                    GridType::HEX=>{
+                        let mut hex = gdnative::ConvexPolygonShape2D::new();
+                        let r=1.1547005*0.5; //radius of hexagon
+
+                        let mut pts=gdnative::VariantArray::new();
+                        pts.push(&gdnative::Variant::from_vector2(&gdnative::Vector2::new(-0.5,-0.5*r)));
+                        pts.push(&gdnative::Variant::from_vector2(&gdnative::Vector2::new(0.0,-r)));
+                        pts.push(&gdnative::Variant::from_vector2(&gdnative::Vector2::new(0.5,-0.5*r)));
+                        pts.push(&gdnative::Variant::from_vector2(&gdnative::Vector2::new(0.5,0.5*r)));
+                        pts.push(&gdnative::Variant::from_vector2(&gdnative::Vector2::new(0.0,r)));
+                        pts.push(&gdnative::Variant::from_vector2(&gdnative::Vector2::new(-0.5,0.5*r)));
+
+                        hex.set_point_cloud(gdnative::Vector2Array::from_variant_array(&pts));
+                        (hex.cast::<gdnative::Shape2D>().unwrap(),gdnative::Vector2::new(1.0,2.0*r),gdnative::Vector2::new(0.5,0.0))  
+                    }
+                };
+                
+               
+                
+                let mut shape=shape.unwrap().new_ref();
+
+                for i in 0..width*height {
+                    let x=i%width;
+                    let y=i/width;
+                    let xf= x as f32 * delta.x + if y%2==0 {0.0} else {offset_of_odd.x};
+                    let yf= y as f32 * delta.y + if x%2==0 {0.0} else {offset_of_odd.y};
+                    let tl=tile.new_ref();
+                    if shape.collide(
+                        gdnative::Transform2D::create_translation(0.0,0.0),
+                        Some(tl),
+                        gdnative::Transform2D::create_translation(xf,yf)){
+                            bitmap.push(Some(terrain_id));
+                        }else{
+                            bitmap.push(None);
+                        }
+                                         
+                        
+                
+                }
+            } */
+
             //input is a rectangle
             gdnative::VariantType::Rect2 =>{
                 let rect=bounds.to_rect2();
@@ -878,13 +998,44 @@ impl DijkstraMap {
                 width=rect.size.width as usize;
                 height=rect.size.height as usize;
                 bitmap=Vec::with_capacity(width*height);
+
                 for _ in 0..width*height {
+                    
+                    
                     bitmap.push(Some(terrain_id))
                 }
                 
             }
+
+            gdnative::VariantType::Object => {
+                let bmp=bounds.try_to_object::<gdnative::BitMap>();
+                match bmp {
+                    None=>{
+                        godot_error!("Invalid Argument type for bounds. Expected Rect2 or BitMap.");
+                        return None;
+                    },
+                    Some(bitmap_godot)=>{
+                        top_left=gdnative::Vector2::new(0.0,0.0);
+                        start=gdnative::Vector2::new(0.0,0.0);
+                        width=bitmap_godot.get_size().x as usize;
+                        height=bitmap_godot.get_size().y as usize;
+                        bitmap=Vec::with_capacity(width*height);
+                        for i in 0..width*height {
+                            let x=i%width;
+                            let y=i/width;
+                            if bitmap_godot.get_bit(gdnative::Vector2::new(x as f32,y as f32)){
+                                bitmap.push(Some(terrain_id))
+                            }else{
+                                bitmap.push(None)
+                            }
+                            
+                        }
+                    }
+                }
+            }
+
             _=>{
-                godot_error!("Invalid Argument type for bounds. Expected Rect2.");
+                godot_error!("Invalid Argument type for bounds. Expected Rect2 or BitMap.");
                 return None;
             },
         }
@@ -901,7 +1052,7 @@ impl DijkstraMap {
             match terrain {
                 None=>{},
                 Some(tid)=>{
-                    self.add_point(_owner,id,*tid);
+                    self.add_point(_owner,id,Some(*tid));
                     points_in_bounds.insert((pos.x as i32,pos.y as i32),id);
                     pos_to_id.set(&gdnative::Variant::from_vector2(&(pos+top_left)), &gdnative::Variant::from_i64(id as i64))
                 },
@@ -946,7 +1097,7 @@ impl DijkstraMap {
         let points_in_bounds: FnvHashMap<(i32,i32),i32>;
 
         //add points covered by bounds
-        match self.add_grid_internal(_owner,GridType::SQUARE,initial_offset,bounds,terrain_id_maybe){
+        match self.add_grid_internal(_owner,GridType::SQUARE,initial_offset,bounds,None,terrain_id_maybe){
             None=>{return gdnative::Dictionary::new()}
             Some((a,b))=>{
                 pos_to_id=a;
@@ -993,7 +1144,8 @@ impl DijkstraMap {
     /// `cost` specifies cost of connections (default `1.0`) and `terrain_id` specifies terrain to be used (default `-1`).
     /// 
     /// Note: hexgrid is in the "pointy" orentation by default (see example below).
-    /// To switch to "flat" orientation, swap x and y coordinates in the keys of the output dictionary.
+    /// To switch to "flat" orientation, swap x and y coordinates in the `bounds` and in keys of the output dictionary. 
+    /// (Transform2D may be convenient there)
     /// For example, this is what `Rect2(0,0,2,3)` would produce:
     ///
     ///```text
@@ -1027,7 +1179,7 @@ impl DijkstraMap {
         let points_in_bounds: FnvHashMap<(i32,i32),i32>;
 
         //add points covered by bounds
-        match self.add_grid_internal(_owner,GridType::HEX,initial_offset,bounds,terrain_id_maybe){
+        match self.add_grid_internal(_owner,GridType::HEX,initial_offset,bounds,None,terrain_id_maybe){
             None=>{return gdnative::Dictionary::new()}
             Some((a,b))=>{
                 pos_to_id=a;

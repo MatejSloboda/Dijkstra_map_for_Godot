@@ -104,7 +104,8 @@ impl DijkstraMap {
         }
         id
     }
-    ///Adds new point with given ID and terrain ID into the graph and returns OK. If point with that ID already exists, does nothing and returns FAILED.
+    ///Adds new point with given ID and optional terrain ID into the graph and returns OK.
+    /// If point with that ID already exists, does nothing and returns FAILED.
     #[export]
     pub fn add_point(&mut self, mut _owner: gdnative::Node, id: i32, #[opt] terrain_id: Option<i32>) -> i64 {
         if self.has_point(_owner, id) {
@@ -140,7 +141,7 @@ impl DijkstraMap {
         return *self.terrain_map.get(&id).unwrap_or(&-1);
     }
 
-    //Removes point from graph along with all of its connections and returns OK. If point doesn't exist, returns FAILED.
+    ///Removes point from graph along with all of its connections and returns OK. If point doesn't exist, returns FAILED.
     #[export]
     pub fn remove_point(&mut self, mut _owner: gdnative::Node, point: i32) -> i64 {
         self.disabled_points.remove(&point);
@@ -165,7 +166,7 @@ impl DijkstraMap {
             }
         }
     }
-    //Returns true if point exists.
+    ///Returns true if point exists.
     #[export]
     pub fn has_point(&mut self, mut _owner: gdnative::Node, id: i32) -> bool {
         self.connections.contains_key(&id)
@@ -206,8 +207,8 @@ impl DijkstraMap {
     }
 
     ///Adds connection with given cost (or cost of existing existing connection) between a source point and target point if they exist.
-    /// if the connection is added successfuly return OK
-    /// if they one of the point dont exist returns FAILED
+    ///If the connection is added successfuly return OK
+    ///If they one of the point dont exist returns FAILED
     ///If bidirectional is true, it also adds connection from target to source too.
     #[export]
     pub fn connect_points(

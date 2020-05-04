@@ -40,9 +40,9 @@ you can also look at the unit tests in Tests/unit/*
 
 you should also look at our documentation in ./documentation/index.html (open it in your browser)
 
-### Features && HowTo's
+## Features && HowTo's
 
-# Basic Behaviour
+#### Basic Behaviour
 In godot you create a new DijkstraMap Node.
 * you start by adding points to it, where point are the only representation of the world for your map:
 * then you connect those points between them, you assign a cost to each connections (which represents how hard it is going from one point to another via this connection)
@@ -56,12 +56,12 @@ or automatically with add_*_grid (add_square_grid or add_hexagonal_grid ...)
 * you can then use get_cost_map() to get a dictionary of (the id of a point) -> (the cost to go to that point from the id you specified in recalculate)
 * you can use get_direction_map to get a dictionary of (the id of a point) -> (the id of the point where it should go next for moving the fastest to the id you specified in recalculate)
 * you can use get_all_points_with_cost_between whose name is self explanatory
-# More recalculate flags
+#### More recalculate flags
 * if you look at the documentation you'll see you can optionnaly dive a dictionary to the recalculate method
 'max cost' default to INF meaning the map will calculate for all points whose cost are below INF which means.. all points
 but sometimes you dont need to recalculate all map, if you have a monster moving on a chess board that has a total of movement points equal to 20, it makes sense to set 'max cost' to 20, meaning we only calculate for the points the monster can actually reach
 for more info go look at the documentation
-# The usefulness of terrain
+#### The usefulness of terrain
 * If you look at the documentation you might notice there's a mysterious feature called terrain (you can pass optionnal terrain id for add_point for instance)
 this serves the following purpose:
 you want to share the same map (without redoing connections each turn) between a warrior that is slow on the forest but quick on the field, and a priest that is quick everywhere (priest are overpowered, you should really fix your game), but the map is very big and you cant afford to recalculate all the map after changing the connections each time
@@ -78,7 +78,7 @@ you pass {CONST_TERRAIN_FOREST : 2.0} in optional
 going from P1 to P2: cost is connection_cost(=1.0) * (cost_terrainP1(1.0)*cost_terrainP2(2.0)) /2 this connection between to different terrains was mutiplied by 1.5 total is 1.0 * 1.5 = 1.5
 going from P2 to P3: cost is connection_cost(=1.0) * (cost_terrainP2(2.0)*cost_terrainP3(2.0)) /2 this connection between to different terrains was mutiplied by 2 total is 1.0 * 2.0 = 2.0
 
-### Notes
+## Notes
 
 Careful ! If you pass arguments of the wrong signature to the rust API, the game will not crash, if you're lucky and have a terminal open, it ight print an error there but not in godot! this issue can be avoided by using a gdscript wrapper
 But it can lead to non trivial bugs, consider yourselves warned

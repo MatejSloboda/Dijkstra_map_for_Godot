@@ -54,29 +54,37 @@ or automatically with add_*_grid (add_square_grid or add_hexagonal_grid ...)
 * you then have to call recalculate with appropriate args, by defaut, if you only pass an id or a PoolIntArray of id's, its gonna calculate the cost from these id's to every other point of your map
 
 * you can then use get_cost_map() to get a dictionary of (the id of a point) -> (the cost to go to that point from the id you specified in recalculate)
+
 * you can use get_direction_map to get a dictionary of (the id of a point) -> (the id of the point where it should go next for moving the fastest to the id you specified in recalculate)
+
 * you can use get_all_points_with_cost_between whose name is self explanatory
+
 #### More recalculate flags
 * if you look at the documentation you'll see you can optionnaly dive a dictionary to the recalculate method
 'max cost' default to INF meaning the map will calculate for all points whose cost are below INF which means.. all points
 but sometimes you dont need to recalculate all map, if you have a monster moving on a chess board that has a total of movement points equal to 20, it makes sense to set 'max cost' to 20, meaning we only calculate for the points the monster can actually reach
 for more info go look at the documentation
+
 #### The usefulness of terrain
-* If you look at the documentation you might notice there's a mysterious feature called terrain (you can pass optionnal terrain id for add_point for instance)
-this serves the following purpose:
-you want to share the same map (without redoing connections each turn) between a warrior that is slow on the forest but quick on the field, and a priest that is quick everywhere (priest are overpowered, you should really fix your game), but the map is very big and you cant afford to recalculate all the map after changing the connections each time
-the solution offered by terrain is this: you set the terrain id of forest to, lets say 0 but we'll call it CONST_TERRAIN_FOREST = 0 and CONST_TERRAIN_FIELD = 1
+
+* If you look at the documentation you might notice there's a mysterious feature called terrain (you can pass optionnal terrain id for add_point for instance) this serves the following purpose:
+
+you want to share the same map (without redoing connections each turn) between a warrior that is slow on the forest but quick on the field, and a priest that is quick everywhere (priest are overpowered, you should really fix your game), but the map is very big and you cant afford to recalculate all the map after changing the connections each time.
+
+the solution offered by terrain is this: you set the terrain id of forest to, lets say 0 but we'll call it CONST_TERRAIN_FOREST = 0 and CONST_TERRAIN_FIELD = 1.
+
 you then set all the terrain id of your points via set_terrain_for_point
 and then when you call recalculate, you pass a optional_params = a dictionary where key = "terrain weights" and value = a dictionary of terrains weigth
 where key = CONST_TERRAIN_FOREST and the value is a mutiplier of the cost its gonna take for each connection where terrain is the terrain id specified.
-for instance value = 1.0 is neutral (and default) but value = 5.0 means its gonna be harder to cross
+for instance value = 1.0 is neutral (and default) but value = 5.0 means its gonna be harder to cross.
 
-to be a little more precise I'll give an example: you have four points P(point_id,terrain_id) that are connected like such
+to be a little more precise I'll give an example: you have four points P(point_id,terrain_id) that are connected like such: 
 P1 <----> P2 <----> P3 <----> P4 
 if the terrain of P1 is default (-1 with cost 1.0 by default) and other points are all CONST_TERRAIN_FOREST and the cost between each connection is 1.0
 you pass {CONST_TERRAIN_FOREST : 2.0} in optional
 going from P1 to P2: cost is connection_cost(=1.0) * (cost_terrainP1(1.0)*cost_terrainP2(2.0)) /2 this connection between to different terrains was mutiplied by 1.5 total is 1.0 * 1.5 = 1.5
 going from P2 to P3: cost is connection_cost(=1.0) * (cost_terrainP2(2.0)*cost_terrainP3(2.0)) /2 this connection between to different terrains was mutiplied by 2 total is 1.0 * 2.0 = 2.0
+going from P1 to P4 cost 1.5 + 2*2.0 = 5.5
 
 ## Notes
 

@@ -8,7 +8,7 @@ Howdy !
 
 This is a gdnative project to bring the Dikstra algorithm into godot! It serves as pathfinding in a graph and allow to find all path leading to a point source (or all points accessible from a point target) which is more powerful than the A* algorithm
 
-Note that we are in early development and the API is not stable, its still regularly edited!
+Note that the API is now stable! Some features might be added
 
 Also note that other uses can be found in this amazing article : http://www.roguebasin.com/index.php?title=Dijkstra_Maps_Visualized
 
@@ -34,7 +34,11 @@ After having followed *Installing* direction, open the godot project and open an
 * /API demo/demo.tscn
 
 toy around with it, the code of dragon_attack is heavily commented
-the code of demo.tscn is still a little immature and shouldnt be taken as example ... (especially the ugly wrapper I put there)
+mess with the exports variable in demo.tscn (click on the root node and tweak the values at the topof the inspector)
+
+you can also look at the unit tests in Tests/unit/*
+
+you should also look at our documentation in ???
 
 ### Features
 
@@ -63,7 +67,7 @@ state of the test : currently few of them pass, its due to the person writing th
 
 Open an issue before working on a feature, bugfix, unit tests, then we discuss it, then you can work on it (or let someone else) then do a pull request
 
-Before doing that pull request, If you modified the rust code be sure you have build it "cargo build --release" and it still works! (the unit tests pass **are in the same or better state than before, I'm wworking on fixing them** , dragon.tscn is running, the demo is running **currently it is broken no matter what, I'm working on it ;)**.
+Before doing that pull request, If you modified the rust code be sure you have build it "cargo build --release" and it still works! (the unit tests pass, dragon.tscn is running, the demo is running .
 
 
 ## Acknowledgments

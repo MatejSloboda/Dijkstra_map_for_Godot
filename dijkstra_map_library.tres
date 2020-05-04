@@ -1,9 +1,7 @@
 [gd_resource type="GDNativeLibrary" format=2]
 
 [resource]
-entry/UWP.64 = "res://target/release/dijkstra_map_for_godot.dll"
-entry/Windows.64 = "res://target/release/dijkstra_map_for_godot.dll"
-entry/X11.64 = "res://target/release/libdijkstra_map_for_godot.so"
-dependency/UWP.64 = [  ]
+entry/Windows.64 = "res://bin/windows/libdijkstra_map_for_godot.dll"
+entry/X11.64 = "res://bin/linux/libdijkstra_map_for_godot.so"
 dependency/Windows.64 = [  ]
 dependency/X11.64 = [  ]

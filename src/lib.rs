@@ -857,7 +857,163 @@ impl DijkstraMap {
             
     }
 
+    ///calculates shortest parth from `origin` to `destination` using AStar algorithm.
+    /// This method requires id-to-position dictionary to know where the points are in space.
+    /// The keys should be IDs and values should be vector2 or vector3 coordinates of the points.
+    /// heuristic specifies how distance should be estimated.
+    #[export]
+    fn path_find_astar(
+        &mut self,
+        mut _owner: gdnative::Node,
+        origin: i32,
+        destination: i32,
+        id_to_position: gdnative::Dictionary,
+        heuristic: gdnative::Variant,
+        terrain_costs_in: gdnative::Dictionary,
+    ) -> gdnative::Int32Array {
+        
 
+        #[derive(Copy, Clone, PartialEq)]
+        struct QueuePriority{
+            id: i32,
+            cost: f32,
+        }
+        impl Ord for QueuePriority{
+            fn cmp(&self,other: &QueuePriority)->std::cmp::Ordering{
+                other.cost.partial_cmp(&self.cost).unwrap_or(std::cmp::Ordering::Equal).then_with(|| other.id.cmp(&self.id))
+            }
+        }
+        impl PartialOrd for QueuePriority{
+            fn partial_cmp(&self,other :&QueuePriority)->Option<std::cmp::Ordering>{
+                Some(self.cmp(other))
+            }
+        }
+        impl Eq for QueuePriority{}
+
+        let mut terrain_costs = FnvHashMap::<i32, f32>::default();
+        {
+            for key in terrain_costs_in.keys().iter() {
+                match key.try_to_i64() {
+                    None => {}
+                    Some(id) => {
+                        terrain_costs.insert(
+                            id as i32,
+                            terrain_costs_in.get(key).try_to_f64().unwrap_or(1.0) as f32,
+                        );
+                    }
+                }
+            }     
+        }
+        enum Heuristic {
+            NONE,
+            EUCLIDEAN,
+            MANHATTAN,
+            DIAGONAL,
+            CUSTOM,
+        }
+        //choose heuristic function
+        let h= match heuristic.get_type() {
+            gdnative::VariantType::GodotString=>{
+                let strng=heuristic.to_string();
+                match strng.as_str() {
+                    "euclidean"=>Heuristic::EUCLIDEAN,
+                    "manhattan"=>Heuristic::MANHATTAN,
+                    "diagonal"=>Heuristic::DIAGONAL,
+                    _=>Heuristic::NONE,
+                }
+            }
+            gdnative::VariantType::VariantArray=>{
+                Heuristic::CUSTOM
+            },
+            _=>Heuristic::NONE,
+        };
+        
+        let heuristic_function = |pt1:i32,pt2:i32| -> f32 {
+            let v1=id_to_position.get(&gdnative::Variant::from_i64(pt1 as i64));
+            let v2=id_to_position.get(&gdnative::Variant::from_i64(pt2 as i64));
+            match h {
+                Heuristic::NONE=>0.0,
+                Heuristic::EUCLIDEAN=>{
+                    match v1.try_to_vector2(){
+                        Some(v1a)=>{ let a=(v1a-v2.to_vector2()).length();a},
+                        None=>{ (v1.to_vector3()-v2.to_vector3()).length()},
+                    }
+                },
+                Heuristic::MANHATTAN=>{
+                    match v1.try_to_vector2(){
+                        Some(v1a)=>{
+                            let a=v1a-v2.to_vector2();
+                            a.x+a.y
+                        },
+                        None=>{
+                            let a=v1.to_vector3()-v2.to_vector3();
+                            a.x+a.y+a.z
+                        }
+                    }                
+                },
+                _=>0.0,
+            }
+        };
+        
+
+        //initialize containers
+        let connections = &self.connections;
+        let capacity = (f32::sqrt(self.connections.len() as f32) as usize) * 6;
+        let mut cost_map = FnvHashMap::<i32,f32>::with_capacity_and_hasher(capacity,Default::default());
+        let mut direction_map = FnvHashMap::<i32,i32>::with_capacity_and_hasher(capacity,Default::default());
+            
+        let mut open_queue = priority_queue::PriorityQueue::<i32,QueuePriority>::with_capacity(capacity);
+        
+        //add targets to open_queue
+        cost_map.insert(origin, 0.0);
+        open_queue.push(origin, QueuePriority{id: origin, cost: heuristic_function(origin,destination)});
+        
+        
+        
+        let mut c = connections.len() as i32;
+        //iterrate over open_set
+        while !open_queue.is_empty() && c>=0{
+            c-=1;
+            let (point1,_) = open_queue.pop().unwrap();
+            if point1==destination {
+                break
+            }
+            let point1_cost = *cost_map.get_mut(&point1).unwrap_or(&mut std::f32::INFINITY);
+            let weight_of_point1 = terrain_costs
+                .get(&self.terrain_map.get(&point1).unwrap_or(&-1))
+                .unwrap_or(&1.0);
+            //iterrate over it's neighbours
+            for (&point2, dir_cost) in connections.get(&point1).unwrap().iter() {
+                let cost = point1_cost
+                    + dir_cost
+                        * 0.5
+                        * (weight_of_point1
+                            + terrain_costs
+                                .get(&self.terrain_map.get(&point2).unwrap_or(&-1))
+                                .unwrap_or(&1.0));
+                //add to the open set (or update values if already present)
+                //if point is enabled and new cost is better than old one, but not bigger than maximum cost
+                if cost < *cost_map.get_mut(&point2).unwrap_or(&mut std::f32::INFINITY)
+
+                    && !self.disabled_points.contains(&point2)
+                {
+                    open_queue.push_increase(point2, QueuePriority{id:point2,cost:cost+heuristic_function(point2,destination)});
+                    direction_map.insert(point2, point1);
+                    cost_map.insert(point2, cost);
+                }
+            }
+        }
+        
+        c = connections.len() as i32;
+        let mut path=gdnative::Int32Array::new();
+        let mut pt=&destination;
+        while *direction_map.get(&pt).unwrap_or(&origin)!=origin && !c<=0 {
+            c=c-1;
+            pt=direction_map.get(&pt).unwrap();
+            path.push(*pt)
+        }
+        path
+    }
     //returns bounding rectangle of Shape2D
     /* fn _get_bounding_rectangle(&mut self, shape_in: &Option<gdnative::Shape2D>) -> Option<gdnative::Rect2> {
         use gdnative::geom::*;

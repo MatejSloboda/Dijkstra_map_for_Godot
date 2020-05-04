@@ -38,7 +38,7 @@ mess with the exports variable in demo.tscn (click on the root node and tweak th
 
 you can also look at the unit tests in Tests/unit/*
 
-you should also look at our documentation in ???
+you should also look at our documentation in ./documentation/index.html (open it in your browser)
 
 ### Features
 
@@ -51,7 +51,7 @@ But it can lead to non trivial bugs, consider yourselves warned
 
 
 
-A prettier wrapper in GDscript can be found at ???/IDijkstra.gd
+A prettier wrapper in GDscript can be found at API demo/IDijkstra.gd
 which is nice cause it offers autocompletion but a work in progress only
 
 
@@ -68,6 +68,9 @@ state of the test : currently few of them pass, its due to the person writing th
 Open an issue before working on a feature, bugfix, unit tests, then we discuss it, then you can work on it (or let someone else) then do a pull request
 
 Before doing that pull request, If you modified the rust code be sure you have build it "cargo build --release" and it still works! (the unit tests pass, dragon.tscn is running, the demo is running .
+
+## TODO
+find a way to compile it to all platforms in order to ship it via the godot asset store
 
 
 ## Acknowledgments

@@ -388,7 +388,7 @@ impl DijkstraMap {
         }
         let mut termination_points = FnvHashSet::<i32>::default();
         {
-            let val = optional_params.get(&gdnative::Variant::from_str("initial costs"));
+            let val = optional_params.get(&gdnative::Variant::from_str("termination points"));
             match val.get_type() {
                 gdnative::VariantType::I64=>{termination_points.insert(val.to_i64() as i32);},
                 gdnative::VariantType::Int32Array => {
@@ -858,12 +858,25 @@ impl DijkstraMap {
             
     }
 
-    ///calculates shortest parth from `origin` to `destination` using AStar algorithm.
-    /// This method requires id-to-position dictionary to know where the points are in space.
-    /// The keys should be IDs and values should be vector2 or vector3 coordinates of the points.
-    /// heuristic specifies how distance should be estimated.
+    ///calculates shortest parth from `origin` to `destination` using AStar algorithm and returns it as `PoolIntArray`.
+    /// This method does not recalculate the cost map nor direction map.
+    /// 
+    /// WARNING: this method assumes that costs of connections are at least as big as distances between the points.
+    /// If this condition is not satisfied, the path might not be the shortest path.
+    /// This method requires id-to-position `Dictionary` to know where the points are in space.
+    /// The keys should be IDs and values should be `Vector2` or `Vector3` coordinates of the points.
+    /// It also requires terrainID-to-weight `Dictionary`, though it may be empty. Missing entries are assumed to be `1.0` by default
+    /// heuristic specifies how distance should be estimated. Allowed values:
+    /// * `"euclidean"` straight euclidean distance between points ( `sqrt(dx^2 + dy^2 + dz^2)` )
+    /// * `"manhattan"` manhattan distance (`dx+dy+dz`)
+    /// * `"chessboard"` chessboard distance (`max(dx,dy,dz)`)
+    /// * `"diagonal"` 8-way movement distance (`sqrt(2)*(min(dx,dy)+max(dx,dy)-min(dx,dy)+dz`) 
+    /// * `[function_owner,"[function_name]"]` custom heuristic function. 
+    /// `function_owner` should implement function named "[function_name]" that takes 4 arguments: [ID_1,position_1,ID_2,position_2]
+    /// where positions are either Vector2 or Vector3 (depending on what was provided in the id_to_position dictionary)
+    /// and returns `float`
     #[export]
-    fn path_find_astar(
+    pub fn path_find_astar(
         &mut self,
         mut _owner: gdnative::Node,
         origin: i32,
@@ -909,6 +922,7 @@ impl DijkstraMap {
             NONE,
             EUCLIDEAN,
             MANHATTAN,
+            CHESSBOARD,
             DIAGONAL,
             CUSTOM,
         }
@@ -920,6 +934,7 @@ impl DijkstraMap {
                     "euclidean"=>Heuristic::EUCLIDEAN,
                     "manhattan"=>Heuristic::MANHATTAN,
                     "diagonal"=>Heuristic::DIAGONAL,
+                    "chessboard"=>Heuristic::CHESSBOARD,
                     _=>Heuristic::NONE,
                 }
             }
@@ -943,16 +958,50 @@ impl DijkstraMap {
                 Heuristic::MANHATTAN=>{
                     match v1.try_to_vector2(){
                         Some(v1a)=>{
-                            let a=v1a-v2.to_vector2();
-                            a.x+a.y
+                            let d=v1a-v2.to_vector2();
+                            d.x+d.y
                         },
                         None=>{
-                            let a=v1.to_vector3()-v2.to_vector3();
-                            a.x+a.y+a.z
+                            let d=v1.to_vector3()-v2.to_vector3();
+                            d.x+d.y+d.z
                         }
                     }                
                 },
-                _=>0.0,
+                Heuristic::CHESSBOARD=>{
+                    match v1.try_to_vector2(){
+                        Some(v1a)=>{
+                            let d=v1a-v2.to_vector2();
+                            f32::max(d.x, d.y)
+                        },
+                        None=>{
+                            let d=v1.to_vector3()-v2.to_vector3();
+                            f32::max(d.x, f32::max(d.z, d.y))
+                        }
+                    }                
+                },
+                Heuristic::DIAGONAL=>{
+                    match v1.try_to_vector2(){
+                        Some(v1a)=>{
+                            let d=v1a-v2.to_vector2();
+                            f32::max(d.x,d.y)+f32::min(d.x,d.y)*(f32::sqrt(2.0)-1.0)
+                        },
+                        None=>{
+                            let d=v1.to_vector3()-v2.to_vector3();
+                            f32::max(d.x,d.y)+f32::min(d.x,d.y)*(f32::sqrt(2.0)-1.0)+d.z
+                        }
+                    }                
+                },
+                Heuristic::CUSTOM=>{
+                    let mut ar=heuristic.to_array();
+                    let mut fowner=ar.get_val(0);
+                    let fname=ar.get_ref(0).to_godot_string();
+                    if fowner.has_method(&fname) {
+                        fowner.call(&fname,&[gdnative::Variant::from_i64(pt1 as i64),v1,gdnative::Variant::from_i64(pt1 as i64),v2])
+                        .ok().unwrap().to_f64() as f32
+                    }else{
+                        0.0
+                    }
+                }
             }
         };
         
@@ -962,7 +1011,8 @@ impl DijkstraMap {
         let capacity = (f32::sqrt(self.connections.len() as f32) as usize) * 6;
         let mut cost_map = FnvHashMap::<i32,f32>::with_capacity_and_hasher(capacity,Default::default());
         let mut direction_map = FnvHashMap::<i32,i32>::with_capacity_and_hasher(capacity,Default::default());
-            
+        let mut closed_set = FnvHashSet::<i32>::with_capacity_and_hasher(capacity,Default::default());
+        
         let mut open_queue = priority_queue::PriorityQueue::<i32,QueuePriority>::with_capacity(capacity);
         
         //add targets to open_queue
@@ -979,6 +1029,7 @@ impl DijkstraMap {
             if point1==destination {
                 break
             }
+            closed_set.insert(point1);
             let point1_cost = *cost_map.get_mut(&point1).unwrap_or(&mut std::f32::INFINITY);
             let weight_of_point1 = terrain_costs
                 .get(&self.terrain_map.get(&point1).unwrap_or(&-1))
@@ -995,8 +1046,8 @@ impl DijkstraMap {
                 //add to the open set (or update values if already present)
                 //if point is enabled and new cost is better than old one, but not bigger than maximum cost
                 if cost < *cost_map.get_mut(&point2).unwrap_or(&mut std::f32::INFINITY)
-
                     && !self.disabled_points.contains(&point2)
+                    && !closed_set.contains(&point2)
                 {
                     open_queue.push_increase(point2, QueuePriority{id:point2,cost:cost+heuristic_function(point2,destination)});
                     direction_map.insert(point2, point1);

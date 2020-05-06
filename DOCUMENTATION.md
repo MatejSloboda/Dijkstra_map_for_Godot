@@ -1,182 +1,172 @@
-# Documentation
+## Documentation
 
-* fn clear(&mut self, _owner: Node)
+DijkstraMap is general-purpose pathfinding class. It is intended to cover functionality that is currently absent from build-in AStar pathfinding class. Its main purpose is to do bulk pathfinding by calculating shortest paths between given point and all points in the graph. It also allows viewing useful information about the paths, such as their length, listing all paths with certain length, etc.
+___
+# Methods for constructing and modifying the graph
 
-clears the DijkstraMap.
+Just like AStar, DijkstraMap operates on directed weighted graph. To match the naming convention with AStar, vertices are called points and edges are called connections. Points are always referred to by their unique integer ID. Unlike AStar, DijkstraMap does not store information about their real possitions. Users have to store that information themselves, if they want it. For example in form of a Dictionary.
 
+Note: There are also convenience methods for bulk-adding standard grids, described in their own section.
+___
 
-* pub fn duplicate_graph_from(&mut self, _owner: Node, source: Node) -> i64
+* void **clear()**
 
-duplicates graph from other DijkstraMap.
+Clears the DijkstraMap of all points and connections.
 
+___
+* int **duplicate_graph_from(**Node source**)**
 
-* pub fn get_available_point_id(&mut self, _owner: Node) -> i32
+Duplicates graph from other DijkstraMap.
+___
 
-returns next ID not associated with any point
+* int **get_available_point_id()**
 
-* pub fn add_point(
-    &mut self,
-    _owner: Node,
-    id: i32,
-    terrain_id: Option<i32>
-) -> i64
+Returns next ID not associated with any point.
+___
 
-Adds new point with given ID and optional terrain ID into the graph and returns OK. If point with that ID already exists, does nothing and returns FAILED.
+* int **add_point(** int id, int terrain_id=-1 **)**
 
-* pub fn set_terrain_for_point(
-    &mut self,
-    _owner: Node,
-    id: i32,
-    terrain_id: Option<i32>
-) -> i64
+Adds new point with given ID and optional terrain ID into the graph and returns `OK`. If point with that ID already exists, does nothing and returns `FAILED`.
+___
 
-sets terrain ID for given point and returns OK. If point doesn't exist, returns FAILED
+* int **set_terrain_for_point(** int id, int terrain_id=1 **)**
 
-* pub fn get_terrain_for_point(&mut self, _owner: Node, id: i32) -> i32
+sets terrain ID for given point and returns `OK`. If point doesn't exist, returns `FAILED`
+___
 
-gets terrain ID for given point. Returns -1 if given point doesn't exist.
+* int **get_terrain_for_point(** int id **)**
 
-* pub fn remove_point(&mut self, _owner: Node, point: i32) -> i64
+gets terrain ID for given point. Returns `-1` if given point doesn't exist.
+___
 
-Removes point from graph along with all of its connections and returns OK. If point doesn't exist, returns FAILED.
+* int **remove_point(** int point **)**
 
-* pub fn has_point(&mut self, _owner: Node, id: i32) -> bool
+Removes point from graph along with all of its connections and returns `OK`. If point doesn't exist, returns `FAILED`.
+___
 
-Returns true if point exists.
+* bool **has_point(** int id **)**
 
-* pub fn disable_point(&mut self, _owner: Node, point: i32) -> i64
+Returns `true` if point exists.
+___
 
-Disables point from pathfinding and returns true. If point doesn't exist, returns false. Note: points are enabled by default.
+* int **disable_point(** int point **)**
 
-* pub fn enable_point(&mut self, _owner: Node, point: i32) -> i64
+Disables point from pathfinding and returns `OK`. If point doesn't exist, returns `FAILED`. Note: points are enabled by default.
+___
 
-Enables point for pathfinding and returns OK. If point doesn't exist, returns FAILED. Note: points are enabled by default.
+* int **enable_point(** int point **)**
 
-* pub fn is_point_disabled(&mut self, _owner: Node, point: i32) -> bool
+Enables point for pathfinding and returns `OK`. If point doesn't exist, returns `FAILED`. Note: points are enabled by default.
+___
 
-Returns true if point exists and is disabled. Returns false otherwise.
+* bool **is_point_disabled(** int point **)**
 
-* pub fn connect_points(
-    &mut self,
-    _owner: Node,
-    source: i32,
-    target: i32,
-    cost: Option<f32>,
-    bidirectional: Option<bool>
-) -> i64
+Returns `true` if point exists and is disabled. Returns `false` otherwise.
+___
 
-Adds connection with given cost (or cost of existing existing connection) between a source point and target point if they exist. If the connection is added successfuly return OK If they one of the point dont exist returns FAILED If bidirectional is true, it also adds connection from target to source too.
-* pub fn remove_connection(
-    &mut self,
-    _owner: Node,
-    source: i32,
-    target: i32,
-    bidirectional: bool
-) -> i64
+* int **connect_points(** int source, int target, float cost=1.0, bool bidirectional=true **)**
 
-Removes connection between source point and target point. Returns OK if both points and their connection existed. If bidirectional is true, it also removes connection from target to source. Returns OK if connection existed in at least one direction.
+Adds connection with given cost (or cost of existing existing connection) between a `source` point and `target` point if they exist. If the connection is added successfuly returns `OK`. If one or both points dont exist returns `FAILED`. If `bidirectional` is `true`, it also adds connection from `target` to `source` too.
+___
 
-* pub fn has_connection(&mut self, _owner: Node, source: i32, target: i32) -> bool
+* int **remove_connection(** int source, int target, bool bidirectional **)**
 
-Returns true if source point and target point both exist and there's connection from source to target.
+Removes connection between `source` point and `target` point. Returns `OK` if both points and their connection existed. If `bidirectional` is `true`, it also removes connection from `target` to `source`. Returns `OK` if connection existed in at least one direction.
+___
 
-* pub fn recalculate(
-    &mut self,
-    _owner: Node,
-    origin: Variant,
-    optional_params: Dictionary
-)
+* bool **has_connection(** int source, int target **)**
+
+Returns `true` if `source` point and `target` point both exist and there's connection from `source` to `target`.
+___
+
+# Methods for recalculating the DijkstraMap
+
+DijkstraMap does not calculate the paths automatically. It has to be triggered to execute Dijktra algorithm and calculate all the paths. The methods support variety of input formats and optional arguments that affect the end result. Unlike AStar, which calculates a single shortest path between two given points, DijktraMap supports multiple origin points, multiple destination points, with initial priorities, both directions, custom terrain weights and ability to terminate algorithm early based on distance or specified termination points. Performance is expected to be slightly worse than AStar, because of the extra functionality.
+___
+
+* void **recalculate(** Variant origin, Dictionary optional_params **)**
 
 Recalculates cost map and direction map information fo each point, overriding previous results.
-First argument is ID of the origin point or array of IDs (preferably PoolIntArray).
+First argument is ID of the `origin` point or `Array` of IDs (preferably `PoolIntArray`).
 
-Second argument is a Dictionary, specifying optional arguments.Possibilities:
+Second argument is a `Dictionary`, specifying optional arguments. Possibilities:
 
-    "input is destination"->bool: if true treats the origin as the destination (matters only if connections are not bidirectionally symmetric). Default value: false
-    "maximum cost"->float: Specifies maximum cost. Once all shortest paths no longer than maximum cost are found, algorithm terminates. All points with cost bigger than this are treated as inaccessible. Default value: INFINITY
-    "initial costs"->PoolRealArray or Array: Specifies initial costs for given origins. Values are paired with corresponding indices in the origin argument. Can be used to weigh the origins with a preference. By default, initial cost is 0.0.
-    "terrain weights"->Dictionary: Specifies weights for terrain types. Keys are terrain type IDs and values weights as floats. Unspecified values are assumed to be 1.0 by default.
+*   `"input is destination"`->`bool`: if true treats the `origin` as the destination (matters only if connections are not bidirectionally symmetric). Default value: `false`
+*    `"maximum cost"`->`float`: Specifies maximum cost. Once all shortest paths no longer than maximum cost are found, algorithm terminates. All points with cost bigger than this are treated as inaccessible. This can be used to save CPU cycles, when only a close neighbourhood of a point is desired for result. Default value: `INFINITY`
+*    `"initial costs"`->`PoolRealArray` or `Array`: Specifies initial costs for given origins. Values are paired with corresponding indices in the `origin` argument. Can be used to weigh the origins with a preference. By default, initial cost is `0.0`.
+*    `"terrain weights"`->`Dictionary`: Specifies weights for terrain types. Keys are terrain type IDs and values weights as floats. Unspecified values are assumed to be `1.0` by default.
+*    `"termination points"`->`int`,`Array`, or `PoolIntArray`: Specifies one or more termination points. The algorithm terminates once it encounters any of these points. All points with paths longer than the path towards termination point are treated as inaccessible. This can be used to save CPU cycles, when both origins and possible destinations are known. By default, there are no termination points.
+___
 
-* pub fn get_direction_at_point(&mut self, _owner: Node, point: i32) -> i32
+# Methods for accessing results
 
-Given a point, returns ID of the next point along the shortest path toward target or from source. If given point is the target, returns ID of itself. Returns -1, if target is inaccessible from this point.
+These methods are used to access shortest path tree information calculated by the `recalculate()` method. Cost map stores lengths of shortest paths from any given point. Direction map stores directions along the connections that represent shortest path.
 
-* pub fn get_cost_at_point(&mut self, _owner: Node, point: i32) -> f32
+Note: Following documentation is written with the assumption that `"input is destination"` argument was set to `false` (the default behavior). In this case, paths point towards the origin and inspected points are assumed to be destinations. If the `"input is destination"` argument was set to `false`, paths point towards the destination and inpected points are assumed to be origins. Keep this in mind when reading the following section.
+___
 
-Returns cost of the shortest path from this point to the target.
+* int **get_direction_at_point(** int point **)**
 
-* pub fn get_direction_at_points(
-    &mut self,
-    _owner: Node,
-    points: Int32Array
-) -> Int32Array
+Given a `point`, returns ID of the next point along the shortest path toward origin. If given point is the origin, returns ID of itself. Returns `-1`, if target is inaccessible from this point.
+___
 
-Given a PoolIntArray of point IDs, returns PoolIntArray of IDs of points along respective shortest paths.
+* float **get_cost_at_point(** int point **)**
 
-* pub fn get_cost_at_points(
-    &mut self,
-    _owner: Node,
-    points: Int32Array
-) -> Float32Array
+Returns cost of the shortest path from origin to this point.
+___
 
-Given a PoolIntArray of point IDs, returns PoolRealArray of costs of shortest paths from those points.
-* pub fn get_cost_map(&mut self, _owner: Node) -> Dictionary
+* PoolIntArray **get_direction_at_points(** PoolIntArray points **)**
 
-Returns the entire Dijktra map of costs in form of a Dictionary. Keys are points' IDs and values are costs. Inaccessible points are not present in the dictionary.
+Given a `PoolIntArray` of point IDs, returns `PoolIntArray` of IDs of points along respective shortest paths.
+___
 
-* pub fn get_direction_map(&mut self, _owner: Node) -> Dictionary
+* PoolRealArray **get_cost_at_points(** PoolIntArray points **)**
 
-Returns the entire Dijkstra map of directions in form of a Dictionary
+Given a `PoolIntArray` of point IDs, returns `PoolRealArray` of costs of shortest paths from those points.
+___
+* Dictionary **get_cost_map()**
 
-* pub fn get_all_points_with_cost_between(
-    &mut self,
-    _owner: Node,
-    min_cost: f32,
-    max_cost: f32
-) -> Int32Array
+Returns the entire Dijktra map of costs in form of a Dictionary. Keys are points' IDs and values are costs of shortest paths from those points. Inaccessible points are not present in the dictionary.
+___
 
-returns PoolIntArray of IDs of all points with costs between min_cost and max_cost (inclusive), sorted by cost.
+* Dictionary **get_direction_map()**
 
-* pub fn get_shortest_path_from_point(
-    &mut self,
-    _owner: Node,
-    point: i32
-) -> Int32Array
+Returns the entire Dijkstra map of directions in form of a Dictionary. Keys are points' IDs and values IDs of the next point along the shortest path.
+___
 
-returns PoolIntArray of point IDs corresponding to a shortest path from given point (note: given point isn't included). If point is a target or is inaccessible, returns empty array.
+* PoolIntArray **get_all_points_with_cost_between(** float min_cost, float max_cost **)**
 
-* pub fn add_square_grid(
-    &mut self,
-    _owner: Node,
-    initial_offset: i32,
-    bounds: Variant,
-    terrain_id_maybe: Option<i32>,
-    orthogonal_cost: Option<f32>,
-    diagonal_cost: Option<f32>
-) -> Dictionary
+Returns `PoolIntArray` of IDs of all points with costs between `min_cost` and `max_cost` (inclusive), sorted by cost.
+___
 
-Adds a square grid of connected points. initial_offset specifies ID of the first point to be added. returns a Dictionary, where keys are coordinates of points (Vector2) and values are their corresponding point IDs.
+* PoolIntArray **get_shortest_path_from_point(** int point **)**
 
-bounds corresponds to the bounding shape. At the moment, only Rect2 is supported.
+Returns `PoolIntArray` of point IDs corresponding to a shortest path from given point (note: given point isn't included). If point is the origin or is inaccessible, returns empty array.
+___
 
-terrain_id has default value -1.
+# Methods for bulk-adding standard grids
 
-orthogonal_cost specifies cost of orthogonal connections. In typical square grid, orthogonal points share a side. Values of INF or NAN disable orthogonal connections. Default value = 1.0
+For convenience, there are several methods for adding standard 2D grids.
+___
 
-diagonal_cost specifies cost of diagonal connections. In typical square grid, diagonal points share corner. Values of INF or NAN disable diagonal connections. Default value = INF (ie. disabled by default)
+* Dictionary **add_square_grid(** int initial_offset, Variant bounds, int terrain_id=-1, float orthogonal_cost=1.0, float diagonal_cost=NAN **)**
 
-* pub fn add_hexagonal_grid(
-    &mut self,
-    _owner: Node,
-    initial_offset: i32,
-    bounds: Variant,
-    terrain_id_maybe: Option<i32>,
-    cost: Option<f32>
-) -> Dictionary
+Adds a square grid of connected points. `initial_offset` specifies ID of the first point to be added. Returns a `Dictionary`, where keys are coordinates of points (`Vector2`) and values are their corresponding point IDs.
 
-Adds a hexagonal grid of connected points. initial_offset specifies ID of the first point to be added. returns a Dictionary, where keys are coordinates of points (Vector2) and values are their corresponding point IDs. cost specifies cost of connections (default 1.0) and terrain_id specifies terrain to be used (default -1).
+`bounds` corresponds to the bounding shape. It can be either `Rect2` or `BitMap`. In case of `BitMap` only `true` points are added.
 
-Note: hexgrid is in the "pointy" orentation by default (see example below). To switch to "flat" orientation, swap x and y coordinates in the bounds and in keys of the output dictionary. (Transform2D may be convenient there) For example, this is what Rect2(0,0,2,3) would produce:
+`terrain_id` specifies the terrain type for all the points. Default value = `-1`
+
+`orthogonal_cost` specifies cost of orthogonal connections. In typical square grid, orthogonal points share a side. Values of `INF` or `NAN` disable orthogonal connections. Default value = `1.0`
+
+`diagonal_cost` specifies cost of diagonal connections. In typical square grid, diagonal points share a corner. Values of `INF` or `NAN` disable diagonal connections. Default value = `INF` (ie. disabled by default)
+___
+
+* Dictionary **add_hexagonal_grid(** int initial_offset, Variant bounds, int terrain_id=-1, float cost=1.0 **)**
+
+Adds a hexagonal grid of connected points. `initial_offset` specifies ID of the first point to be added. returns a `Dictionary`, where keys are coordinates of points (`Vector2`) and values are their corresponding point IDs. `cost` specifies cost of connections (default value =`1.0`) and `terrain_id` specifies terrain to be used (default value =`-1`).
+
+Note: hexgrid is in the "pointy" orentation by default (see example below). To switch to "flat" orientation, swap x and y coordinates in the bounds and in keys of the output dictionary. (Transform2D may be convenient there) For example, this is what `bounds=Rect2(0,0,2,3)` would produce:
 
 ```
     / \     / \
@@ -195,3 +185,30 @@ Note: hexgrid is in the "pointy" orentation by default (see example below). To s
     \ /     \ /
 
 ```
+___
+
+# Miscellaneous methods
+
+DijkstraMap also has several miscellaneus methods, mostly for convenience.
+___
+
+* PoolIntArray **path_find_astar(** int origin, int destination, Dictionary id_to_position, Variant heuristic, Dictionary terrain_costs **)**
+
+calculates shortest parth from `origin` to `destination` using AStar algorithm and returns it as `PoolIntArray`.
+This method does not recalculate the cost map nor direction map.
+ 
+WARNING: this method assumes that costs of connections are at least as big as distances between the points.
+If this condition is not satisfied, the path might not be the shortest path.
+This method requires id-to-position `Dictionary` to know where the points are in space.
+The keys should be IDs and values should be `Vector2` or `Vector3` coordinates of the points.
+It also requires terrainID-to-weight `Dictionary`, though it may be empty. Missing entries are assumed to be `1.0` by default
+heuristic specifies how distance should be estimated. Allowed values:
+* `"euclidean"` straight euclidean distance between points ( `sqrt(dx^2 + dy^2 + dz^2)` )
+* `"manhattan"` manhattan distance (`dx+dy+dz`)
+* `"chessboard"` chessboard distance (`max(dx,dy,dz)`)
+* `"diagonal"` 8-way movement distance (`sqrt(2)*(min(dx,dy)+max(dx,dy)-min(dx,dy)+dz`) 
+* `[function_owner,"[function_name]"]` custom heuristic function. 
+`function_owner` should implement function named "[function_name]" that takes 4 arguments: `[ID_1,position_1,ID_2,position_2]`
+where positions are either Vector2 or Vector3 (depending on what was provided in the id_to_position dictionary)
+and returns `float` of the estimated cost between the two points.
+___

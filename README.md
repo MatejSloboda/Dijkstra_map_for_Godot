@@ -38,9 +38,9 @@ mess with the exports variable in demo.tscn (click on the root node and tweak th
 
 you can also look at the unit tests in Tests/unit/*
 
-you should also look at our documentation in ??? (currently working on getting easy to see documentation, right now run 
-$: cargo doc --no-deps --open
-to open the documentatio
+you should also look at our documentation in DOCUMENTATION.md (if you have cargo and dont trust DOCUMENTATION.md to be the latest available doc, run : 
+`$: cargo doc --no-deps --open`
+to open the documentation in your browser
 ## Features && HowTo's
 
 #### Basic Behaviour

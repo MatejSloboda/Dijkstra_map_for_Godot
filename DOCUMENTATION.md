@@ -212,10 +212,10 @@ heuristic specifies how distance should be estimated. Allowed values:
 where positions are either [`Vector2`][6] or [`Vector3`][7] (depending on what was provided in the id_to_position dictionary)
 and returns `float` of the estimated cost between the two points.
 ___
-[1] https://docs.godotengine.org/en/stable/classes/class_astar.html
-[2] https://docs.godotengine.org/en/stable/classes/class_dictionary.html
-[3] docs.godotengine.org/en/stable/classes/class_poolintarray.html
-[4] docs.godotengine.org/en/stable/classes/class_poolrealarray.html
-[5] docs.godotengine.org/en/stable/classes/class_array.html
-[6] https://docs.godotengine.org/en/stable/classes/class_vector2.html#class-vector2
-[7] https://docs.godotengine.org/en/stable/classes/class_vector3.html#class-vector3
+[1]: https://docs.godotengine.org/en/stable/classes/class_astar.html
+[2]: https://docs.godotengine.org/en/stable/classes/class_dictionary.html
+[3]: docs.godotengine.org/en/stable/classes/class_poolintarray.html
+[4]: docs.godotengine.org/en/stable/classes/class_poolrealarray.html
+[5]: docs.godotengine.org/en/stable/classes/class_array.html
+[6]: https://docs.godotengine.org/en/stable/classes/class_vector2.html#class-vector2
+[7]: https://docs.godotengine.org/en/stable/classes/class_vector3.html#class-vector3

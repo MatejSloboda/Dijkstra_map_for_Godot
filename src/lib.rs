@@ -618,7 +618,7 @@ impl DijkstraMap {
         let mut next_point = self.get_direction_at_point(_owner, point);
         let mut current_point: i32 = point;
 
-        while current_point != next_point || next_point != -1 {
+        while current_point != next_point && next_point != -1 {
             path.push(next_point);
             current_point = next_point;
             next_point = self.get_direction_at_point(_owner, current_point);

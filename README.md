@@ -31,6 +31,7 @@ If you are on x64 windows, the example should just work from there. Otherwise, y
 
 After having followed *Installing* direction, open the godot project and open and run one of the demo scenes 
 *  /Project Example/dragon_attack.tscn
+* /Project Example/Turn based.tscn
 * /API demo/demo.tscn
 
 toy around with it, the code of dragon_attack is heavily commented

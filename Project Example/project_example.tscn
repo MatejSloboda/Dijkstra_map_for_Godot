@@ -1,7 +1,7 @@
 [gd_scene load_steps=7 format=2]
 
-[ext_resource path="res://Project Example/tileset.tres" type="TileSet" id=1]
-[ext_resource path="res://Project Example/TileMap.gd" type="Script" id=2]
+[ext_resource path="res://Project Example/dependancy/tileset.tres" type="TileSet" id=1]
+[ext_resource path="res://Project Example/dependancy/TileMap.gd" type="Script" id=2]
 [ext_resource path="res://Project Example/dependancy/dragon.png" type="Texture" id=3]
 [ext_resource path="res://Project Example/dependancy/Pikeman.tscn" type="PackedScene" id=4]
 [ext_resource path="res://Project Example/dependancy/Archer.tscn" type="PackedScene" id=5]

@@ -27,7 +27,7 @@ _global_script_class_icons={
 [application]
 
 config/name="Dijkstra Map"
-run/main_scene="res://Project Example/dragon_attack.tscn"
+run/main_scene="res://visualization demo/visualisation.tscn"
 config/icon="res://icon.png"
 
 [editor_plugins]

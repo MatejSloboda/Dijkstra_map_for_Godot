@@ -388,7 +388,7 @@ impl DijkstraMap {
         }
         let mut termination_points = FnvHashSet::<i32>::default();
         {
-            let val = optional_params.get(&gdnative::Variant::from_str("initial costs"));
+            let val = optional_params.get(&gdnative::Variant::from_str("termination points"));
             match val.get_type() {
                 gdnative::VariantType::I64=>{termination_points.insert(val.to_i64() as i32);},
                 gdnative::VariantType::Int32Array => {
@@ -618,7 +618,7 @@ impl DijkstraMap {
         let mut next_point = self.get_direction_at_point(_owner, point);
         let mut current_point: i32 = point;
 
-        while current_point != next_point || next_point != -1 {
+        while current_point != next_point && next_point != -1 {
             path.push(next_point);
             current_point = next_point;
             next_point = self.get_direction_at_point(_owner, current_point);
@@ -858,7 +858,214 @@ impl DijkstraMap {
             
     }
 
+    ///calculates shortest parth from `origin` to `destination` using AStar algorithm and returns it as `PoolIntArray`.
+    /// This method does not recalculate the cost map nor direction map.
+    /// 
+    /// WARNING: this method assumes that costs of connections are at least as big as distances between the points.
+    /// If this condition is not satisfied, the path might not be the shortest path.
+    /// This method requires id-to-position `Dictionary` to know where the points are in space.
+    /// The keys should be IDs and values should be `Vector2` or `Vector3` coordinates of the points.
+    /// It also requires terrainID-to-weight `Dictionary`, though it may be empty. Missing entries are assumed to be `1.0` by default
+    /// heuristic specifies how distance should be estimated. Allowed values:
+    /// * `"euclidean"` straight euclidean distance between points ( `sqrt(dx^2 + dy^2 + dz^2)` )
+    /// * `"manhattan"` manhattan distance (`dx+dy+dz`)
+    /// * `"chessboard"` chessboard distance (`max(dx,dy,dz)`)
+    /// * `"diagonal"` 8-way movement distance (`sqrt(2)*(min(dx,dy)+max(dx,dy)-min(dx,dy)+dz`) 
+    /// * `[function_owner,"[function_name]"]` custom heuristic function. 
+    /// `function_owner` should implement function named "[function_name]" that takes 4 arguments: [ID_1,position_1,ID_2,position_2]
+    /// where positions are either Vector2 or Vector3 (depending on what was provided in the id_to_position dictionary)
+    /// and returns `float`
+    #[export]
+    pub fn path_find_astar(
+        &mut self,
+        mut _owner: gdnative::Node,
+        origin: i32,
+        destination: i32,
+        id_to_position: gdnative::Dictionary,
+        heuristic: gdnative::Variant,
+        terrain_costs_in: gdnative::Dictionary,
+    ) -> gdnative::Int32Array {
+        
 
+        #[derive(Copy, Clone, PartialEq)]
+        struct QueuePriority{
+            id: i32,
+            cost: f32,
+        }
+        impl Ord for QueuePriority{
+            fn cmp(&self,other: &QueuePriority)->std::cmp::Ordering{
+                other.cost.partial_cmp(&self.cost).unwrap_or(std::cmp::Ordering::Equal).then_with(|| other.id.cmp(&self.id))
+            }
+        }
+        impl PartialOrd for QueuePriority{
+            fn partial_cmp(&self,other :&QueuePriority)->Option<std::cmp::Ordering>{
+                Some(self.cmp(other))
+            }
+        }
+        impl Eq for QueuePriority{}
+
+        let mut terrain_costs = FnvHashMap::<i32, f32>::default();
+        {
+            for key in terrain_costs_in.keys().iter() {
+                match key.try_to_i64() {
+                    None => {}
+                    Some(id) => {
+                        terrain_costs.insert(
+                            id as i32,
+                            terrain_costs_in.get(key).try_to_f64().unwrap_or(1.0) as f32,
+                        );
+                    }
+                }
+            }     
+        }
+        enum Heuristic {
+            NONE,
+            EUCLIDEAN,
+            MANHATTAN,
+            CHESSBOARD,
+            DIAGONAL,
+            CUSTOM,
+        }
+        //choose heuristic function
+        let h= match heuristic.get_type() {
+            gdnative::VariantType::GodotString=>{
+                let strng=heuristic.to_string();
+                match strng.as_str() {
+                    "euclidean"=>Heuristic::EUCLIDEAN,
+                    "manhattan"=>Heuristic::MANHATTAN,
+                    "diagonal"=>Heuristic::DIAGONAL,
+                    "chessboard"=>Heuristic::CHESSBOARD,
+                    _=>Heuristic::NONE,
+                }
+            }
+            gdnative::VariantType::VariantArray=>{
+                Heuristic::CUSTOM
+            },
+            _=>Heuristic::NONE,
+        };
+        
+        let heuristic_function = |pt1:i32,pt2:i32| -> f32 {
+            let v1=id_to_position.get(&gdnative::Variant::from_i64(pt1 as i64));
+            let v2=id_to_position.get(&gdnative::Variant::from_i64(pt2 as i64));
+            match h {
+                Heuristic::NONE=>0.0,
+                Heuristic::EUCLIDEAN=>{
+                    match v1.try_to_vector2(){
+                        Some(v1a)=>{ let a=(v1a-v2.to_vector2()).length();a},
+                        None=>{ (v1.to_vector3()-v2.to_vector3()).length()},
+                    }
+                },
+                Heuristic::MANHATTAN=>{
+                    match v1.try_to_vector2(){
+                        Some(v1a)=>{
+                            let d=v1a-v2.to_vector2();
+                            d.x+d.y
+                        },
+                        None=>{
+                            let d=v1.to_vector3()-v2.to_vector3();
+                            d.x+d.y+d.z
+                        }
+                    }                
+                },
+                Heuristic::CHESSBOARD=>{
+                    match v1.try_to_vector2(){
+                        Some(v1a)=>{
+                            let d=v1a-v2.to_vector2();
+                            f32::max(d.x, d.y)
+                        },
+                        None=>{
+                            let d=v1.to_vector3()-v2.to_vector3();
+                            f32::max(d.x, f32::max(d.z, d.y))
+                        }
+                    }                
+                },
+                Heuristic::DIAGONAL=>{
+                    match v1.try_to_vector2(){
+                        Some(v1a)=>{
+                            let d=v1a-v2.to_vector2();
+                            f32::max(d.x,d.y)+f32::min(d.x,d.y)*(f32::sqrt(2.0)-1.0)
+                        },
+                        None=>{
+                            let d=v1.to_vector3()-v2.to_vector3();
+                            f32::max(d.x,d.y)+f32::min(d.x,d.y)*(f32::sqrt(2.0)-1.0)+d.z
+                        }
+                    }                
+                },
+                Heuristic::CUSTOM=>{
+                    let mut ar=heuristic.to_array();
+                    let mut fowner=ar.get_val(0);
+                    let fname=ar.get_ref(0).to_godot_string();
+                    if fowner.has_method(&fname) {
+                        fowner.call(&fname,&[gdnative::Variant::from_i64(pt1 as i64),v1,gdnative::Variant::from_i64(pt1 as i64),v2])
+                        .ok().unwrap().to_f64() as f32
+                    }else{
+                        0.0
+                    }
+                }
+            }
+        };
+        
+
+        //initialize containers
+        let connections = &self.connections;
+        let capacity = (f32::sqrt(self.connections.len() as f32) as usize) * 6;
+        let mut cost_map = FnvHashMap::<i32,f32>::with_capacity_and_hasher(capacity,Default::default());
+        let mut direction_map = FnvHashMap::<i32,i32>::with_capacity_and_hasher(capacity,Default::default());
+        let mut closed_set = FnvHashSet::<i32>::with_capacity_and_hasher(capacity,Default::default());
+        
+        let mut open_queue = priority_queue::PriorityQueue::<i32,QueuePriority>::with_capacity(capacity);
+        
+        //add targets to open_queue
+        cost_map.insert(origin, 0.0);
+        open_queue.push(origin, QueuePriority{id: origin, cost: heuristic_function(origin,destination)});
+        
+        
+        
+        let mut c = connections.len() as i32;
+        //iterrate over open_set
+        while !open_queue.is_empty() && c>=0{
+            c-=1;
+            let (point1,_) = open_queue.pop().unwrap();
+            if point1==destination {
+                break
+            }
+            closed_set.insert(point1);
+            let point1_cost = *cost_map.get_mut(&point1).unwrap_or(&mut std::f32::INFINITY);
+            let weight_of_point1 = terrain_costs
+                .get(&self.terrain_map.get(&point1).unwrap_or(&-1))
+                .unwrap_or(&1.0);
+            //iterrate over it's neighbours
+            for (&point2, dir_cost) in connections.get(&point1).unwrap().iter() {
+                let cost = point1_cost
+                    + dir_cost
+                        * 0.5
+                        * (weight_of_point1
+                            + terrain_costs
+                                .get(&self.terrain_map.get(&point2).unwrap_or(&-1))
+                                .unwrap_or(&1.0));
+                //add to the open set (or update values if already present)
+                //if point is enabled and new cost is better than old one, but not bigger than maximum cost
+                if cost < *cost_map.get_mut(&point2).unwrap_or(&mut std::f32::INFINITY)
+                    && !self.disabled_points.contains(&point2)
+                    && !closed_set.contains(&point2)
+                {
+                    open_queue.push_increase(point2, QueuePriority{id:point2,cost:cost+heuristic_function(point2,destination)});
+                    direction_map.insert(point2, point1);
+                    cost_map.insert(point2, cost);
+                }
+            }
+        }
+        
+        c = connections.len() as i32;
+        let mut path=gdnative::Int32Array::new();
+        let mut pt=&destination;
+        while *direction_map.get(&pt).unwrap_or(&origin)!=origin && !c<=0 {
+            c=c-1;
+            pt=direction_map.get(&pt).unwrap();
+            path.push(*pt)
+        }
+        path
+    }
     //returns bounding rectangle of Shape2D
     /* fn _get_bounding_rectangle(&mut self, shape_in: &Option<gdnative::Shape2D>) -> Option<gdnative::Rect2> {
         use gdnative::geom::*;

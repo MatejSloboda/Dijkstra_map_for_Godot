@@ -9,7 +9,7 @@
 config_version=4
 
 _global_script_classes=[ {
-"base": "Node",
+"base": "",
 "class": "DijkstraMap",
 "language": "NativeScript",
 "path": "res://Dijkstra_map_library/dijkstra_map.gdns"

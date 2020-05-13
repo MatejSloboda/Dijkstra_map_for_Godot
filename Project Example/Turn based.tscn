@@ -1,8 +1,8 @@
 [gd_scene load_steps=5 format=2]
 
-[ext_resource path="res://Project Example/tileset.tres" type="TileSet" id=1]
-[ext_resource path="res://Project Example/turn_based.gd" type="Script" id=2]
-[ext_resource path="res://Project Example/knight.gd" type="Script" id=3]
+[ext_resource path="res://Project Example/dependancy/tileset.tres" type="TileSet" id=1]
+[ext_resource path="res://Project Example/dependancy/turn_based.gd" type="Script" id=2]
+[ext_resource path="res://Project Example/dependancy/knight.gd" type="Script" id=3]
 [ext_resource path="res://Project Example/dependancy/pikeman_32x32.png" type="Texture" id=4]
 
 [node name="Turn based" type="Node2D"]

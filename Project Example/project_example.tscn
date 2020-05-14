@@ -44,8 +44,20 @@ position = Vector2( 278.745, 190.963 )
 [node name="Archer2" parent="TileMap" instance=ExtResource( 5 )]
 position = Vector2( 206.364, 122.175 )
 
+[node name="Archer3" parent="TileMap" instance=ExtResource( 5 )]
+position = Vector2( 762.364, 301.175 )
+
+[node name="Archer4" parent="TileMap" instance=ExtResource( 5 )]
+position = Vector2( 317.364, 417.175 )
+
 [node name="Pikeman2" parent="TileMap" instance=ExtResource( 4 )]
 position = Vector2( 150.409, 174.023 )
 
 [node name="Pikeman3" parent="TileMap" instance=ExtResource( 4 )]
 position = Vector2( 239.217, 137.062 )
+
+[node name="Pikeman4" parent="TileMap" instance=ExtResource( 4 )]
+position = Vector2( 677.217, 425.062 )
+
+[node name="Pikeman5" parent="TileMap" instance=ExtResource( 4 )]
+position = Vector2( 659.217, 137.062 )

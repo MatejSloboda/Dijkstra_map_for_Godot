@@ -4,3 +4,7 @@ Cargo.lock
 /.import
 /.vscode
 /performance_test
+
+export.cfg
+export_presets.cfg
+*.translation

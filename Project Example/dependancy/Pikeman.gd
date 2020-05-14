@@ -11,4 +11,6 @@ func _process(delta):
 	var parent=get_parent();
 	var direction=parent.get_direction_for_pikeman(self.position)
 	var speed_modifier=parent.get_speed_modifier(self.position)
-	move_and_slide(direction*speed*speed_modifier)
+	var collision=move_and_collide(direction*speed*speed_modifier*delta)
+	if collision and collision.collider is KinematicBody2D:
+		collision.collider.move_and_slide(-speed*collision.normal*collision.remainder.length())

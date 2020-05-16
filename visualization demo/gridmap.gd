@@ -82,4 +82,3 @@ func _unhandled_input(event):
 			self.set_cellv(cell,tile_draw)
 			dijkstramap.set_terrain_for_point(pos_to_id[cell],tile_draw)
 			recalculate()
-	

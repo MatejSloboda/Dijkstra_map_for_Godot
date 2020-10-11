@@ -5,8 +5,8 @@ extern crate gdnative;
 use fnv::FnvHashMap;
 use fnv::FnvHashSet;
 
-#[derive(gdnative::NativeClass)]
-#[inherit(gdnative::Node)]
+#[derive(gdnative::prelude::NativeClass)]
+#[inherit(gdnative::prelude::Node)]
 //#[user_data(gdnative::user_data::ArcData<DijkstraMap>)]
 pub struct DijkstraMap {
     connections: FnvHashMap<i32, FnvHashMap<i32, f32>>, //for point1 stores weights of connections going from point1 to point2
@@ -23,12 +23,15 @@ enum GridType {
     HEX,
 }
 
+const STATUS_OK: i64 = 0;
+const STATUS_FAILED: i64 = 1;
+
 // __One__ `impl` block can have the `#[methods]` attribute, which will generate
 // code to automatically bind any exported methods to Godot.
 #[gdnative::methods]
 impl DijkstraMap {
     /// The "constructor" of the class.
-    fn _init(_owner: gdnative::Node) -> Self {
+    fn new(_owner: &gdnative::prelude::Node) -> Self {
         DijkstraMap {
             connections: FnvHashMap::default(),
             reverse_connections: FnvHashMap::default(),
@@ -42,7 +45,7 @@ impl DijkstraMap {
 
     ///clears the DijkstraMap.
     #[export]
-    pub fn clear(&mut self, mut _owner: gdnative::Node) {
+    pub fn clear(&mut self, mut _owner: &gdnative::prelude::Node) {
         self.connections.clear();
         self.reverse_connections.clear();
         self.cost_map.clear();
@@ -53,28 +56,28 @@ impl DijkstraMap {
     }
     
     ///duplicates graph from other DijkstraMap. 
-    #[export]
-    pub fn duplicate_graph_from(&mut self, mut _owner: gdnative::Node, source: gdnative::Node) -> i64 {
-        let source_instance: Option<gdnative::Instance<DijkstraMap>>=gdnative::Instance::try_from_base(source);
+    /*#[export]
+    pub fn duplicate_graph_from(&mut self, mut _owner: &gdnative::prelude::Node, source: gdnative::Ref<gdnative::prelude::Node, gdnative::prelude::Unique>) -> i64 {
+        let source_instance: Result<gdnative::prelude::Instance<DijkstraMap, gdnative::prelude::Unique>, gdnative::Ref<gdnative::prelude::Node, gdnative::prelude::Unique>>=gdnative::prelude::Instance::try_from_base(source);
         match source_instance{
-            None=>gdnative::GlobalConstants::FAILED,
-            Some(source_instance)=>source_instance.map(
+            Err(e)=>STATUS_FAILED,
+            Ok(source_instance)=>source_instance.map(
                 |dmap,_node|{
                 self.connections=dmap.connections.clone();
                 self.reverse_connections=dmap.reverse_connections.clone();
                 self.disabled_points=dmap.disabled_points.clone();
                 self.terrain_map=dmap.terrain_map.clone();
 
-                gdnative::GlobalConstants::OK
-            }).unwrap_or(gdnative::GlobalConstants::FAILED)
+                STATUS_OK
+            }).unwrap_or(STATUS_FAILED)
         }
-    }
+    }*/
 
     /* ///duplicates graph from AStar object.
     /// because of the differences between Astar and DijkstraMap, 
     /// terrain is set to default and weights are baked into the connection costs.
     #[export]
-    pub fn duplicate_graph_from_astar(&mut self, mut _owner: gdnative::Node, mut source: gdnative::AStar) -> i64 {
+    pub fn duplicate_graph_from_astar(&mut self, mut _owner: gdnative::prelude::Node, mut source: gdnative::AStar) -> i64 {
         
         for pt in source.get_points().iter(){
             let point=pt.to_i64() as i32;
@@ -92,12 +95,12 @@ impl DijkstraMap {
 
         }
 
-        gdnative::GlobalConstants::OK
+        STATUS_OK
     } */
 
     ///returns next ID not associated with any point
     #[export]
-    pub fn get_available_point_id(&mut self, mut _owner: gdnative::Node) -> i32 {
+    pub fn get_available_point_id(&mut self, mut _owner: &gdnative::prelude::Node) -> i32 {
         let mut id: i32 = 0;
         while self.has_point(_owner, id) {
             id = id + 1;
@@ -107,14 +110,14 @@ impl DijkstraMap {
     ///Adds new point with given ID and optional terrain ID into the graph and returns OK.
     /// If point with that ID already exists, does nothing and returns FAILED.
     #[export]
-    pub fn add_point(&mut self, mut _owner: gdnative::Node, id: i32, #[opt] terrain_id: Option<i32>) -> i64 {
+    pub fn add_point(&mut self, mut _owner: &gdnative::prelude::Node, id: i32, #[opt] terrain_id: Option<i32>) -> i64 {
         if self.has_point(_owner, id) {
-            gdnative::GlobalConstants::FAILED
+            STATUS_FAILED
         } else {
             self.connections.insert(id, FnvHashMap::default());
             self.reverse_connections.insert(id, FnvHashMap::default());
             self.terrain_map.insert(id, terrain_id.unwrap_or(-1));
-            gdnative::GlobalConstants::OK
+            STATUS_OK
         }
     }
 
@@ -122,32 +125,32 @@ impl DijkstraMap {
     #[export]
     pub fn set_terrain_for_point(
         &mut self,
-        mut _owner: gdnative::Node,
+        mut _owner: &gdnative::prelude::Node,
         id: i32,
         terrain_id: Option<i32>, //TODO BASIC TERRAIN cost always == 1.0
     ) -> i64 {
         let terrain_id = terrain_id.unwrap_or(-1);
         if self.has_point(_owner, id) {
             self.terrain_map.insert(id, terrain_id);
-            gdnative::GlobalConstants::OK
+            STATUS_OK
         } else {
-            gdnative::GlobalConstants::FAILED
+            STATUS_FAILED
         }
     }
 
     ///gets terrain ID for given point. Returns -1 if given point doesn't exist.
     #[export]
-    pub fn get_terrain_for_point(&mut self, mut _owner: gdnative::Node, id: i32) -> i32 {
+    pub fn get_terrain_for_point(&mut self, mut _owner: &gdnative::prelude::Node, id: i32) -> i32 {
         return *self.terrain_map.get(&id).unwrap_or(&-1);
     }
 
     ///Removes point from graph along with all of its connections and returns OK. If point doesn't exist, returns FAILED.
     #[export]
-    pub fn remove_point(&mut self, mut _owner: gdnative::Node, point: i32) -> i64 {
+    pub fn remove_point(&mut self, mut _owner: &gdnative::prelude::Node, point: i32) -> i64 {
         self.disabled_points.remove(&point);
         //remove this point's entry from connections
         match self.connections.remove(&point) {
-            None => gdnative::GlobalConstants::FAILED,
+            None => STATUS_FAILED,
             Some(neighbours) => {
                 //remove reverse connections to this point from neighbours
                 for nbr in neighbours.keys() {
@@ -162,43 +165,43 @@ impl DijkstraMap {
                 for nbr in nbrs2.keys() {
                     self.connections.get_mut(nbr).unwrap().remove(&point);
                 }
-                gdnative::GlobalConstants::OK
+                STATUS_OK
             }
         }
     }
     ///Returns true if point exists.
     #[export]
-    pub fn has_point(&mut self, mut _owner: gdnative::Node, id: i32) -> bool {
+    pub fn has_point(&mut self, mut _owner: &gdnative::prelude::Node, id: i32) -> bool {
         self.connections.contains_key(&id)
     }
 
     ///Disables point from pathfinding and returns true. If point doesn't exist, returns false.
     ///Note: points are enabled by default.
     #[export]
-    pub fn disable_point(&mut self, mut _owner: gdnative::Node, point: i32) -> i64 {
+    pub fn disable_point(&mut self, mut _owner: &gdnative::prelude::Node, point: i32) -> i64 {
         if self.connections.contains_key(&point) {
             self.disabled_points.insert(point);
-            gdnative::GlobalConstants::OK
+            STATUS_OK
         } else {
-            gdnative::GlobalConstants::FAILED
+            STATUS_FAILED
         }
     }
 
     ///Enables point for pathfinding and returns OK. If point doesn't exist, returns FAILED.
     ///Note: points are enabled by default.
     #[export]
-    pub fn enable_point(&mut self, mut _owner: gdnative::Node, point: i32) -> i64 {
+    pub fn enable_point(&mut self, mut _owner: &gdnative::prelude::Node, point: i32) -> i64 {
         if self.connections.contains_key(&point) {
             self.disabled_points.remove(&point); //assumes it works
-            gdnative::GlobalConstants::OK
+            STATUS_OK
         } else {
-            gdnative::GlobalConstants::FAILED
+            STATUS_FAILED
         }
     }
 
     ///Returns true if point exists and is disabled. Returns false otherwise.
     #[export]
-    pub fn is_point_disabled(&mut self, mut _owner: gdnative::Node, point: i32) -> bool {
+    pub fn is_point_disabled(&mut self, mut _owner: &gdnative::prelude::Node, point: i32) -> bool {
         if self.connections.contains_key(&point) && self.disabled_points.contains(&point) {
             true
         } else {
@@ -213,7 +216,7 @@ impl DijkstraMap {
     #[export]
     pub fn connect_points(
         &mut self,
-        mut _owner: gdnative::Node,
+        mut _owner: &gdnative::prelude::Node,
         source: i32,
         target: i32,
         #[opt] cost: Option<f32> , 
@@ -224,19 +227,19 @@ impl DijkstraMap {
         if bidirectional {
             let a = self.connect_points(_owner, source, target, Some(cost), Some(false));
             let b = self.connect_points(_owner, target, source, Some(cost), Some(false));
-            if a == gdnative::GlobalConstants::OK || b == gdnative::GlobalConstants::OK {
-                return gdnative::GlobalConstants::OK;
+            if a == STATUS_OK || b == STATUS_OK {
+                return STATUS_OK;
             } else {
-                return gdnative::GlobalConstants::FAILED;
+                return STATUS_FAILED;
             }
         } else {
             if !self.connections.contains_key(&source) || !self.connections.contains_key(&target) {
-                return gdnative::GlobalConstants::FAILED;
+                return STATUS_FAILED;
             }
 
             let _connection_is_valid: bool = false;
             match self.connections.get_mut(&source) {
-                None => return gdnative::GlobalConstants::FAILED,
+                None => return STATUS_FAILED,
                 Some(cons) => {
                     let prev = cons.insert(target, cost);
                     let _connection_is_valid: bool = if prev.is_some() {
@@ -251,7 +254,7 @@ impl DijkstraMap {
                 .unwrap()
                 .insert(source, cost);
 
-            gdnative::GlobalConstants::OK
+            STATUS_OK
         }
     }
 
@@ -260,7 +263,7 @@ impl DijkstraMap {
     #[export]
     pub fn remove_connection(
         &mut self,
-        mut _owner: gdnative::Node,
+        mut _owner: &gdnative::prelude::Node,
         source: i32,
         target: i32,
         bidirectional: bool,
@@ -268,22 +271,22 @@ impl DijkstraMap {
         if bidirectional == true {
             let a = self.remove_connection(_owner, source, target, false);
             let b = self.remove_connection(_owner, target, source, false);
-            match a == gdnative::GlobalConstants::OK || b == gdnative::GlobalConstants::OK {
-                true => gdnative::GlobalConstants::OK,
-                false => gdnative::GlobalConstants::FAILED,
+            match a == STATUS_OK || b == STATUS_OK {
+                true => STATUS_OK,
+                false => STATUS_FAILED,
             }
         } else if self.has_connection(_owner, source, target) {
             self.connections.get_mut(&source).unwrap().remove(&target);
             self.reverse_connections.get_mut(&target).unwrap().remove(&source);
-            gdnative::GlobalConstants::OK
+            STATUS_OK
         } else {
-            gdnative::GlobalConstants::FAILED
+            STATUS_FAILED
         }
     }
 
     ///Returns true if source point and target point both exist and there's connection from source to target.
     #[export]
-    pub fn has_connection(&mut self, mut _owner: gdnative::Node, source: i32, target: i32) -> bool {
+    pub fn has_connection(&mut self, mut _owner: &gdnative::prelude::Node, source: i32, target: i32) -> bool {
         match self.connections.get(&source) {
             None => false,
             Some(src) => src.contains_key(&target),
@@ -313,18 +316,18 @@ impl DijkstraMap {
     #[export]
     pub fn recalculate(
         &mut self,
-        mut _owner: gdnative::Node,
-        origin: gdnative::Variant,
-        #[opt] optional_params: gdnative::Dictionary,
+        mut _owner: &gdnative::prelude::Node,
+        origin: gdnative::core_types::Variant,
+        #[opt] optional_params: gdnative::core_types::Dictionary,
     ) {
         let mut origins: Vec<i32> = Vec::new();
         //convert target variant to appropriate value(s) and push onto the targets stack.
         match origin.get_type() {
-            gdnative::VariantType::I64 => origins.push(origin.to_i64() as i32),
-            gdnative::VariantType::Int32Array => {
+            gdnative::core_types::VariantType::I64 => origins.push(origin.to_i64() as i32),
+            gdnative::core_types::VariantType::Int32Array => {
                 origins.extend(origin.to_int32_array().read().iter())
             }
-            gdnative::VariantType::VariantArray => {
+            gdnative::core_types::VariantType::VariantArray => {
                 for i in origin.to_array().iter() {
                     match i.try_to_i64() {
                         Some(intval) => origins.push(intval as i32),
@@ -340,21 +343,21 @@ impl DijkstraMap {
         //extract optional parameters
         //TODO crash if exist key provided not in "reversed", "maximum cost", ...
         let reversed: bool = optional_params
-            .get(&gdnative::Variant::from_str("input is destination"))
+            .get(&gdnative::core_types::Variant::from_str("input is destination"))
             .try_to_bool()
             .unwrap_or(false);
         let max_cost: f32 = optional_params
-            .get(&gdnative::Variant::from_str("maximum cost"))
+            .get(&gdnative::core_types::Variant::from_str("maximum cost"))
             .try_to_f64()
             .unwrap_or(std::f64::INFINITY) as f32;
         let mut initial_costs: Vec<f32> = Vec::new();
         {
-            let val = optional_params.get(&gdnative::Variant::from_str("initial costs"));
+            let val = optional_params.get(&gdnative::core_types::Variant::from_str("initial costs"));
             match val.get_type() {
-                gdnative::VariantType::Float32Array => {
+                gdnative::core_types::VariantType::Float32Array => {
                     initial_costs.extend(val.to_float32_array().read().iter());
                 }
-                gdnative::VariantType::VariantArray => {
+                gdnative::core_types::VariantType::VariantArray => {
                     initial_costs.reserve(origins.len());
                     for i in val.to_array().iter() {
                         match i.try_to_f64() {
@@ -368,7 +371,7 @@ impl DijkstraMap {
         }
         let mut terrain_costs = FnvHashMap::<i32, f32>::default();
         {
-            let val = optional_params.get(&gdnative::Variant::from_str("terrain weights"));
+            let val = optional_params.get(&gdnative::core_types::Variant::from_str("terrain weights"));
             match val.try_to_dictionary() {
                 None => {}
                 Some(dict) => {
@@ -388,13 +391,13 @@ impl DijkstraMap {
         }
         let mut termination_points = FnvHashSet::<i32>::default();
         {
-            let val = optional_params.get(&gdnative::Variant::from_str("termination points"));
+            let val = optional_params.get(&gdnative::core_types::Variant::from_str("termination points"));
             match val.get_type() {
-                gdnative::VariantType::I64=>{termination_points.insert(val.to_i64() as i32);},
-                gdnative::VariantType::Int32Array => {
+                gdnative::core_types::VariantType::I64=>{termination_points.insert(val.to_i64() as i32);},
+                gdnative::core_types::VariantType::Int32Array => {
                     termination_points.extend(val.to_int32_array().read().iter());
                 }
-                gdnative::VariantType::VariantArray => {
+                gdnative::core_types::VariantType::VariantArray => {
                     termination_points.reserve(origins.len());
                     for i in val.to_array().iter() {
                         match i.try_to_i64() {
@@ -422,7 +425,7 @@ impl DijkstraMap {
         #[export]
         fn recalculate_for_target(
             &mut self,
-            mut _owner: gdnative::Node,
+            mut _owner: gdnative::prelude::Node,
             target: i32,
             max_cost: f32,
             reversed: bool,
@@ -442,8 +445,8 @@ impl DijkstraMap {
         #[export]
         fn recalculate_for_targets(
             &mut self,
-            mut _owner: gdnative::Node,
-            targets_in: gdnative::Int32Array,
+            mut _owner: gdnative::prelude::Node,
+            targets_in: gdnative::core_types::Int32Array,
             max_cost: f32,
             reversed: bool,
         ) {
@@ -464,9 +467,9 @@ impl DijkstraMap {
         #[export]
         fn recalculate_for_targets_with_costs(
             &mut self,
-            mut _owner: gdnative::Node,
-            targets_in: gdnative::Int32Array,
-            costs_in: gdnative::Float32Array,
+            mut _owner: gdnative::prelude::Node,
+            targets_in: gdnative::core_types::Int32Array,
+            costs_in: gdnative::core_types::Float32Array,
             max_cost: f32,
             reversed: bool,
         ) {
@@ -487,12 +490,12 @@ impl DijkstraMap {
     ///Given a point, returns ID of the next point along the shortest path toward target or from source.
     ///If given point is the target, returns ID of itself. Returns -1, if target is inaccessible from this point.
     #[export]
-    pub fn get_direction_at_point(&mut self, mut _owner: gdnative::Node, point: i32) -> i32 {
+    pub fn get_direction_at_point(&mut self, mut _owner: &gdnative::prelude::Node, point: i32) -> i32 {
         *self.direction_map.get(&point).unwrap_or(&-1)
     }
     ///Returns cost of the shortest path from this point to the target.
     #[export]
-    pub fn get_cost_at_point(&mut self, mut _owner: gdnative::Node, point: i32) -> f32 {
+    pub fn get_cost_at_point(&mut self, mut _owner: &gdnative::prelude::Node, point: i32) -> f32 {
         *self.cost_map.get(&point).unwrap_or(&std::f32::INFINITY)
     }
 
@@ -500,10 +503,10 @@ impl DijkstraMap {
     #[export]
     pub fn get_direction_at_points(
         &mut self,
-        mut _owner: gdnative::Node,
-        points: gdnative::Int32Array,
-    ) -> gdnative::Int32Array {
-        let mut dirs = gdnative::Int32Array::new();
+        mut _owner: &gdnative::prelude::Node,
+        points: gdnative::core_types::Int32Array,
+    ) -> gdnative::core_types::Int32Array {
+        let mut dirs = gdnative::core_types::Int32Array::new();
         dirs.resize(points.len());
         {
             let points_read = points.read();
@@ -518,10 +521,10 @@ impl DijkstraMap {
     #[export]
     pub fn get_cost_at_points(
         &mut self,
-        mut _owner: gdnative::Node,
-        points: gdnative::Int32Array,
-    ) -> gdnative::Float32Array {
-        let mut costs = gdnative::Float32Array::new();
+        mut _owner: &gdnative::prelude::Node,
+        points: gdnative::core_types::Int32Array,
+    ) -> gdnative::core_types::Float32Array {
+        let mut costs = gdnative::core_types::Float32Array::new();
         costs.resize(points.len());
         {
             let points_read = points.read();
@@ -539,26 +542,30 @@ impl DijkstraMap {
     ///Returns the entire Dijktra map of costs in form of a `Dictionary`. Keys are points' IDs and values are costs.
     ///Inaccessible points are not present in the dictionary.
     #[export]
-    pub fn get_cost_map(&mut self, mut _owner: gdnative::Node) -> gdnative::Dictionary {
-        let mut dict = gdnative::Dictionary::new();
+    pub fn get_cost_map(&mut self, mut _owner: &gdnative::prelude::Node) -> gdnative::core_types::Dictionary {
+        let mut dict = gdnative::core_types::Dictionary::new_shared();
         for id in self.sorted_points.iter() {
-            dict.set(
-                &gdnative::Variant::from_i64(*id as i64),
-                &gdnative::Variant::from_f64(self.cost_of(*id) as f64),
-            );
+			unsafe {
+				dict.insert(
+					&gdnative::core_types::Variant::from_i64(*id as i64),
+					&gdnative::core_types::Variant::from_f64(self.cost_of(*id) as f64),
+				);
+			}
         }
         dict
     }
 
     ///Returns the entire Dijkstra map of directions in form of a `Dictionary`
     #[export]
-    pub fn get_direction_map(&mut self, mut _owner: gdnative::Node) -> gdnative::Dictionary {
-        let mut dict = gdnative::Dictionary::new();
+    pub fn get_direction_map(&mut self, mut _owner: &gdnative::prelude::Node) -> gdnative::core_types::Dictionary {
+        let mut dict = gdnative::core_types::Dictionary::new_shared();
         for id in self.sorted_points.iter() {
-            dict.set(
-                &gdnative::Variant::from_i64(*id as i64),
-                &gdnative::Variant::from_i64(*self.direction_map.get(id).unwrap() as i64),
-            );
+            unsafe {
+				dict.insert(
+					&gdnative::core_types::Variant::from_i64(*id as i64),
+					&gdnative::core_types::Variant::from_i64(*self.direction_map.get(id).unwrap() as i64),
+				);
+			}
         }
         dict
     }
@@ -567,10 +574,10 @@ impl DijkstraMap {
     #[export]
     pub fn get_all_points_with_cost_between(
         &mut self,
-        mut _owner: gdnative::Node,
+        mut _owner: &gdnative::prelude::Node,
         min_cost: f32,
         max_cost: f32,
-    ) -> gdnative::Int32Array {
+    ) -> gdnative::core_types::Int32Array {
         let start_point = match self.sorted_points.binary_search_by(|a| {
             if self.cost_of(*a) < min_cost {
                 return std::cmp::Ordering::Less;
@@ -594,7 +601,7 @@ impl DijkstraMap {
         };
 
         let slice = start_point..end_point;
-        let mut poolintarray = gdnative::Int32Array::new();
+        let mut poolintarray = gdnative::core_types::Int32Array::new();
         poolintarray.resize(slice.len() as i32);
         {
             let mut pool_write_access = poolintarray.write();
@@ -611,9 +618,9 @@ impl DijkstraMap {
     #[export]
     pub fn get_shortest_path_from_point(
         &mut self,
-        mut _owner: gdnative::Node,
+        mut _owner: &gdnative::prelude::Node,
         point: i32,
-    ) -> gdnative::Int32Array {
+    ) -> gdnative::core_types::Int32Array {
         let mut path: Vec<i32> = Vec::new();
         let mut next_point = self.get_direction_at_point(_owner, point);
         let mut current_point: i32 = point;
@@ -624,7 +631,7 @@ impl DijkstraMap {
             next_point = self.get_direction_at_point(_owner, current_point);
         }
 
-        let mut out_array = gdnative::Int32Array::new();
+        let mut out_array = gdnative::core_types::Int32Array::new();
         if path.len() > 0 {
             out_array.resize(path.len() as i32);
             let mut path_write = out_array.write();
@@ -878,13 +885,13 @@ impl DijkstraMap {
     #[export]
     pub fn path_find_astar(
         &mut self,
-        mut _owner: gdnative::Node,
+        mut _owner: &gdnative::prelude::Node,
         origin: i32,
         destination: i32,
-        id_to_position: gdnative::Dictionary,
-        heuristic: gdnative::Variant,
-        terrain_costs_in: gdnative::Dictionary,
-    ) -> gdnative::Int32Array {
+        id_to_position: gdnative::core_types::Dictionary,
+        heuristic: gdnative::core_types::Variant,
+        terrain_costs_in: gdnative::core_types::Dictionary,
+    ) -> gdnative::core_types::Int32Array {
         
 
         #[derive(Copy, Clone, PartialEq)]
@@ -928,7 +935,7 @@ impl DijkstraMap {
         }
         //choose heuristic function
         let h= match heuristic.get_type() {
-            gdnative::VariantType::GodotString=>{
+            gdnative::core_types::VariantType::GodotString=>{
                 let strng=heuristic.to_string();
                 match strng.as_str() {
                     "euclidean"=>Heuristic::EUCLIDEAN,
@@ -938,15 +945,15 @@ impl DijkstraMap {
                     _=>Heuristic::NONE,
                 }
             }
-            gdnative::VariantType::VariantArray=>{
+            gdnative::core_types::VariantType::VariantArray=>{
                 Heuristic::CUSTOM
             },
             _=>Heuristic::NONE,
         };
         
         let heuristic_function = |pt1:i32,pt2:i32| -> f32 {
-            let v1=id_to_position.get(&gdnative::Variant::from_i64(pt1 as i64));
-            let v2=id_to_position.get(&gdnative::Variant::from_i64(pt2 as i64));
+            let v1=id_to_position.get(&gdnative::core_types::Variant::from_i64(pt1 as i64));
+            let v2=id_to_position.get(&gdnative::core_types::Variant::from_i64(pt2 as i64));
             match h {
                 Heuristic::NONE=>0.0,
                 Heuristic::EUCLIDEAN=>{
@@ -991,12 +998,12 @@ impl DijkstraMap {
                         }
                     }                
                 },
-                Heuristic::CUSTOM=>{
-                    let mut ar=heuristic.to_array();
-                    let mut fowner=ar.get_val(0);
-                    let fname=ar.get_ref(0).to_godot_string();
+                Heuristic::CUSTOM=> unsafe {
+                    let mut ar: gdnative::core_types::VariantArray<gdnative::prelude::Shared> = heuristic.to_array();
+                    let mut fowner: gdnative::core_types::Variant = ar.get(0);
+                    let fname: String = ar.get_ref(0).to_godot_string().to_string();
                     if fowner.has_method(&fname) {
-                        fowner.call(&fname,&[gdnative::Variant::from_i64(pt1 as i64),v1,gdnative::Variant::from_i64(pt1 as i64),v2])
+                        fowner.call(&fname,&[gdnative::core_types::Variant::from_i64(pt1 as i64),v1,gdnative::core_types::Variant::from_i64(pt1 as i64),v2])
                         .ok().unwrap().to_f64() as f32
                     }else{
                         0.0
@@ -1057,7 +1064,7 @@ impl DijkstraMap {
         }
         
         c = connections.len() as i32;
-        let mut path=gdnative::Int32Array::new();
+        let mut path=gdnative::core_types::Int32Array::new();
         let mut pt=&destination;
         while *direction_map.get(&pt).unwrap_or(&origin)!=origin && !c<=0 {
             c=c-1;
@@ -1067,7 +1074,7 @@ impl DijkstraMap {
         path
     }
     //returns bounding rectangle of Shape2D
-    /* fn _get_bounding_rectangle(&mut self, shape_in: &Option<gdnative::Shape2D>) -> Option<gdnative::Rect2> {
+    /* fn _get_bounding_rectangle(&mut self, shape_in: &Option<gdnative::api::Shape2D>) -> Option<gdnative::Rect2> {
         use gdnative::geom::*;
         match shape_in {
             None=>return None,
@@ -1112,27 +1119,27 @@ impl DijkstraMap {
     //function for common processing input of add_*grid methods.
     fn add_grid_internal(
         &mut self, 
-        mut _owner: gdnative::Node,
+        mut _owner: &gdnative::prelude::Node,
         _gridtype: GridType,
         initial_offset: i32,
-        bounds: gdnative::Variant,
-        _custom_tile: Option<(gdnative::Shape2D,gdnative::Vector2,gdnative::Vector2)>, //preparation for potential future upgrade of custom tiles
+        bounds: gdnative::core_types::Variant,
+        _custom_tile: Option<(gdnative::api::Shape2D,gdnative::core_types::Vector2,gdnative::core_types::Vector2)>, //preparation for potential future upgrade of custom tiles
         terrain_id_maybe: Option<i32>,
-    ) -> Option<(gdnative::Dictionary,FnvHashMap<(i32,i32),i32>)> {
+    ) -> Option<(gdnative::core_types::Dictionary,FnvHashMap<(i32,i32),i32>)> {
         
 
         let terrain_id=terrain_id_maybe.unwrap_or(-1); //default terrain
         //extract shape and starting point coordinates
-        let top_left: gdnative::Vector2;
+        let top_left: gdnative::core_types::Vector2;
         let width: usize;
         let height: usize;
-        let start: gdnative::Vector2;
+        let start: gdnative::core_types::Vector2;
         let mut bitmap: Vec<Option<i32>>;
 
         match bounds.get_type() {
             //Shape2D detection doesn't work at the moment
-            /* gdnative::VariantType::Object => {
-                let shape=bounds.try_to_object::<gdnative::Shape2D>();
+            /* gdnative::core_types::VariantType::Object => {
+                let shape=bounds.try_to_object::<gdnative::api::Shape2D>();
                                 
                 let rect=self._get_bounding_rectangle(&shape);
                 if rect.is_none(){
@@ -1140,7 +1147,7 @@ impl DijkstraMap {
                 }
                 let rect=rect.unwrap();
                 top_left=rect.origin.to_vector();
-                start=gdnative::Vector2::new(0.0,0.0);
+                start=gdnative::core_types::Vector2::new(0.0,0.0);
                 width=rect.size.width as usize;
                 height=rect.size.height as usize;
                 bitmap=Vec::with_capacity(width*height);
@@ -1148,29 +1155,29 @@ impl DijkstraMap {
                 let (tile,delta,offset_of_odd)=match _gridtype {
                     GridType::SQUARE=>{
                         let mut sqr = gdnative::ConvexPolygonShape2D::new();
-                        let mut pts=gdnative::VariantArray::new();
-                        pts.push(&gdnative::Variant::from_vector2(&gdnative::Vector2::new(-0.5,-0.5)));
-                        pts.push(&gdnative::Variant::from_vector2(&gdnative::Vector2::new(0.5,-0.5)));
-                        pts.push(&gdnative::Variant::from_vector2(&gdnative::Vector2::new(0.5,0.5)));
-                        pts.push(&gdnative::Variant::from_vector2(&gdnative::Vector2::new(-0.5,0.5)));
+                        let mut pts=gdnative::core_types::VariantArray::new();
+                        pts.push(&gdnative::core_types::Variant::from_vector2(&gdnative::core_types::Vector2::new(-0.5,-0.5)));
+                        pts.push(&gdnative::core_types::Variant::from_vector2(&gdnative::core_types::Vector2::new(0.5,-0.5)));
+                        pts.push(&gdnative::core_types::Variant::from_vector2(&gdnative::core_types::Vector2::new(0.5,0.5)));
+                        pts.push(&gdnative::core_types::Variant::from_vector2(&gdnative::core_types::Vector2::new(-0.5,0.5)));
 
-                        sqr.set_point_cloud(gdnative::Vector2Array::from_variant_array(&pts));
-                        (sqr.cast::<gdnative::Shape2D>().unwrap(),gdnative::Vector2::new(1.0,1.0),gdnative::Vector2::new(0.0,0.0))
+                        sqr.set_point_cloud(gdnative::core_types::Vector2Array::from_variant_array(&pts));
+                        (sqr.cast::<gdnative::api::Shape2D>().unwrap(),gdnative::core_types::Vector2::new(1.0,1.0),gdnative::core_types::Vector2::new(0.0,0.0))
                     }
                     GridType::HEX=>{
                         let mut hex = gdnative::ConvexPolygonShape2D::new();
                         let r=1.1547005*0.5; //radius of hexagon
 
-                        let mut pts=gdnative::VariantArray::new();
-                        pts.push(&gdnative::Variant::from_vector2(&gdnative::Vector2::new(-0.5,-0.5*r)));
-                        pts.push(&gdnative::Variant::from_vector2(&gdnative::Vector2::new(0.0,-r)));
-                        pts.push(&gdnative::Variant::from_vector2(&gdnative::Vector2::new(0.5,-0.5*r)));
-                        pts.push(&gdnative::Variant::from_vector2(&gdnative::Vector2::new(0.5,0.5*r)));
-                        pts.push(&gdnative::Variant::from_vector2(&gdnative::Vector2::new(0.0,r)));
-                        pts.push(&gdnative::Variant::from_vector2(&gdnative::Vector2::new(-0.5,0.5*r)));
+                        let mut pts=gdnative::core_types::VariantArray::new();
+                        pts.push(&gdnative::core_types::Variant::from_vector2(&gdnative::core_types::Vector2::new(-0.5,-0.5*r)));
+                        pts.push(&gdnative::core_types::Variant::from_vector2(&gdnative::core_types::Vector2::new(0.0,-r)));
+                        pts.push(&gdnative::core_types::Variant::from_vector2(&gdnative::core_types::Vector2::new(0.5,-0.5*r)));
+                        pts.push(&gdnative::core_types::Variant::from_vector2(&gdnative::core_types::Vector2::new(0.5,0.5*r)));
+                        pts.push(&gdnative::core_types::Variant::from_vector2(&gdnative::core_types::Vector2::new(0.0,r)));
+                        pts.push(&gdnative::core_types::Variant::from_vector2(&gdnative::core_types::Vector2::new(-0.5,0.5*r)));
 
-                        hex.set_point_cloud(gdnative::Vector2Array::from_variant_array(&pts));
-                        (hex.cast::<gdnative::Shape2D>().unwrap(),gdnative::Vector2::new(1.0,2.0*r),gdnative::Vector2::new(0.5,0.0))  
+                        hex.set_point_cloud(gdnative::core_types::Vector2Array::from_variant_array(&pts));
+                        (hex.cast::<gdnative::api::Shape2D>().unwrap(),gdnative::core_types::Vector2::new(1.0,2.0*r),gdnative::core_types::Vector2::new(0.5,0.0))  
                     }
                 };
                 
@@ -1199,10 +1206,10 @@ impl DijkstraMap {
             } */
 
             //input is a rectangle
-            gdnative::VariantType::Rect2 =>{
+            gdnative::core_types::VariantType::Rect2 =>{
                 let rect=bounds.to_rect2();
                 top_left=rect.origin.to_vector();
-                start=gdnative::Vector2::new(0.0,0.0);
+                start=gdnative::core_types::Vector2::new(0.0,0.0);
                 width=rect.size.width as usize;
                 height=rect.size.height as usize;
                 bitmap=Vec::with_capacity(width*height);
@@ -1215,23 +1222,24 @@ impl DijkstraMap {
                 
             }
 
-            gdnative::VariantType::Object => {
-                let bmp=bounds.try_to_object::<gdnative::BitMap>();
+            /*gdnative::core_types::VariantType::Object => {
+                let bmp: Option<gdnative::prelude::Ref<gdnative::api::BitMap, gdnative::prelude::Shared>> = bounds.try_to_object::<gdnative::api::BitMap>();
                 match bmp {
                     None=>{
                         godot_error!("Invalid Argument type for bounds. Expected Rect2 or BitMap.");
                         return None;
                     },
                     Some(bitmap_godot)=>{
-                        top_left=gdnative::Vector2::new(0.0,0.0);
-                        start=gdnative::Vector2::new(0.0,0.0);
+                        top_left=gdnative::core_types::Vector2::new(0.0,0.0);
+                        start=gdnative::core_types::Vector2::new(0.0,0.0);
+						
                         width=bitmap_godot.get_size().x as usize;
                         height=bitmap_godot.get_size().y as usize;
                         bitmap=Vec::with_capacity(width*height);
                         for i in 0..width*height {
                             let x=i%width;
                             let y=i/width;
-                            if bitmap_godot.get_bit(gdnative::Vector2::new(x as f32,y as f32)){
+                            if bitmap_godot.get_bit(gdnative::core_types::Vector2::new(x as f32,y as f32)){
                                 bitmap.push(Some(terrain_id))
                             }else{
                                 bitmap.push(None)
@@ -1240,7 +1248,7 @@ impl DijkstraMap {
                         }
                     }
                 }
-            }
+            }*/
 
             _=>{
                 godot_error!("Invalid Argument type for bounds. Expected Rect2 or BitMap.");
@@ -1249,7 +1257,7 @@ impl DijkstraMap {
         }
         
         //add points both to DijkstraMap and the output dictionary
-        let mut pos_to_id=gdnative::Dictionary::new();
+        let mut pos_to_id=gdnative::core_types::Dictionary::new_shared();
         let mut points_in_bounds=FnvHashMap::<(i32,i32),i32>::default();
 
         let mut id=initial_offset;
@@ -1262,7 +1270,9 @@ impl DijkstraMap {
                 Some(tid)=>{
                     self.add_point(_owner,id,Some(*tid));
                     points_in_bounds.insert((pos.x as i32,pos.y as i32),id);
-                    pos_to_id.set(&gdnative::Variant::from_vector2(&(pos+top_left)), &gdnative::Variant::from_i64(id as i64))
+					unsafe {
+						pos_to_id.insert(&gdnative::core_types::Variant::from_vector2(&(pos+top_left)), &gdnative::core_types::Variant::from_i64(id as i64))
+					}
                 },
             }
 
@@ -1293,20 +1303,20 @@ impl DijkstraMap {
     #[export]
     pub fn add_square_grid(
         &mut self,
-        mut _owner: gdnative::Node,
+        mut _owner: &gdnative::prelude::Node,
         initial_offset: i32,
-        bounds: gdnative::Variant,
+        bounds: gdnative::core_types::Variant,
         #[opt] terrain_id_maybe: Option<i32>,
         #[opt] orthogonal_cost: Option<f32>,
         #[opt] diagonal_cost: Option<f32>,
-    ) -> gdnative::Dictionary {
+    ) -> gdnative::core_types::Dictionary {
 
-        let pos_to_id:gdnative::Dictionary;
+        let pos_to_id:gdnative::core_types::Dictionary;
         let points_in_bounds: FnvHashMap<(i32,i32),i32>;
 
         //add points covered by bounds
         match self.add_grid_internal(_owner,GridType::SQUARE,initial_offset,bounds,None,terrain_id_maybe){
-            None=>{return gdnative::Dictionary::new()}
+            None=>{return gdnative::core_types::Dictionary::new_shared()}
             Some((a,b))=>{
                 pos_to_id=a;
                 points_in_bounds=b;
@@ -1376,19 +1386,19 @@ impl DijkstraMap {
     #[export]
     pub fn add_hexagonal_grid(
         &mut self,
-        mut _owner: gdnative::Node,
+        mut _owner: &gdnative::prelude::Node,
         initial_offset: i32,
-        bounds: gdnative::Variant,
+        bounds: gdnative::core_types::Variant,
         #[opt] terrain_id_maybe: Option<i32>,
         #[opt] cost: Option<f32>,
-    ) -> gdnative::Dictionary {
+    ) -> gdnative::core_types::Dictionary {
 
-        let pos_to_id:gdnative::Dictionary;
+        let pos_to_id:gdnative::core_types::Dictionary;
         let points_in_bounds: FnvHashMap<(i32,i32),i32>;
 
         //add points covered by bounds
         match self.add_grid_internal(_owner,GridType::HEX,initial_offset,bounds,None,terrain_id_maybe){
-            None=>{return gdnative::Dictionary::new()}
+            None=>{return gdnative::core_types::Dictionary::new_shared()}
             Some((a,b))=>{
                 pos_to_id=a;
                 points_in_bounds=b;
@@ -1422,7 +1432,7 @@ impl DijkstraMap {
 }
 
 // Function that registers all exposed classes to Godot
-fn init(handle: gdnative::init::InitHandle) {
+fn init(handle: gdnative::prelude::InitHandle) {
     handle.add_class::<DijkstraMap>();
 }
 

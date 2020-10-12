@@ -14,7 +14,7 @@ ___
 Clears the DijkstraMap of all points and connections.
 
 ___
-* int **duplicate_graph_from(** DijkstraMap source **)**
+* int **duplicate_graph_from(** DijkstraMap source **)** currently broken, use branch v1.0
 
 Duplicates graph from other DijkstraMap.
 ___
@@ -149,7 +149,7 @@ ___
 For convenience, there are several methods for adding standard 2D grids.
 ___
 
-* [Dictionary][2] **add_square_grid(** int initial_offset, Variant bounds, int terrain_id=-1, float orthogonal_cost=1.0, float diagonal_cost=NAN **)**
+* [Dictionary][2] **add_square_grid(** int initial_offset, Variant bounds, int terrain_id=-1, float orthogonal_cost=1.0, float diagonal_cost=NAN **)** currently broken, use branch v1.0
 
 Adds a square grid of connected points. `initial_offset` specifies ID of the first point to be added. Returns a [`Dictionary`][2], where keys are coordinates of points ([`Vector2`][6]) and values are their corresponding point IDs.
 
@@ -162,7 +162,7 @@ Adds a square grid of connected points. `initial_offset` specifies ID of the fir
 `diagonal_cost` specifies cost of diagonal connections. In typical square grid, diagonal points share a corner. Values of `INF` or `NAN` disable diagonal connections. Default value = `INF` (ie. disabled by default)
 ___
 
-* [Dictionary][2] **add_hexagonal_grid(** int initial_offset, Variant bounds, int terrain_id=-1, float cost=1.0 **)**
+* [Dictionary][2] **add_hexagonal_grid(** int initial_offset, Variant bounds, int terrain_id=-1, float cost=1.0 **)** currently broken, use branch v1.0
 
 Adds a hexagonal grid of connected points. `initial_offset` specifies ID of the first point to be added. returns a [`Dictionary`][2], where keys are coordinates of points ([`Vector2`][6]) and values are their corresponding point IDs. `cost` specifies cost of connections (default value =`1.0`) and `terrain_id` specifies terrain to be used (default value =`-1`).
 

@@ -6,6 +6,8 @@
 
 Howdy !
 
+The Master branch is broken while porting to gdnative 0.9.0, use the branch v1.0 for production!
+
 This is a GDNative project for Godot game engine, that introduces Dijktra Map pathfinding node. It provides a much needed versatility currently absent from the build-in AStar pathfinding. Its main feature is the ability to populate the entire graph with shortest paths towards a given origin point. Total lenghs of shortest paths and directions can then be easily looked up for any point in the graph.
 
 Common use cases include: pre-computing pathfinding for tower-defense games, RTS games and roguelikes; Listing available moves for turn-based games; aiding in movement-related AI behaviour. You can find more examples in [this amazing article](http://www.roguebasin.com/index.php?title=Dijkstra_Maps_Visualized).

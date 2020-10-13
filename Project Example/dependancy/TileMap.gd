@@ -8,10 +8,7 @@ var point_id_to_position={}
 var point_position_to_id={}
 var speed_modifiers={}
 
-func _exit_tree():
-	#we need to manually free Dijkstra maps from memory
-	dijkstra_map_for_archers.free()
-	dijkstra_map_for_pikemen.free()
+
 
 # Called when the node enters the scene tree for the first time.
 func _ready():

@@ -1,12 +1,10 @@
-#[macro_use]
-extern crate gdnative;
-
 //use std::collections::HashMap;
+use gdnative::prelude::*;
 use fnv::FnvHashMap;
 use fnv::FnvHashSet;
 
-#[derive(gdnative::prelude::NativeClass)]
-#[inherit(gdnative::prelude::Node)]
+#[derive(NativeClass)]
+#[inherit(Reference)]
 //#[user_data(gdnative::user_data::ArcData<DijkstraMap>)]
 pub struct DijkstraMap {
     connections: FnvHashMap<i32, FnvHashMap<i32, f32>>, //for point1 stores weights of connections going from point1 to point2
@@ -31,7 +29,7 @@ const STATUS_FAILED: i64 = 1;
 #[gdnative::methods]
 impl DijkstraMap {
     /// The "constructor" of the class.
-    fn new(_owner: &gdnative::prelude::Node) -> Self {
+    fn new(_owner: &Reference) -> Self {
         DijkstraMap {
             connections: FnvHashMap::default(),
             reverse_connections: FnvHashMap::default(),
@@ -45,7 +43,7 @@ impl DijkstraMap {
 
     ///clears the DijkstraMap.
     #[export]
-    pub fn clear(&mut self, mut _owner: &gdnative::prelude::Node) {
+    pub fn clear(&mut self, mut _owner: &Reference) {
         self.connections.clear();
         self.reverse_connections.clear();
         self.cost_map.clear();
@@ -56,24 +54,26 @@ impl DijkstraMap {
     }
     
     ///duplicates graph from other DijkstraMap. 
-    /*#[export]
-    pub fn duplicate_graph_from(&mut self, mut _owner: &gdnative::prelude::Node, source: gdnative::Ref<gdnative::prelude::Node, gdnative::prelude::Unique>) -> i64 {
-        let source_instance: Result<gdnative::prelude::Instance<DijkstraMap, gdnative::prelude::Unique>, gdnative::Ref<gdnative::prelude::Node, gdnative::prelude::Unique>>=gdnative::prelude::Instance::try_from_base(source);
-        match source_instance{
-            Err(e)=>STATUS_FAILED,
-            Ok(source_instance)=>source_instance.map(
+    #[export]
+    pub fn duplicate_graph_from(&mut self, mut _owner: &Reference, source_instance: Variant) -> i64 {
+        
+        unsafe {
+            source_instance.try_to_object::<Reference>().expect(
+                "Failed to convert Variant to DijkstraMap.").assume_safe().cast_instance::<DijkstraMap>().expect(
+                "Failed to convert Variant to DijkstraMap.")}.map(
                 |dmap,_node|{
                 self.connections=dmap.connections.clone();
                 self.reverse_connections=dmap.reverse_connections.clone();
                 self.disabled_points=dmap.disabled_points.clone();
                 self.terrain_map=dmap.terrain_map.clone();
 
-                STATUS_OK
-            }).unwrap_or(STATUS_FAILED)
-        }
-    }*/
+                return STATUS_OK;
+                
+            }).expect("Failed to convert Variant to DijkstraMap.");
+        return STATUS_FAILED;
+    }
 
-    /* ///duplicates graph from AStar object.
+    /*///duplicates graph from AStar object.
     /// because of the differences between Astar and DijkstraMap, 
     /// terrain is set to default and weights are baked into the connection costs.
     #[export]
@@ -100,7 +100,7 @@ impl DijkstraMap {
 
     ///returns next ID not associated with any point
     #[export]
-    pub fn get_available_point_id(&mut self, mut _owner: &gdnative::prelude::Node) -> i32 {
+    pub fn get_available_point_id(&mut self, mut _owner: &Reference) -> i32 {
         let mut id: i32 = 0;
         while self.has_point(_owner, id) {
             id = id + 1;
@@ -110,7 +110,7 @@ impl DijkstraMap {
     ///Adds new point with given ID and optional terrain ID into the graph and returns OK.
     /// If point with that ID already exists, does nothing and returns FAILED.
     #[export]
-    pub fn add_point(&mut self, mut _owner: &gdnative::prelude::Node, id: i32, #[opt] terrain_id: Option<i32>) -> i64 {
+    pub fn add_point(&mut self, mut _owner: &Reference, id: i32, #[opt] terrain_id: Option<i32>) -> i64 {
         if self.has_point(_owner, id) {
             STATUS_FAILED
         } else {
@@ -125,7 +125,7 @@ impl DijkstraMap {
     #[export]
     pub fn set_terrain_for_point(
         &mut self,
-        mut _owner: &gdnative::prelude::Node,
+        mut _owner: &Reference,
         id: i32,
         terrain_id: Option<i32>, //TODO BASIC TERRAIN cost always == 1.0
     ) -> i64 {
@@ -140,13 +140,13 @@ impl DijkstraMap {
 
     ///gets terrain ID for given point. Returns -1 if given point doesn't exist.
     #[export]
-    pub fn get_terrain_for_point(&mut self, mut _owner: &gdnative::prelude::Node, id: i32) -> i32 {
+    pub fn get_terrain_for_point(&mut self, mut _owner: &Reference, id: i32) -> i32 {
         return *self.terrain_map.get(&id).unwrap_or(&-1);
     }
 
     ///Removes point from graph along with all of its connections and returns OK. If point doesn't exist, returns FAILED.
     #[export]
-    pub fn remove_point(&mut self, mut _owner: &gdnative::prelude::Node, point: i32) -> i64 {
+    pub fn remove_point(&mut self, mut _owner: &Reference, point: i32) -> i64 {
         self.disabled_points.remove(&point);
         //remove this point's entry from connections
         match self.connections.remove(&point) {
@@ -171,14 +171,14 @@ impl DijkstraMap {
     }
     ///Returns true if point exists.
     #[export]
-    pub fn has_point(&mut self, mut _owner: &gdnative::prelude::Node, id: i32) -> bool {
+    pub fn has_point(&mut self, mut _owner: &Reference, id: i32) -> bool {
         self.connections.contains_key(&id)
     }
 
     ///Disables point from pathfinding and returns true. If point doesn't exist, returns false.
     ///Note: points are enabled by default.
     #[export]
-    pub fn disable_point(&mut self, mut _owner: &gdnative::prelude::Node, point: i32) -> i64 {
+    pub fn disable_point(&mut self, mut _owner: &Reference, point: i32) -> i64 {
         if self.connections.contains_key(&point) {
             self.disabled_points.insert(point);
             STATUS_OK
@@ -190,7 +190,7 @@ impl DijkstraMap {
     ///Enables point for pathfinding and returns OK. If point doesn't exist, returns FAILED.
     ///Note: points are enabled by default.
     #[export]
-    pub fn enable_point(&mut self, mut _owner: &gdnative::prelude::Node, point: i32) -> i64 {
+    pub fn enable_point(&mut self, mut _owner: &Reference, point: i32) -> i64 {
         if self.connections.contains_key(&point) {
             self.disabled_points.remove(&point); //assumes it works
             STATUS_OK
@@ -201,7 +201,7 @@ impl DijkstraMap {
 
     ///Returns true if point exists and is disabled. Returns false otherwise.
     #[export]
-    pub fn is_point_disabled(&mut self, mut _owner: &gdnative::prelude::Node, point: i32) -> bool {
+    pub fn is_point_disabled(&mut self, mut _owner: &Reference, point: i32) -> bool {
         if self.connections.contains_key(&point) && self.disabled_points.contains(&point) {
             true
         } else {
@@ -216,7 +216,7 @@ impl DijkstraMap {
     #[export]
     pub fn connect_points(
         &mut self,
-        mut _owner: &gdnative::prelude::Node,
+        mut _owner: &Reference,
         source: i32,
         target: i32,
         #[opt] cost: Option<f32> , 
@@ -263,7 +263,7 @@ impl DijkstraMap {
     #[export]
     pub fn remove_connection(
         &mut self,
-        mut _owner: &gdnative::prelude::Node,
+        mut _owner: &Reference,
         source: i32,
         target: i32,
         bidirectional: bool,
@@ -286,7 +286,7 @@ impl DijkstraMap {
 
     ///Returns true if source point and target point both exist and there's connection from source to target.
     #[export]
-    pub fn has_connection(&mut self, mut _owner: &gdnative::prelude::Node, source: i32, target: i32) -> bool {
+    pub fn has_connection(&mut self, mut _owner: &Reference, source: i32, target: i32) -> bool {
         match self.connections.get(&source) {
             None => false,
             Some(src) => src.contains_key(&target),
@@ -316,7 +316,7 @@ impl DijkstraMap {
     #[export]
     pub fn recalculate(
         &mut self,
-        mut _owner: &gdnative::prelude::Node,
+        mut _owner: &Reference,
         origin: gdnative::core_types::Variant,
         #[opt] optional_params: gdnative::core_types::Dictionary,
     ) {
@@ -490,12 +490,12 @@ impl DijkstraMap {
     ///Given a point, returns ID of the next point along the shortest path toward target or from source.
     ///If given point is the target, returns ID of itself. Returns -1, if target is inaccessible from this point.
     #[export]
-    pub fn get_direction_at_point(&mut self, mut _owner: &gdnative::prelude::Node, point: i32) -> i32 {
+    pub fn get_direction_at_point(&mut self, mut _owner: &Reference, point: i32) -> i32 {
         *self.direction_map.get(&point).unwrap_or(&-1)
     }
     ///Returns cost of the shortest path from this point to the target.
     #[export]
-    pub fn get_cost_at_point(&mut self, mut _owner: &gdnative::prelude::Node, point: i32) -> f32 {
+    pub fn get_cost_at_point(&mut self, mut _owner: &Reference, point: i32) -> f32 {
         *self.cost_map.get(&point).unwrap_or(&std::f32::INFINITY)
     }
 
@@ -503,7 +503,7 @@ impl DijkstraMap {
     #[export]
     pub fn get_direction_at_points(
         &mut self,
-        mut _owner: &gdnative::prelude::Node,
+        mut _owner: &Reference,
         points: gdnative::core_types::Int32Array,
     ) -> gdnative::core_types::Int32Array {
         let mut dirs = gdnative::core_types::Int32Array::new();
@@ -521,7 +521,7 @@ impl DijkstraMap {
     #[export]
     pub fn get_cost_at_points(
         &mut self,
-        mut _owner: &gdnative::prelude::Node,
+        mut _owner: &Reference,
         points: gdnative::core_types::Int32Array,
     ) -> gdnative::core_types::Float32Array {
         let mut costs = gdnative::core_types::Float32Array::new();
@@ -542,39 +542,37 @@ impl DijkstraMap {
     ///Returns the entire Dijktra map of costs in form of a `Dictionary`. Keys are points' IDs and values are costs.
     ///Inaccessible points are not present in the dictionary.
     #[export]
-    pub fn get_cost_map(&mut self, mut _owner: &gdnative::prelude::Node) -> gdnative::core_types::Dictionary {
-        let mut dict = gdnative::core_types::Dictionary::new_shared();
+    pub fn get_cost_map(&mut self, mut _owner: &Reference) -> gdnative::core_types::Dictionary {
+        let dict = gdnative::core_types::Dictionary::new();
         for id in self.sorted_points.iter() {
-			unsafe {
-				dict.insert(
-					&gdnative::core_types::Variant::from_i64(*id as i64),
-					&gdnative::core_types::Variant::from_f64(self.cost_of(*id) as f64),
-				);
-			}
+            dict.insert(
+                Variant::from_i64(*id as i64),
+                Variant::from_f64(self.cost_of(*id) as f64),
+            );
         }
-        dict
+        dict.into_shared()
     }
 
     ///Returns the entire Dijkstra map of directions in form of a `Dictionary`
     #[export]
-    pub fn get_direction_map(&mut self, mut _owner: &gdnative::prelude::Node) -> gdnative::core_types::Dictionary {
-        let mut dict = gdnative::core_types::Dictionary::new_shared();
+    pub fn get_direction_map(&mut self, mut _owner: &Reference) -> gdnative::core_types::Dictionary {
+        let dict = gdnative::core_types::Dictionary::new();
         for id in self.sorted_points.iter() {
-            unsafe {
-				dict.insert(
-					&gdnative::core_types::Variant::from_i64(*id as i64),
-					&gdnative::core_types::Variant::from_i64(*self.direction_map.get(id).unwrap() as i64),
-				);
-			}
+        
+            dict.insert(
+                Variant::from_i64(*id as i64),
+                Variant::from_i64(*self.direction_map.get(id).unwrap() as i64),
+            );
+        
         }
-        dict
+        dict.into_shared()
     }
 
     ///returns `PoolIntArray` of IDs of all points with costs between `min_cost` and `max_cost` (inclusive), sorted by cost.
     #[export]
     pub fn get_all_points_with_cost_between(
         &mut self,
-        mut _owner: &gdnative::prelude::Node,
+        mut _owner: &Reference,
         min_cost: f32,
         max_cost: f32,
     ) -> gdnative::core_types::Int32Array {
@@ -618,7 +616,7 @@ impl DijkstraMap {
     #[export]
     pub fn get_shortest_path_from_point(
         &mut self,
-        mut _owner: &gdnative::prelude::Node,
+        mut _owner: &Reference,
         point: i32,
     ) -> gdnative::core_types::Int32Array {
         let mut path: Vec<i32> = Vec::new();
@@ -885,7 +883,7 @@ impl DijkstraMap {
     #[export]
     pub fn path_find_astar(
         &mut self,
-        mut _owner: &gdnative::prelude::Node,
+        mut _owner: &Reference,
         origin: i32,
         destination: i32,
         id_to_position: gdnative::core_types::Dictionary,
@@ -999,7 +997,7 @@ impl DijkstraMap {
                     }                
                 },
                 Heuristic::CUSTOM=> unsafe {
-                    let mut ar: gdnative::core_types::VariantArray<gdnative::prelude::Shared> = heuristic.to_array();
+                    let ar: gdnative::core_types::VariantArray<gdnative::prelude::Shared> = heuristic.to_array();
                     let mut fowner: gdnative::core_types::Variant = ar.get(0);
                     let fname: String = ar.get_ref(0).to_godot_string().to_string();
                     if fowner.has_method(&fname) {
@@ -1119,7 +1117,7 @@ impl DijkstraMap {
     //function for common processing input of add_*grid methods.
     fn add_grid_internal(
         &mut self, 
-        mut _owner: &gdnative::prelude::Node,
+        mut _owner: &Reference,
         _gridtype: GridType,
         initial_offset: i32,
         bounds: gdnative::core_types::Variant,
@@ -1257,7 +1255,7 @@ impl DijkstraMap {
         }
         
         //add points both to DijkstraMap and the output dictionary
-        let mut pos_to_id=gdnative::core_types::Dictionary::new_shared();
+        let pos_to_id=gdnative::core_types::Dictionary::new();
         let mut points_in_bounds=FnvHashMap::<(i32,i32),i32>::default();
 
         let mut id=initial_offset;
@@ -1270,9 +1268,8 @@ impl DijkstraMap {
                 Some(tid)=>{
                     self.add_point(_owner,id,Some(*tid));
                     points_in_bounds.insert((pos.x as i32,pos.y as i32),id);
-					unsafe {
-						pos_to_id.insert(&gdnative::core_types::Variant::from_vector2(&(pos+top_left)), &gdnative::core_types::Variant::from_i64(id as i64))
-					}
+					pos_to_id.insert(Variant::from_vector2(&(pos+top_left)), Variant::from_i64(id as i64))
+					
                 },
             }
 
@@ -1282,7 +1279,7 @@ impl DijkstraMap {
                 pos.y+=1.0;
             }
         }
-        Some((pos_to_id,points_in_bounds))
+        Some((pos_to_id.into_shared(),points_in_bounds))
     }
 
     ///Adds a square grid of connected points. `initial_offset` specifies ID of the first point to be added.
@@ -1303,7 +1300,7 @@ impl DijkstraMap {
     #[export]
     pub fn add_square_grid(
         &mut self,
-        mut _owner: &gdnative::prelude::Node,
+        mut _owner: &Reference,
         initial_offset: i32,
         bounds: gdnative::core_types::Variant,
         #[opt] terrain_id_maybe: Option<i32>,
@@ -1386,7 +1383,7 @@ impl DijkstraMap {
     #[export]
     pub fn add_hexagonal_grid(
         &mut self,
-        mut _owner: &gdnative::prelude::Node,
+        mut _owner: &Reference,
         initial_offset: i32,
         bounds: gdnative::core_types::Variant,
         #[opt] terrain_id_maybe: Option<i32>,

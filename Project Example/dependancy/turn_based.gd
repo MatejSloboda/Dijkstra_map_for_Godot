@@ -4,8 +4,6 @@ var dijkstra_map = DijkstraMap.new()
 var position_to_id={}
 var id_to_position={}
 
-func _exit_tree():
-	dijkstra_map.free()
 
 func _ready():
 	#we need to initialize the dijkstra map with appropriate graph for pathfinding.

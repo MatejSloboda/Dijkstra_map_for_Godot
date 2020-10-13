@@ -14,7 +14,8 @@ func _on_visualisation_selection_item_selected(index):
 	var costmap=get_node(\"gridmap/costs\")
 	var dirmap=get_node(\"gridmap/directions\")
 	costmap.visible=index==1
-	dirmap.visible=index==2"
+	dirmap.visible=index==2
+"
 
 [sub_resource type="TileSet" id=2]
 0/name = "arrows.png 0"
@@ -25,6 +26,10 @@ func _on_visualisation_selection_item_selected(index):
 0/tile_mode = 0
 0/occluder_offset = Vector2( 0, 0 )
 0/navigation_offset = Vector2( 0, 0 )
+0/shape_offset = Vector2( 0, 0 )
+0/shape_transform = Transform2D( 1, 0, 0, 1, 0, 0 )
+0/shape_one_way = false
+0/shape_one_way_margin = 0.0
 0/shapes = [  ]
 0/z_index = 0
 1/name = "arrows.png 1"
@@ -35,6 +40,10 @@ func _on_visualisation_selection_item_selected(index):
 1/tile_mode = 0
 1/occluder_offset = Vector2( 0, 0 )
 1/navigation_offset = Vector2( 0, 0 )
+1/shape_offset = Vector2( 0, 0 )
+1/shape_transform = Transform2D( 1, 0, 0, 1, 0, 0 )
+1/shape_one_way = false
+1/shape_one_way_margin = 0.0
 1/shapes = [  ]
 1/z_index = 0
 2/name = "arrows.png 2"
@@ -45,6 +54,10 @@ func _on_visualisation_selection_item_selected(index):
 2/tile_mode = 0
 2/occluder_offset = Vector2( 0, 0 )
 2/navigation_offset = Vector2( 0, 0 )
+2/shape_offset = Vector2( 0, 0 )
+2/shape_transform = Transform2D( 1, 0, 0, 1, 0, 0 )
+2/shape_one_way = false
+2/shape_one_way_margin = 0.0
 2/shapes = [  ]
 2/z_index = 0
 3/name = "arrows.png 3"
@@ -55,6 +68,10 @@ func _on_visualisation_selection_item_selected(index):
 3/tile_mode = 0
 3/occluder_offset = Vector2( 0, 0 )
 3/navigation_offset = Vector2( 0, 0 )
+3/shape_offset = Vector2( 0, 0 )
+3/shape_transform = Transform2D( 1, 0, 0, 1, 0, 0 )
+3/shape_one_way = false
+3/shape_one_way_margin = 0.0
 3/shapes = [  ]
 3/z_index = 0
 
@@ -70,9 +87,14 @@ func _on_visualisation_selection_item_selected(index):
 0/autotile/spacing = 0
 0/autotile/occluder_map = [  ]
 0/autotile/navpoly_map = [  ]
+0/autotile/priority_map = [  ]
 0/autotile/z_index_map = [  ]
 0/occluder_offset = Vector2( 0, 0 )
 0/navigation_offset = Vector2( 0, 0 )
+0/shape_offset = Vector2( 0, 0 )
+0/shape_transform = Transform2D( 1, 0, 0, 1, 0, 0 )
+0/shape_one_way = false
+0/shape_one_way_margin = 0.0
 0/shapes = [  ]
 0/z_index = 0
 1/name = "arrows"
@@ -86,9 +108,14 @@ func _on_visualisation_selection_item_selected(index):
 1/autotile/spacing = 0
 1/autotile/occluder_map = [  ]
 1/autotile/navpoly_map = [  ]
+1/autotile/priority_map = [  ]
 1/autotile/z_index_map = [  ]
 1/occluder_offset = Vector2( 0, 0 )
 1/navigation_offset = Vector2( 0, 0 )
+1/shape_offset = Vector2( 0, 0 )
+1/shape_transform = Transform2D( 1, 0, 0, 1, 0, 0 )
+1/shape_one_way = false
+1/shape_one_way_margin = 0.0
 1/shapes = [  ]
 1/z_index = 0
 

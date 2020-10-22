@@ -9,30 +9,19 @@
 config_version=4
 
 _global_script_classes=[ {
-"base": "Node",
+"base": "",
 "class": "DijkstraMap",
 "language": "NativeScript",
-"path": "res://Dijkstra_map_library/dijkstra_map.gdns"
-}, {
-"base": "Node",
-"class": "IDijkstraMap",
-"language": "GDScript",
-"path": "res://API demo/IDijkstra.gd"
+"path": "res://Dijkstra_map_library/nativescript.gdns"
 } ]
 _global_script_class_icons={
-"DijkstraMap": "",
-"IDijkstraMap": ""
+"DijkstraMap": ""
 }
 
 [application]
 
-config/name="Dijkstra Map"
+config/name="djikstra map for godot"
 run/main_scene="res://visualization demo/visualisation.tscn"
-config/icon="res://icon.png"
-
-[editor_plugins]
-
-enabled=PoolStringArray( "gut" )
 
 [input]
 
@@ -41,9 +30,3 @@ left_mouse_button={
 "events": [ Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"button_mask":0,"position":Vector2( 0, 0 ),"global_position":Vector2( 0, 0 ),"factor":1.0,"button_index":1,"pressed":false,"doubleclick":false,"script":null)
  ]
 }
-
-[rendering]
-
-vram_compression/import_etc=true
-vram_compression/import_etc2=false
-environment/default_environment="res://default_env.tres"

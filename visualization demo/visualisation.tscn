@@ -15,6 +15,8 @@ func _on_visualisation_selection_item_selected(index):
 	var dirmap=get_node(\"gridmap/directions\")
 	costmap.visible=index==1
 	dirmap.visible=index==2
+	
+	
 "
 
 [sub_resource type="TileSet" id=2]
@@ -156,7 +158,7 @@ func _ready():
 #	pass
 "
 
-[node name="Node2D" type="Node2D"]
+[node name="visualisation_demo" type="Node2D"]
 script = SubResource( 1 )
 
 [node name="gridmap" type="TileMap" parent="."]
@@ -185,6 +187,9 @@ margin_right = 979.0
 margin_bottom = 164.0
 max_text_lines = 4
 script = SubResource( 4 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="visualisation selection" type="ItemList" parent="."]
 margin_left = 761.534
@@ -199,6 +204,9 @@ margin_top = 34.0
 margin_right = 973.0
 margin_bottom = 48.0
 text = "Select terrain to draw on tilemap:"
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="map vis label" type="Label" parent="."]
 margin_left = 765.0

@@ -91,11 +91,11 @@ First argument is ID of the `origin` point or [`Array`][5] of IDs (preferably [`
 
 Second argument is a [`Dictionary`][2], specifying optional arguments. Possibilities:
 
-*   `"input is destination"`->`bool`: if true treats the `origin` as the destination (matters only if connections are not bidirectionally symmetric). Default value: `false`
-*    `"maximum cost"`->`float`: Specifies maximum cost. Once all shortest paths no longer than maximum cost are found, algorithm terminates. All points with cost bigger than this are treated as inaccessible. This can be used to save CPU cycles, when only a close neighbourhood of a point is desired for result. Default value: `INFINITY`
-*    `"initial costs"`->[`PoolRealArray`][4] or [`Array`][5]: Specifies initial costs for given origins. Values are paired with corresponding indices in the `origin` argument. Can be used to weigh the origins with a preference. By default, initial cost is `0.0`.
-*    `"terrain weights"`->[`Dictionary`][2]: Specifies weights for terrain types. Keys are terrain type IDs and values weights as floats. Unspecified values are assumed to be `1.0` by default.
-*    `"termination points"`->`int`,[`Array`][5], or [`PoolIntArray`][3]: Specifies one or more termination points. The algorithm terminates once it encounters any of these points. All points with paths longer than the path towards termination point are treated as inaccessible. This can be used to save CPU cycles, when both origins and possible destinations are known. By default, there are no termination points.
+*   `"input_is_destination"`->`bool`: if true treats the `origin` as the destination (matters only if connections are not bidirectionally symmetric). Default value: `false`
+*    `"maximum_cost"`->`float`: Specifies maximum cost. Once all shortest paths no longer than maximum cost are found, algorithm terminates. All points with cost bigger than this are treated as inaccessible. This can be used to save CPU cycles, when only a close neighbourhood of a point is desired for result. Default value: `INFINITY`
+*    `"initial_costs"`->[`PoolRealArray`][4] or [`Array`][5]: Specifies initial costs for given origins. Values are paired with corresponding indices in the `origin` argument. Can be used to weigh the origins with a preference. By default, initial cost is `0.0`.
+*    `"terrain_weights"`->[`Dictionary`][2]: Specifies weights for terrain types. Keys are terrain type IDs and values weights as floats. Unspecified values are assumed to be `INF` by default.
+*    `"termination_points"`->`int`,[`Array`][5], or [`PoolIntArray`][3]: Specifies one or more termination points. The algorithm terminates once it encounters any of these points. All points with paths longer than the path towards termination point are treated as inaccessible. This can be used to save CPU cycles, when both origins and possible destinations are known. By default, there are no termination points.
 ___
 
 # Methods for accessing results
@@ -187,35 +187,10 @@ Note: hexgrid is in the "pointy" orentation by default (see example below). To s
 ```
 ___
 
-# Miscellaneous methods
 
-DijkstraMap also has several miscellaneus methods, mostly for convenience.
-___
-
-* [PoolIntArray][3] **path_find_astar(** int origin, int destination, [Dictionary][2] id_to_position, Variant heuristic, [Dictionary][2] terrain_costs **)**
-
-calculates shortest parth from `origin` to `destination` using AStar algorithm and returns it as [`PoolIntArray`][3].
-This method does not recalculate the cost map nor direction map.
- 
-WARNING: this method assumes that costs of connections are at least as big as distances between the points.
-If this condition is not satisfied, the path might not be the shortest path.
-This method requires id-to-position [`Dictionary`][2] to know where the points are in space.
-The keys should be IDs and values should be [`Vector2`][6] or [`Vector3`][7] coordinates of the points.
-It also requires terrainID-to-weight [`Dictionary`][2], though it may be empty. Missing entries are assumed to be `1.0` by default
-heuristic specifies how distance should be estimated. Allowed values:
-* `"euclidean"`: straight euclidean distance between points ( `sqrt(dx^2 + dy^2 + dz^2)` )
-* `"manhattan"`: manhattan distance (`dx+dy+dz`)
-* `"chessboard"`: chessboard distance (`max(dx,dy,dz)`)
-* `"diagonal"`: 8-way movement distance (`sqrt(2)*(min(dx,dy)+max(dx,dy)-min(dx,dy)+dz`) 
-* `[function_owner,"[function_name]"]`: [`Array`][5] specifiying custom heuristic function. 
-`function_owner` should implement function named "[function_name]" that takes 4 arguments: `[ID_1,position_1,ID_2,position_2]`
-where positions are either [`Vector2`][6] or [`Vector3`][7] (depending on what was provided in the id_to_position dictionary)
-and returns `float` of the estimated cost between the two points.
-___
 [1]: https://docs.godotengine.org/en/stable/classes/class_astar.html
 [2]: https://docs.godotengine.org/en/stable/classes/class_dictionary.html
 [3]: docs.godotengine.org/en/stable/classes/class_poolintarray.html
 [4]: docs.godotengine.org/en/stable/classes/class_poolrealarray.html
 [5]: docs.godotengine.org/en/stable/classes/class_array.html
 [6]: https://docs.godotengine.org/en/stable/classes/class_vector2.html#class-vector2
-[7]: https://docs.godotengine.org/en/stable/classes/class_vector3.html#class-vector3

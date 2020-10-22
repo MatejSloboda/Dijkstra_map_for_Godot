@@ -22,11 +22,11 @@ class ScriptMethods:
 		'_unhandled_input',
 		'_unhandled_key_input',
 		'_set',
-		'_get', # probably
-		'emit_signal', # can't handle extra parameters to be sent with signal.
-		'draw_mesh', # issue with one parameter, value is `Null((..), (..), (..))``
-		'_to_string', # nonexistant function ._to_string
-		'_get_minimum_size', # Nonexistent function _get_minimum_size
+		'_get',  # probably
+		'emit_signal',  # can't handle extra parameters to be sent with signal.
+		'draw_mesh',  # issue with one parameter, value is `Null((..), (..), (..))``
+		'_to_string',  # nonexistant function ._to_string
+		'_get_minimum_size',  # Nonexistent function _get_minimum_size
 	]
 
 	var built_ins = []
@@ -38,18 +38,18 @@ class ScriptMethods:
 
 	func _add_name_if_does_not_have(method_name):
 		var should_add = _method_names.find(method_name) == -1
-		if(should_add):
+		if should_add:
 			_method_names.append(method_name)
 		return should_add
 
 	func add_built_in_method(method_meta):
 		var did_add = _add_name_if_does_not_have(method_meta.name)
-		if(did_add and !is_blacklisted(method_meta)):
+		if did_add and ! is_blacklisted(method_meta):
 			built_ins.append(method_meta)
 
 	func add_local_method(method_meta):
 		var did_add = _add_name_if_does_not_have(method_meta.name)
-		if(did_add):
+		if did_add:
 			local_methods.append(method_meta)
 
 	func to_s():
@@ -60,6 +60,7 @@ class ScriptMethods:
 		for i in range(built_ins.size()):
 			text += str("  ", built_ins[i].name, "\n")
 		return text
+
 
 # ------------------------------------------------------------------------------
 # Helper class to deal with objects and inner classes.
@@ -74,15 +75,15 @@ class ObjectInfo:
 	var _native_class = null
 	var _native_class_instance = null
 
-	func _init(path, subpath=null):
+	func _init(path, subpath = null):
 		_path = path
-		if(subpath != null):
+		if subpath != null:
 			_subpaths = _utils.split_string(subpath, '/')
 
 	# Returns an instance of the class/inner class
 	func instantiate():
 		var to_return = null
-		if(is_native()):
+		if is_native():
 			to_return = _native_class.new()
 		else:
 			to_return = get_loaded_class().new()
@@ -111,12 +112,12 @@ class ObjectInfo:
 
 	func get_extends_text():
 		var extend = null
-		if(is_native()):
+		if is_native():
 			extend = str("extends ", get_native_class_name())
 		else:
 			extend = str("extends '", get_path(), "'")
 
-		if(has_subpath()):
+		if has_subpath():
 			extend += str('.', get_subpath().replace('/', '.'))
 
 		return extend
@@ -138,6 +139,7 @@ class ObjectInfo:
 	func get_native_class_name():
 		return _native_class_instance.get_class()
 
+
 # ------------------------------------------------------------------------------
 # Allows for interacting with a file but only creating a string.  This was done
 # to ease the transition from files being created for doubles to loading
@@ -148,22 +150,22 @@ class FileOrString:
 	extends File
 
 	var _do_file = false
-	var _contents  = ''
+	var _contents = ''
 	var _path = null
 
 	func open(path, mode):
 		_path = path
-		if(_do_file):
+		if _do_file:
 			return .open(path, mode)
 		else:
 			return OK
 
 	func close():
-		if(_do_file):
+		if _do_file:
 			return .close()
 
 	func store_string(s):
-		if(_do_file):
+		if _do_file:
 			.store_string(s)
 		_contents += s
 
@@ -174,13 +176,14 @@ class FileOrString:
 		return _path
 
 	func load_it():
-		if(_contents != ''):
+		if _contents != '':
 			var script = GDScript.new()
 			script.set_source_code(get_contents())
 			script.reload()
 			return script
 		else:
 			return load(_path)
+
 
 # ------------------------------------------------------------------------------
 # A stroke of genius if I do say so.  This allows for doubling a scene without
@@ -189,15 +192,15 @@ class FileOrString:
 # ------------------------------------------------------------------------------
 class PackedSceneDouble:
 	extends PackedScene
-	var _script =  null
+	var _script = null
 	var _scene = null
 
 	func set_script_obj(obj):
 		_script = obj
 
-	func instance(edit_state=0):
+	func instance(edit_state = 0):
 		var inst = _scene.instance(edit_state)
-		if(_script !=  null):
+		if _script != null:
 			inst.set_script(_script)
 		return inst
 
@@ -205,23 +208,23 @@ class PackedSceneDouble:
 		_scene = load(path)
 
 
-
-
 # ------------------------------------------------------------------------------
 # START Doubler
 # ------------------------------------------------------------------------------
 var _utils = load('res://addons/gut/utils.gd').new()
 
-var  _ignored_methods = _utils.OneToMany.new()
+var _ignored_methods = _utils.OneToMany.new()
 var _stubber = _utils.Stubber.new()
 var _lgr = _utils.get_logger()
 var _method_maker = _utils.MethodMaker.new()
 
 var _output_dir = 'user://gut_temp_directory'
-var _double_count = 0 # used in making files names unique
+var _double_count = 0  # used in making files names unique
 var _spy = null
 var _strategy = null
-var _base_script_text = _utils.get_file_as_text('res://addons/gut/double_templates/script_template.gd')
+var _base_script_text = _utils.get_file_as_text(
+	'res://addons/gut/double_templates/script_template.gd'
+)
 var _make_files = false
 
 # These methods all call super implicitly.  Stubbing them to call super causes
@@ -238,9 +241,11 @@ var _non_super_methods = [
 	"_gui_input	",
 ]
 
-func _init(strategy=_utils.DOUBLE_STRATEGY.PARTIAL):
+
+func _init(strategy = _utils.DOUBLE_STRATEGY.PARTIAL):
 	set_logger(_utils.get_logger())
 	_strategy = strategy
+
 
 # ###############
 # Private
@@ -253,38 +258,40 @@ func _get_indented_line(indents, text):
 
 
 func _stub_to_call_super(obj_info, method_name):
-	if(_non_super_methods.has(method_name)):
+	if _non_super_methods.has(method_name):
 		return
 	var path = obj_info.get_path()
-	if(obj_info.scene_path != null):
+	if obj_info.scene_path != null:
 		path = obj_info.scene_path
 	var params = _utils.StubParams.new(path, method_name, obj_info.get_subpath())
 	params.to_call_super()
 	_stubber.add_stub(params)
 
+
 func _get_base_script_text(obj_info, override_path):
 	var path = obj_info.get_path()
-	if(override_path != null):
+	if override_path != null:
 		path = override_path
 
 	var stubber_id = -1
-	if(_stubber != null):
+	if _stubber != null:
 		stubber_id = _stubber.get_instance_id()
 
 	var spy_id = -1
-	if(_spy != null):
+	if _spy != null:
 		spy_id = _spy.get_instance_id()
 
 	var values = {
-		"path":path,
-		"subpath":obj_info.get_subpath(),
-		"stubber_id":stubber_id,
-		"spy_id":spy_id,
-		"extends":obj_info.get_extends_text()
+		"path": path,
+		"subpath": obj_info.get_subpath(),
+		"stubber_id": stubber_id,
+		"spy_id": spy_id,
+		"extends": obj_info.get_extends_text()
 	}
 	return _base_script_text.format(values)
 
-func _write_file(obj_info, dest_path, override_path=null):
+
+func _write_file(obj_info, dest_path, override_path = null):
 	var base_script = _get_base_script_text(obj_info, override_path)
 	var script_methods = _get_methods(obj_info)
 
@@ -292,7 +299,7 @@ func _write_file(obj_info, dest_path, override_path=null):
 	f._do_file = _make_files
 	var f_result = f.open(dest_path, f.WRITE)
 
-	if(f_result != OK):
+	if f_result != OK:
 		_lgr.error(str('Error creating file ', dest_path))
 		_lgr.error(str('Could not create double for :', obj_info.to_s()))
 		return
@@ -300,7 +307,7 @@ func _write_file(obj_info, dest_path, override_path=null):
 	f.store_string(base_script)
 
 	for i in range(script_methods.local_methods.size()):
-		if(obj_info.make_partial_double):
+		if obj_info.make_partial_double:
 			_stub_to_call_super(obj_info, script_methods.local_methods[i].name)
 		f.store_string(_get_func_text(script_methods.local_methods[i]))
 
@@ -311,17 +318,18 @@ func _write_file(obj_info, dest_path, override_path=null):
 	f.close()
 	return f
 
+
 func _double_scene_and_script(scene_info):
 	var to_return = PackedSceneDouble.new()
 	to_return.load_scene(scene_info.get_path())
 
 	var inst = load(scene_info.get_path()).instance()
 	var script_path = null
-	if(inst.get_script()):
+	if inst.get_script():
 		script_path = inst.get_script().get_path()
 	inst.free()
 
-	if(script_path):
+	if script_path:
 		var oi = ObjectInfo.new(script_path)
 		oi.set_method_strategy(scene_info.get_method_strategy())
 		oi.make_partial_double = scene_info.make_partial_double
@@ -329,6 +337,7 @@ func _double_scene_and_script(scene_info):
 		to_return.set_script_obj(_double(oi, scene_info.get_path()).load_it())
 
 	return to_return
+
 
 func _get_methods(object_info):
 	var obj = object_info.instantiate()
@@ -340,41 +349,49 @@ func _get_methods(object_info):
 	for i in range(methods.size()):
 		# 65 is a magic number for methods in script, though documentation
 		# says 64.  This picks up local overloads of base class methods too.
-		if(methods[i].flags == 65 and !_ignored_methods.has(object_info.get_path(), methods[i]['name'])):
+		if (
+			methods[i].flags == 65
+			and ! _ignored_methods.has(object_info.get_path(), methods[i]['name'])
+		):
 			script_methods.add_local_method(methods[i])
 
-
-	if(object_info.get_method_strategy() == _utils.DOUBLE_STRATEGY.FULL):
+	if object_info.get_method_strategy() == _utils.DOUBLE_STRATEGY.FULL:
 		# second pass is for anything not local
 		for i in range(methods.size()):
 			# 65 is a magic number for methods in script, though documentation
 			# says 64.  This picks up local overloads of base class methods too.
-			if(methods[i].flags != 65 and !_ignored_methods.has(object_info.get_path(), methods[i]['name'])):
+			if (
+				methods[i].flags != 65
+				and ! _ignored_methods.has(object_info.get_path(), methods[i]['name'])
+			):
 				script_methods.add_built_in_method(methods[i])
 
 	return script_methods
 
+
 func _get_inst_id_ref_str(inst):
 	var ref_str = 'null'
-	if(inst):
-		ref_str = str('instance_from_id(', inst.get_instance_id(),')')
+	if inst:
+		ref_str = str('instance_from_id(', inst.get_instance_id(), ')')
 	return ref_str
+
 
 func _get_func_text(method_hash):
 	return _method_maker.get_function_text(method_hash) + "\n"
+
 
 # returns the path to write the double file to
 func _get_temp_path(object_info):
 	var file_name = null
 	var extension = null
-	if(object_info.is_native()):
+	if object_info.is_native():
 		file_name = object_info.get_native_class_name()
 		extension = 'gd'
 	else:
 		file_name = object_info.get_path().get_file().get_basename()
 		extension = object_info.get_path().get_extension()
 
-	if(object_info.has_subpath()):
+	if object_info.has_subpath():
 		file_name += '__' + object_info.get_subpath().replace('/', '__')
 
 	file_name += str('__dbl', _double_count, '__.', extension)
@@ -382,14 +399,17 @@ func _get_temp_path(object_info):
 	var to_return = _output_dir.plus_file(file_name)
 	return to_return
 
+
 func _load_double(fileOrString):
 	return fileOrString.load_it()
 
-func _double(obj_info, override_path=null):
+
+func _double(obj_info, override_path = null):
 	var temp_path = _get_temp_path(obj_info)
 	var result = _write_file(obj_info, temp_path, override_path)
 	_double_count += 1
 	return result
+
 
 func _double_script(path, make_partial, strategy):
 	var oi = ObjectInfo.new(path)
@@ -397,17 +417,20 @@ func _double_script(path, make_partial, strategy):
 	oi.set_method_strategy(strategy)
 	return _double(oi).load_it()
 
+
 func _double_inner(path, subpath, make_partial, strategy):
 	var oi = ObjectInfo.new(path, subpath)
 	oi.set_method_strategy(strategy)
 	oi.make_partial_double = make_partial
 	return _double(oi).load_it()
 
+
 func _double_scene(path, make_partial, strategy):
 	var oi = ObjectInfo.new(path)
 	oi.set_method_strategy(strategy)
 	oi.make_partial_double = make_partial
 	return _double_scene_and_script(oi)
+
 
 func _double_gdnative(native_class, make_partial, strategy):
 	var oi = ObjectInfo.new(null)
@@ -416,109 +439,133 @@ func _double_gdnative(native_class, make_partial, strategy):
 	oi.make_partial_double = make_partial
 	return _double(oi).load_it()
 
+
 # ###############
 # Public
 # ###############
 func get_output_dir():
 	return _output_dir
 
+
 func set_output_dir(output_dir):
-	if(output_dir !=  null):
+	if output_dir != null:
 		_output_dir = output_dir
-		if(_make_files):
+		if _make_files:
 			var d = Directory.new()
 			d.make_dir_recursive(output_dir)
+
 
 func get_spy():
 	return _spy
 
+
 func set_spy(spy):
 	_spy = spy
+
 
 func get_stubber():
 	return _stubber
 
+
 func set_stubber(stubber):
 	_stubber = stubber
 
+
 func get_logger():
 	return _lgr
+
 
 func set_logger(logger):
 	_lgr = logger
 	_method_maker.set_logger(logger)
 
+
 func get_strategy():
 	return _strategy
+
 
 func set_strategy(strategy):
 	_strategy = strategy
 
-func partial_double_scene(path, strategy=_strategy):
+
+func partial_double_scene(path, strategy = _strategy):
 	return _double_scene(path, true, strategy)
 
+
 # double a scene
-func double_scene(path, strategy=_strategy):
+func double_scene(path, strategy = _strategy):
 	return _double_scene(path, false, strategy)
 
+
 # double a script/object
-func double(path, strategy=_strategy):
+func double(path, strategy = _strategy):
 	return _double_script(path, false, strategy)
 
-func partial_double(path, strategy=_strategy):
+
+func partial_double(path, strategy = _strategy):
 	return _double_script(path, true, strategy)
 
-func partial_double_inner(path, subpath, strategy=_strategy):
+
+func partial_double_inner(path, subpath, strategy = _strategy):
 	return _double_inner(path, subpath, true, strategy)
 
+
 # double an inner class in a script
-func double_inner(path, subpath, strategy=_strategy):
+func double_inner(path, subpath, strategy = _strategy):
 	return _double_inner(path, subpath, false, strategy)
+
 
 # must always use FULL strategy since this is a native class and you won't get
 # any methods if you don't use FULL
 func double_gdnative(native_class):
 	return _double_gdnative(native_class, false, _utils.DOUBLE_STRATEGY.FULL)
 
+
 # must always use FULL strategy since this is a native class and you won't get
 # any methods if you don't use FULL
 func partial_double_gdnative(native_class):
 	return _double_gdnative(native_class, true, _utils.DOUBLE_STRATEGY.FULL)
 
+
 func clear_output_directory():
-	if(!_make_files):
+	if ! _make_files:
 		return false
 
 	var did = false
-	if(_output_dir.find('user://') == 0):
+	if _output_dir.find('user://') == 0:
 		var d = Directory.new()
 		var result = d.open(_output_dir)
 		# BIG GOTCHA HERE.  If it cannot open the dir w/ erro 31, then the
 		# directory becomes res:// and things go on normally and gut clears out
 		# out res:// which is SUPER BAD.
-		if(result == OK):
+		if result == OK:
 			d.list_dir_begin(true)
 			var f = d.get_next()
-			while(f != ''):
+			while f != '':
 				d.remove(f)
 				f = d.get_next()
 				did = true
 	return did
 
+
 func delete_output_directory():
 	var did = clear_output_directory()
-	if(did):
+	if did:
 		var d = Directory.new()
 		d.remove(_output_dir)
+
 
 func add_ignored_method(path, method_name):
 	_ignored_methods.add(path, method_name)
 
+
 func get_ignored_methods():
 	return _ignored_methods
 
+
 func get_make_files():
 	return _make_files
+
 
 func set_make_files(make_files):
 	_make_files = make_files

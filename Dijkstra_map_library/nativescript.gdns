@@ -1,8 +1,8 @@
 [gd_resource type="NativeScript" load_steps=2 format=2]
 
-[ext_resource path="res://Dijkstra_map_library/dijkstra_map_library.tres" type="GDNativeLibrary" id=1]
+[ext_resource path="res://Dijkstra_map_library/gdnativelibrary.tres" type="GDNativeLibrary" id=1]
 
 [resource]
-class_name = "DijkstraMap"
+class_name = "Interface"
 library = ExtResource( 1 )
 script_class_name = "DijkstraMap"

@@ -1,12 +1,9 @@
 # Dijkstra Algorithm for Godot
 
 
-
 ### What it does
 
 Howdy !
-
-The Master branch is broken while porting to gdnative 0.9.0, use the branch v1.0 for production!
 
 This is a GDNative project for Godot game engine, that introduces Dijktra Map pathfinding node. It provides a much needed versatility currently absent from the build-in AStar pathfinding. Its main feature is the ability to populate the entire graph with shortest paths towards a given origin point. Total lenghs of shortest paths and directions can then be easily looked up for any point in the graph.
 
@@ -35,16 +32,13 @@ It will compile the DLL binary file (or equivalent) and put it into "res://targe
 ## Getting Started
 
 After having followed *Installing* direction, open the godot project and open and run one of the demo scenes 
+*  un the main scene (F5)
 *  /Project Example/dragon_attack.tscn
 *  /Project Example/Turn based.tscn
-* /API demo/demo.tscn
-
 toy around with it, the code of dragon_attack is heavily commented
 mess with the exports variable in demo.tscn (click on the root node and tweak the values at the topof the inspector)
 
 you can also look at the unit tests in Tests/unit/*
-
-you should also look at our documentation in DOCUMENTATION.md file.
 
 To use the Dijkstra Map in your own projects, you can copy the /Dijkstra_map_library/ directory to the root of your project (warning: putting it to subdirectories may crash godot, because paths in GDNativeLibrary resource are not relative).
 
@@ -94,47 +88,50 @@ const TERRAIN_ID_FOREST=1
 ```
 Now you assign these terrain IDs to the points in your DijkstraMap. This can be done while adding the points (`add_point` method has optional second parameter for terrain ID) or even after they were added (via `set_terrain_for_point` method). By default (if not specified otherwise), points get terrain ID of `-1`.
 
-When recalculating the DijkstraMap for the Cavalry, we specify "terrain weights" optional argument as follows:
-```
-my_dijkstra_map.recalculate(origin_point, {"terrain weights": {TERRAIN_ID_FOREST:2.0} } )
+When recalculating the DijkstraMap for the Cavalry, we specify "terrain_weights" optional argument as follows:
+```gdscript
+my_dijkstra_map.recalculate(origin_point, {"terrain_weights": {TERRAIN_ID_FOREST:2.0} } )
 ```
 Now, during this recalculation, connection costs of forest points are doubled* (ie. movement speed is halved) and the shortest paths will try avoid forest points, to minimize travel time. Specifically, path segments will only lead trough forests, if they are half the length of alternative paths. 
 
+* *important note, if terrain_weights doesnt specify a terrain present in the dijkstra, this terrain will be innacessible (cost = inf)
 * *note: connection costs between two points are multiplied by the average of their respective weights. All terrain weights that remain unspecified in the argument have default terrain weight of `1.0`.
 
 When recalculating the DijkstraMap for the Wagon, we specify "terrain weights" optional argument as follows:
 ```
-my_dijkstra_map.recalculate(origin_point, {"terrain weights": {TERRAIN_ID_FOREST:INF, TERRAIN_ID_OTHER:INF} } )
+my_dijkstra_map.recalculate(origin_point, {"terrain_weights": {TERRAIN_ID_FOREST:INF, TERRAIN_ID_OTHER:INF} } )
 ```
 Now, during this recalculation, all points, except roads, are completely inaccessible, because their connections have infinite cost. The calculated paths will only follow roads.
 
 ## Notes
 
 Careful ! If you pass arguments of the wrong signature to the rust API, the game will not crash, if you're lucky and have a terminal open, it ight print an error there but not in godot! this issue can be avoided by using a gdscript wrapper
-But it can lead to non trivial bugs, consider yourselves warned
-
-
-
-A prettier wrapper in GDscript can be found at API demo/IDijkstra.gd
-which is nice cause it offers autocompletion but a work in progress only
-
+But it can lead to non trivial bugs, consider yourselves warned.
+We're working on friendlier error at runtime.
 
 
 ## Running the tests
 
 If you're familiar with the gut API, you can launch the Gut.tscn and run some test
 
-state of the test : currently few of them pass, its due to the person writing them (me) not having understood the API, but this will be fixed quickly
-
+you can also run 'cargo test' and you're free to look at rust test or contribute to them.
 
 ## Contributing
 
 Open an issue before working on a feature, bugfix, unit tests, then we discuss it, then you can work on it (or let someone else) then do a pull request
 
-Before doing that pull request, If you modified the rust code be sure you have build it "cargo build --release" and it still works! (the unit tests pass, dragon.tscn is running, the demo is running .
+Before doing that pull request, If you modified the rust code be sure you have build it "cargo build --release" and it still works! 
+* the unit tests pass (cargo test and the gut scene)
+* dragon.tscn is running
+* the demo is running
+* you have run cargo fmt and gdformat on your files 
+
 
 ## TODO
-find a way to compile it to all platforms in order to ship it via the godot asset store
-
+* find a way to compile it to all platforms in order to ship it via the godot asset store
+* if performance on djikstra is a real heavy consideration, consider implementing threading 
 
 ## Acknowledgments
+KohuGaly
+Astrale
+Eäradrier

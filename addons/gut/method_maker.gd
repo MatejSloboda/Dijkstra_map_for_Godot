@@ -30,21 +30,19 @@ const PARAM_PREFIX = 'p_'
 # but things like Vectors and Colors do since only the parameters to create a
 # new Vector or Color are included in the metadata.
 # ------------------------------------------------------
-	# TYPE_NIL = 0 — Variable is of type nil (only applied for null).
-	# TYPE_BOOL = 1 — Variable is of type bool.
-	# TYPE_INT = 2 — Variable is of type int.
-	# TYPE_REAL = 3 — Variable is of type float/real.
-	# TYPE_STRING = 4 — Variable is of type String.
-	# TYPE_VECTOR2 = 5 — Variable is of type Vector2.
-	# TYPE_RECT2 = 6 — Variable is of type Rect2.
-	# TYPE_VECTOR3 = 7 — Variable is of type Vector3.
-	# TYPE_COLOR = 14 — Variable is of type Color.
-	# TYPE_OBJECT = 17 — Variable is of type Object.
-	# TYPE_DICTIONARY = 18 — Variable is of type Dictionary.
-	# TYPE_ARRAY = 19 — Variable is of type Array.
-	# TYPE_VECTOR2_ARRAY = 24 — Variable is of type PoolVector2Array.
-
-
+# TYPE_NIL = 0 — Variable is of type nil (only applied for null).
+# TYPE_BOOL = 1 — Variable is of type bool.
+# TYPE_INT = 2 — Variable is of type int.
+# TYPE_REAL = 3 — Variable is of type float/real.
+# TYPE_STRING = 4 — Variable is of type String.
+# TYPE_VECTOR2 = 5 — Variable is of type Vector2.
+# TYPE_RECT2 = 6 — Variable is of type Rect2.
+# TYPE_VECTOR3 = 7 — Variable is of type Vector3.
+# TYPE_COLOR = 14 — Variable is of type Color.
+# TYPE_OBJECT = 17 — Variable is of type Object.
+# TYPE_DICTIONARY = 18 — Variable is of type Dictionary.
+# TYPE_ARRAY = 19 — Variable is of type Array.
+# TYPE_VECTOR2_ARRAY = 24 — Variable is of type PoolVector2Array.
 
 # TYPE_TRANSFORM2D = 8 — Variable is of type Transform2D.
 # TYPE_PLANE = 9 — Variable is of type Plane.
@@ -63,6 +61,7 @@ const PARAM_PREFIX = 'p_'
 # TYPE_MAX = 27 — Marker for end of type constants.
 # ------------------------------------------------------
 var _supported_defaults = []
+
 
 func _init():
 	for _i in range(TYPE_MAX):
@@ -85,13 +84,16 @@ func _init():
 	_supported_defaults[TYPE_VECTOR3] = 'Vector3'
 	_supported_defaults[TYPE_COLOR] = 'Color'
 
+
 # ###############
 # Private
 # ###############
 var _func_text = _utils.get_file_as_text('res://addons/gut/double_templates/function_template.gd')
 
+
 func _is_supported_default(type_flag):
 	return type_flag >= 0 and type_flag < _supported_defaults.size() and [type_flag] != null
+
 
 # Creates a list of parameters with defaults of null unless a default value is
 # found in the metadata.  If a default is found in the meta then it is used if
@@ -116,15 +118,15 @@ func _get_arg_text(method_meta):
 	for i in range(method_meta.default_args.size()):
 		var t = args[defaults.size()]['type']
 		var value = ''
-		if(_is_supported_default(t)):
+		if _is_supported_default(t):
 			# strings are special, they need quotes around the value
-			if(t == TYPE_STRING):
+			if t == TYPE_STRING:
 				value = str("'", str(method_meta.default_args[i]), "'")
 			# Colors need the parens but things like Vector2 and Rect2 don't
-			elif(t == TYPE_COLOR):
+			elif t == TYPE_COLOR:
 				value = str(_supported_defaults[t], '(', str(method_meta.default_args[i]), ')')
-			elif(t == TYPE_OBJECT):
-				if(str(method_meta.default_args[i]) == "[Object:null]"):
+			elif t == TYPE_OBJECT:
+				if str(method_meta.default_args[i]) == "[Object:null]":
 					value = str(_supported_defaults[t], 'null')
 				else:
 					value = str(_supported_defaults[t], str(method_meta.default_args[i]).to_lower())
@@ -135,9 +137,19 @@ func _get_arg_text(method_meta):
 			else:
 				value = str(_supported_defaults[t], str(method_meta.default_args[i]).to_lower())
 		else:
-			_lgr.warn(str(
-				'Unsupported default param type:  ',method_meta.name, '-', args[defaults.size()].name, ' ', t, ' = ', method_meta.default_args[i]))
-			value = str('unsupported=',t)
+			_lgr.warn(
+				str(
+					'Unsupported default param type:  ',
+					method_meta.name,
+					'-',
+					args[defaults.size()].name,
+					' ',
+					t,
+					' = ',
+					method_meta.default_args[i]
+				)
+			)
+			value = str('unsupported=', t)
 			has_unsupported_defaults = true
 
 		defaults.append(value)
@@ -145,20 +157,22 @@ func _get_arg_text(method_meta):
 	# construct the string of parameters
 	for i in range(args.size()):
 		text += str(PARAM_PREFIX, args[i].name, '=', defaults[i])
-		if(i != args.size() -1):
+		if i != args.size() - 1:
 			text += ', '
 
 	# if we don't know how to make a default then we have to return null b/c
 	# it will cause a runtime error and it's one thing we could return to let
 	# callers know it didn't work.
-	if(has_unsupported_defaults):
+	if has_unsupported_defaults:
 		text = null
 
 	return text
 
+
 # ###############
 # Public
 # ###############
+
 
 # Creates a delceration for a function based off of function metadata.  All
 # types whose defaults are supported will have their values.  If a datatype
@@ -169,18 +183,21 @@ func get_function_text(meta):
 	var text = null
 
 	var param_array = get_spy_call_parameters_text(meta)
-	if(param_array == 'null'):
+	if param_array == 'null':
 		param_array = '[]'
 
-	if(method_params != null):
+	if method_params != null:
 		var decleration = str('func ', meta.name, '(', method_params, '):')
-		text = _func_text.format({
-			"func_decleration":decleration,
-			"method_name":meta.name,
-			"param_array":param_array,
-			"super_call":get_super_call_text(meta)
-		})
+		text = _func_text.format(
+			{
+				"func_decleration": decleration,
+				"method_name": meta.name,
+				"param_array": param_array,
+				"super_call": get_super_call_text(meta)
+			}
+		)
 	return text
+
 
 # creates a call to the function in meta in the super's class.
 func get_super_call_text(meta):
@@ -188,24 +205,27 @@ func get_super_call_text(meta):
 
 	for i in range(meta.args.size()):
 		params += PARAM_PREFIX + meta.args[i].name
-		if(meta.args.size() > 1 and i != meta.args.size() -1):
+		if meta.args.size() > 1 and i != meta.args.size() - 1:
 			params += ', '
 
 	return str('.', meta.name, '(', params, ')')
 
+
 func get_spy_call_parameters_text(meta):
 	var called_with = 'null'
-	if(meta.args.size() > 0):
+	if meta.args.size() > 0:
 		called_with = '['
 		for i in range(meta.args.size()):
 			called_with += str(PARAM_PREFIX, meta.args[i].name)
-			if(i < meta.args.size() - 1):
+			if i < meta.args.size() - 1:
 				called_with += ', '
 		called_with += ']'
 	return called_with
 
+
 func get_logger():
 	return _lgr
+
 
 func set_logger(logger):
 	_lgr = logger

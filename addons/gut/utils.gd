@@ -1,4 +1,4 @@
-var _Logger = load('res://addons/gut/logger.gd') # everything should use get_logger
+var _Logger = load('res://addons/gut/logger.gd')  # everything should use get_logger
 
 var Doubler = load('res://addons/gut/doubler.gd')
 var Gut = load('res://addons/gut/gut.gd')
@@ -15,13 +15,10 @@ var OneToMany = load('res://addons/gut/one_to_many.gd')
 
 const GUT_METADATA = '__gut_metadata_'
 
-enum DOUBLE_STRATEGY{
-	FULL,
-	PARTIAL
-}
+enum DOUBLE_STRATEGY { FULL, PARTIAL }
 
 var escape = PoolByteArray([0x1b]).get_string_from_ascii()
-var CMD_COLORS  = {
+var CMD_COLORS = {
 	RED = escape + '[31m',
 	YELLOW = escape + '[33m',
 	DEFAULT = escape + '[0m',
@@ -30,9 +27,11 @@ var CMD_COLORS  = {
 	BOLD = escape + '[1m'
 }
 
+
 func colorize_word(source, word, c):
-	var new_word  = c + word + CMD_COLORS.DEFAULT
+	var new_word = c + word + CMD_COLORS.DEFAULT
 	return source.replace(word, new_word)
+
 
 func colorize_text(text):
 	var t = colorize_word(text, 'FAILED', CMD_COLORS.RED)
@@ -44,17 +43,20 @@ func colorize_text(text):
 	t = colorize_word(t, '[DEPRECATED]', CMD_COLORS.BOLD)
 	t = colorize_word(t, '[INFO]', CMD_COLORS.BOLD)
 	return t
-	
+
 
 var _file_checker = File.new()
+
 
 func is_version_30():
 	var info = Engine.get_version_info()
 	return info.major == 3 and info.minor == 0
 
+
 func is_version_31():
 	var info = Engine.get_version_info()
 	return info.major == 3 and info.minor == 1
+
 
 # ------------------------------------------------------------------------------
 # Everything should get a logger through this.
@@ -67,6 +69,7 @@ func is_version_31():
 func get_logger():
 	return _Logger.new()
 
+
 # ------------------------------------------------------------------------------
 # Returns an array created by splitting the string by the delimiter
 # ------------------------------------------------------------------------------
@@ -74,12 +77,13 @@ func split_string(to_split, delim):
 	var to_return = []
 
 	var loc = to_split.find(delim)
-	while(loc != -1):
+	while loc != -1:
 		to_return.append(to_split.substr(0, loc))
 		to_split = to_split.substr(loc + 1, to_split.length() - loc)
 		loc = to_split.find(delim)
 	to_return.append(to_split)
 	return to_return
+
 
 # ------------------------------------------------------------------------------
 # Returns a string containing all the elements in the array separated by delim
@@ -88,18 +92,20 @@ func join_array(a, delim):
 	var to_return = ''
 	for i in range(a.size()):
 		to_return += str(a[i])
-		if(i != a.size() -1):
+		if i != a.size() - 1:
 			to_return += str(delim)
 	return to_return
+
 
 # ------------------------------------------------------------------------------
 # return if_null if value is null otherwise return value
 # ------------------------------------------------------------------------------
 func nvl(value, if_null):
-	if(value == null):
+	if value == null:
 		return if_null
 	else:
 		return value
+
 
 # ------------------------------------------------------------------------------
 # returns true if the object has been freed, false if not
@@ -110,22 +116,27 @@ func nvl(value, if_null):
 # ------------------------------------------------------------------------------
 func is_freed(obj):
 	var wr = weakref(obj)
-	return !(wr.get_ref() and str(obj) != '[Deleted Object]')
+	return ! (wr.get_ref() and str(obj) != '[Deleted Object]')
+
 
 func is_not_freed(obj):
-	return !is_freed(obj)
+	return ! is_freed(obj)
+
 
 func is_double(obj):
 	return obj.get(GUT_METADATA) != null
 
+
 func extract_property_from_array(source, property):
 	var to_return = []
-	for i in (source.size()):
+	for i in source.size():
 		to_return.append(source[i].get(property))
 	return to_return
 
+
 func file_exists(path):
 	return _file_checker.file_exists(path)
+
 
 func write_file(path, content):
 	var f = File.new()
@@ -133,20 +144,24 @@ func write_file(path, content):
 	f.store_string(content)
 	f.close()
 
+
 func is_null_or_empty(text):
 	return text == null or text == ''
 
+
 func get_native_class_name(thing):
 	var to_return = null
-	if(is_native_class(thing)):
+	if is_native_class(thing):
 		to_return = thing.new().get_class()
 	return to_return
 
+
 func is_native_class(thing):
 	var it_is = false
-	if(typeof(thing) == TYPE_OBJECT):
+	if typeof(thing) == TYPE_OBJECT:
 		it_is = str(thing).begins_with("[GDScriptNativeClass:")
 	return it_is
+
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -154,7 +169,7 @@ func get_file_as_text(path):
 	var to_return = ''
 	var f = File.new()
 	var result = f.open(path, f.READ)
-	if(result == OK):
+	if result == OK:
 		to_return = f.get_as_text()
 		f.close()
 	return to_return

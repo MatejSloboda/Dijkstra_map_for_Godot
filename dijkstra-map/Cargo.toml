@@ -1,0 +1,10 @@
+[package]
+name = "dijkstra_map"
+version = "0.1.0"
+authors = ["Astrale", "Matej Sloboda"]
+edition = "2018"
+
+[dependencies]
+fnv = "1.0.7"
+priority-queue = "1.0"
+euclid = "0.22.1"

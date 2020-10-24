@@ -1,21 +1,12 @@
-use super::*;
+use super::{Cost, DijkstraMap, PointComputedInfo, PointID};
+use fnv::FnvHashMap;
+
 impl DijkstraMap {
-    ///Returns the entire Dijktra map of costs in form of a `Dictionary`. Keys are points' IDs and values are costs.
-    ///Inaccessible points are not present in the dictionary.
-    pub fn get_cost_map(&self) -> FnvHashMap<PointID, Cost> {
-        let mut dict = FnvHashMap::<PointID, Cost>::default();
-        for id in self.sorted_points.iter() {
-            dict.insert(*id, self.get_cost_at_point(*id));
-        }
-        dict
+    /// Returns the entire Dijkstra map of directions and costs.
+    pub fn get_direction_and_cost_map(&mut self) -> &FnvHashMap<PointID, PointComputedInfo> {
+        &self.computed_info
     }
-    ///Returns the entire Dijkstra map of directions in form of a `Dictionary`
-    pub fn get_direction_map(&mut self) -> FnvHashMap<PointID, PointID> {
-        self.map
-            .iter()
-            .map(|(point, super::PointInfo { direction, .. })| (*point, *direction))
-            .collect()
-    }
+
     ///returns `PoolIntArray` of IDs of all points with costs between `min_cost` and `max_cost` (inclusive), sorted by cost.
     pub fn get_all_points_with_cost_between(&self, min_cost: Cost, max_cost: Cost) -> Vec<PointID> {
         let start_point = match self.sorted_points.binary_search_by(|a| {
@@ -51,6 +42,9 @@ impl DijkstraMap {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::{Read, TerrainType, Weight};
+    use fnv::FnvHashSet;
+
     const ID0: PointID = PointID(0);
     const ID1: PointID = PointID(1);
     const ID2: PointID = PointID(2);

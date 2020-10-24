@@ -1,4 +1,7 @@
-use super::*;
+use dijkstra_map::{Cost, DijkstraMap, PointID, Read, TerrainType, Weight};
+use fnv::FnvHashMap;
+use fnv::FnvHashSet;
+use gdnative::prelude::*;
 
 #[derive(NativeClass)]
 #[inherit(Reference)]
@@ -50,7 +53,7 @@ impl Interface {
 
     #[export]
     /// Clear the underlying [`DijkstraMap`](DijkstraMap).
-    pub fn clear(&mut self, mut _owner: &Reference) {
+    pub fn clear(&mut self, _owner: &Reference) {
         self.dijkstra.clear()
     }
 
@@ -82,7 +85,7 @@ impl Interface {
 
     #[export]
     /// Returns the first positive available id.
-    pub fn get_available_point_id(&mut self, mut _owner: &Reference) -> i32 {
+    pub fn get_available_point_id(&mut self, _owner: &Reference) -> i32 {
         self.dijkstra.get_available_id(None).into()
     }
 
@@ -96,7 +99,7 @@ impl Interface {
     /// If a point with the given id already exists, the map is unchanged and `1` is returned.
     pub fn add_point(
         &mut self,
-        mut _owner: &Reference,
+        _owner: &Reference,
         point_id: i32,
         #[opt] terrain_type: Option<i32>,
     ) -> i64 {
@@ -115,7 +118,7 @@ impl Interface {
     /// If the given id does not exists in the map, `1` is returned.
     pub fn set_terrain_for_point(
         &mut self,
-        mut _owner: &Reference,
+        _owner: &Reference,
         point_id: i32,
         terrain_id: Option<i32>,
     ) -> i64 {
@@ -131,12 +134,11 @@ impl Interface {
     /// Get the terrain type for the given point.
     ///
     /// This function returns -1 if no point with the given id exists in the map.
-    pub fn get_terrain_for_point(&mut self, mut _owner: &Reference, point_id: i32) -> i32 {
-        (*self
-            .dijkstra
+    pub fn get_terrain_for_point(&mut self, _owner: &Reference, point_id: i32) -> i32 {
+        self.dijkstra
             .get_terrain_for_point(point_id.into())
-            .unwrap_or(&TerrainType::Terrain(-1)))
-        .into()
+            .unwrap_or(TerrainType::Terrain(-1))
+            .into()
     }
 
     #[export]
@@ -145,14 +147,14 @@ impl Interface {
     /// # Errors
     ///
     /// Returns `1` if the point doesnot exists in the map.
-    pub fn remove_point(&mut self, mut _owner: &Reference, point_id: i32) -> i64 {
+    pub fn remove_point(&mut self, _owner: &Reference, point_id: i32) -> i64 {
         let res = self.dijkstra.remove_point(point_id.into());
         result_to_int(res)
     }
 
     #[export]
     /// Returns `true` if the map contains the given point.
-    pub fn has_point(&mut self, mut _owner: &Reference, point_id: i32) -> bool {
+    pub fn has_point(&mut self, _owner: &Reference, point_id: i32) -> bool {
         self.dijkstra.has_point(point_id.into())
     }
 
@@ -162,7 +164,7 @@ impl Interface {
     /// # Errors
     ///
     /// Returns `1` if the point does not exists in the map.
-    pub fn disable_point(&mut self, mut _owner: &Reference, point_id: i32) -> i64 {
+    pub fn disable_point(&mut self, _owner: &Reference, point_id: i32) -> i64 {
         let res = self.dijkstra.disable_point(point_id.into());
         result_to_int(res)
     }
@@ -173,14 +175,14 @@ impl Interface {
     /// # Errors
     ///
     /// Returns `1` if the point does not exists in the map.
-    pub fn enable_point(&mut self, mut _owner: &Reference, point_id: i32) -> i64 {
+    pub fn enable_point(&mut self, _owner: &Reference, point_id: i32) -> i64 {
         let res = self.dijkstra.enable_point(point_id.into());
         result_to_int(res)
     }
 
     #[export]
     /// Returns `true` if the point exists and is disabled, otherwise returns `false`.
-    pub fn is_point_disabled(&mut self, mut _owner: &Reference, point_id: i32) -> bool {
+    pub fn is_point_disabled(&mut self, _owner: &Reference, point_id: i32) -> bool {
         self.dijkstra.is_point_disabled(point_id.into())
     }
 
@@ -199,7 +201,7 @@ impl Interface {
     /// Return `1` if one of the points does not exists in the map.
     pub fn connect_points(
         &mut self,
-        mut _owner: &Reference,
+        _owner: &Reference,
         source: i32,
         target: i32,
         #[opt] weight: Option<f32>,
@@ -240,17 +242,17 @@ impl Interface {
 
     #[export]
     /// Returns `true` if there is a connection from `source` to `target` (and they both exist).
-    pub fn has_connection(&mut self, mut _owner: &Reference, source: i32, target: i32) -> bool {
+    pub fn has_connection(&mut self, _owner: &Reference, source: i32, target: i32) -> bool {
         self.dijkstra.has_connection(source.into(), target.into())
     }
 
     #[export]
     /// Given a point, returns the id of the next point along the shortest path toward the target.
     ///
-    /// This function return '-1' if there is no path from the point to the target.
+    /// # Errors
     ///
-    /// TODO : What if the point does not exist ?
-    pub fn get_direction_at_point(&mut self, mut _owner: &Reference, point_id: i32) -> i32 {
+    /// This function return `-1` if there is no path from the point to the target.
+    pub fn get_direction_at_point(&mut self, _owner: &Reference, point_id: i32) -> i32 {
         self.dijkstra
             .get_direction_at_point(point_id.into())
             .unwrap_or(PointID(-1))
@@ -261,7 +263,7 @@ impl Interface {
     /// Returns the cost of the shortest path from this point to the target.
     ///
     /// If there is no path, the cost is `INFINITY`.
-    pub fn get_cost_at_point(&mut self, mut _owner: &Reference, point_id: i32) -> f32 {
+    pub fn get_cost_at_point(&mut self, _owner: &Reference, point_id: i32) -> f32 {
         self.dijkstra.get_cost_at_point(point_id.into()).into()
     }
 
@@ -294,7 +296,7 @@ impl Interface {
     /// - `origin` is neither an I64, a Int32Array or a VariantArray.
     pub fn recalculate(
         &mut self,
-        mut _owner: &Reference,
+        _owner: &Reference,
         origin: gdnative::core_types::Variant,
         #[opt] optional_params: Option<Dictionary>,
     ) -> i64 {
@@ -436,7 +438,7 @@ impl Interface {
     /// If a point does not exists, or there is not path from it to the target, the corresponding point will be `-1`.
     pub fn get_direction_at_points(
         &mut self,
-        mut _owner: &Reference,
+        _owner: &Reference,
         points: Int32Array,
     ) -> Int32Array {
         Int32Array::from_vec(
@@ -459,7 +461,7 @@ impl Interface {
     /// If there is no path from a point to the target, the cost is `INFINITY`.
     pub fn get_cost_at_points(
         &mut self,
-        mut _owner: &Reference,
+        _owner: &Reference,
         points: gdnative::core_types::Int32Array,
     ) -> gdnative::core_types::Float32Array {
         Float32Array::from_vec(
@@ -479,12 +481,12 @@ impl Interface {
     /// Returns the entire Dijktra map of costs in form of a Dictionary.
     ///
     /// Keys are points' IDs, and values are costs. Inaccessible points are not present in the dictionary.
-    pub fn get_cost_map(&mut self, mut _owner: &Reference) -> gdnative::core_types::Dictionary {
+    pub fn get_cost_map(&mut self, _owner: &Reference) -> gdnative::core_types::Dictionary {
         let dict = Dictionary::new();
-        for (k, v) in self.dijkstra.get_cost_map().iter() {
-            let k: i32 = (*k).into();
-            let v: f32 = (*v).into();
-            dict.insert(k, v);
+        for (&point, info) in self.dijkstra.get_direction_and_cost_map().iter() {
+            let point: i32 = point.into();
+            let cost: f32 = info.cost.into();
+            dict.insert(point, cost);
         }
         dict.into_shared()
     }
@@ -495,15 +497,12 @@ impl Interface {
     /// Keys are points' IDs, and values are the next point along the shortest path.
     ///
     /// TODO : What about innacessible points ?
-    pub fn get_direction_map(
-        &mut self,
-        mut _owner: &Reference,
-    ) -> gdnative::core_types::Dictionary {
+    pub fn get_direction_map(&mut self, _owner: &Reference) -> gdnative::core_types::Dictionary {
         let dict = Dictionary::new();
-        for (k, v) in self.dijkstra.get_direction_map().iter() {
-            let k: i32 = (*k).into();
-            let v: i32 = (*v).into();
-            dict.insert(k, v);
+        for (&point, info) in self.dijkstra.get_direction_and_cost_map().iter() {
+            let point: i32 = point.into();
+            let direction: i32 = info.direction.into();
+            dict.insert(point, direction);
         }
         dict.into_shared()
     }
@@ -514,7 +513,7 @@ impl Interface {
     /// The array will be sorted by cost.
     pub fn get_all_points_with_cost_between(
         &mut self,
-        mut _owner: &Reference,
+        _owner: &Reference,
         min_cost: f32,
         max_cost: f32,
     ) -> gdnative::core_types::Int32Array {
@@ -528,12 +527,11 @@ impl Interface {
     }
 
     #[export]
-    /// Returns a vector of points describing the shortest path from a starting point (note: the starting point itself is not included).
-
+    /// Returns a vector of points describing the shortest path from a starting point (note: the starting point itself is not included). \
     /// If the starting point is a target or is inaccessible, the vector will be empty.
     pub fn get_shortest_path_from_point(
         &mut self,
-        mut _owner: &Reference,
+        _owner: &Reference,
         point_id: i32,
     ) -> gdnative::core_types::Int32Array {
         let res = self
@@ -599,17 +597,41 @@ impl Interface {
     ///
     /// # Parameters
     ///
-    /// - `initial_offset` : first point to be added.
-    /// - `bounds` : TODO
-    /// - `terrain_type` : specifies terrain to be used (default to `-1`).
-    /// - `weight` : specifies cost of connections (default to `1.0`)
+    /// - `bounds` : Dimensions of the grid.
+    /// - `initial_offset` (default : `0`) : first point to be added.
+    /// - `terrain_type` (default : `-1`) : specifies terrain to be used.
+    /// - `weight` (default : `1.0`) : specifies cost of connections.
     ///
     /// # Returns
     ///
-    /// This function returns a Dictionary where keys are coordinates of points (Vector2) and values are their corresponding point IDs.
+    /// This function returns a `Dictionary` where keys are coordinates of points (Vector2) and values are their corresponding point IDs.
+    ///
+    /// # Note
+    ///
+    /// Hexgrid is in the "pointy" orentation by default (see example below).
+    ///
+    /// To switch to "flat" orientation, swap `width` and `height`, and switch `x` and `y` coordinates of the keys in the return `Dictionary`. (`Transform2D` may be convenient there)
+    ///
+    /// # Example
+    ///
+    /// This is what `add_hexagonal_grid(Rect2(0, 0, 2, 3), ...)` would produce:
+    ///
+    ///```text
+    ///    / \     / \
+    ///  /     \ /     \
+    /// |  0,0  |  1,0  |
+    ///  \     / \     / \
+    ///    \ /     \ /     \
+    ///     |  0,1  |  1,1  |
+    ///    / \     / \     /
+    ///  /     \ /     \ /
+    /// |  0,2  |  1,2  |
+    ///  \     / \     /
+    ///    \ /     \ /
+    ///```
     pub fn add_hexagonal_grid(
         &mut self,
-        mut _owner: &Reference,
+        _owner: &Reference,
         bounds: Variant,
         #[opt] initial_offset: Option<i32>,
         #[opt] terrain_type: Option<i32>,
@@ -630,11 +652,18 @@ impl Interface {
             )
             .iter()
         {
-            let (x, y) = (k.x, k.y);
-            let id: i32 = v.into();
-            let vec = Variant::from_vector2(&Vector2::from((x as f32, y as f32)));
-            dict.insert(vec, id);
+            dict.insert(
+                Variant::from_vector2(&Vector2::from((k.x as f32, k.y as f32))),
+                i32::from(v),
+            );
         }
         dict.into_shared()
     }
 }
+
+fn init(handle: gdnative::prelude::InitHandle) {
+    handle.add_class::<Interface>();
+}
+godot_gdnative_init!();
+godot_nativescript_init!(init);
+godot_gdnative_terminate!();

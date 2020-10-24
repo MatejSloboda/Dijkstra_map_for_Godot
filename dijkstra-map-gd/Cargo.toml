@@ -1,0 +1,13 @@
+[package]
+name = "dijkstra_map_gd"
+version = "0.1.0"
+authors = ["Astrale", "Matej Sloboda"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+fnv = "1.0.7"
+gdnative = "0.9"
+dijkstra_map = { path = "../dijkstra-map" }

@@ -1,6 +1,5 @@
 use fnv::FnvHashMap;
 use fnv::FnvHashSet;
-use gdnative::prelude::*;
 mod get_maps;
 mod getters;
 mod grids;
@@ -8,16 +7,14 @@ mod setters;
 /// contains trait that allows explicit conversion, operations, defaut values on custom struct Weight, PointID and Cost
 mod trait_conversions_ops;
 
-pub mod godot_interface;
-
 #[derive(PartialOrd, Copy, Clone, PartialEq, Debug)]
-pub struct Weight(f32);
+pub struct Weight(pub f32);
 
 #[derive(PartialEq, PartialOrd, Ord, Copy, Clone, Eq, Hash, Debug)]
-pub struct PointID(i32);
+pub struct PointID(pub i32);
 
 #[derive(PartialOrd, Copy, Clone, PartialEq, Debug)]
-pub struct Cost(f32);
+pub struct Cost(pub f32);
 
 /// what each case of the world is made of
 /// never use TerrainType::Terrain(-1) inside rust!
@@ -60,28 +57,38 @@ impl PartialOrd for QueuePriority {
 
 impl Eq for QueuePriority {}
 
-/// Informations related to a point, grouped in a single structure.
+/// Information relative to a point.
+///
+/// Contains the connections, reverse connections and terrain type for a point.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PointInfo {
+    /// Connections from this point to others.
+    connections: FnvHashMap<PointID, Weight>,
+    /// Connections from other points to this one.
+    reverse_connections: FnvHashMap<PointID, Weight>,
+    /// The point's terrain type.
+    terrain_type: TerrainType,
+}
+
+/// Informations computed by Dijkstra for a point, grouped in a single structure.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct PointInfo {
+pub struct PointComputedInfo {
     /// Cost of this point's shortest path
-    cost: Cost,
+    pub cost: Cost,
     /// Next point along the shortest path
-    direction: PointID,
+    pub direction: PointID,
 }
 
 #[derive(Debug, Clone)]
 pub struct DijkstraMap {
-    /// Map a point to its connections to other points, together with their weights.
-    connections: FnvHashMap<PointID, FnvHashMap<PointID, Weight>>,
-    /// Map a point to the connections of other points to it, together with their weights.
-    reverse_connections: FnvHashMap<PointID, FnvHashMap<PointID, Weight>>,
+    /// Map a point to its informations
+    points: FnvHashMap<PointID, PointInfo>,
     /// All the points in the map, sorted by their cost.
     sorted_points: Vec<PointID>,
-    disabled_points: FnvHashSet<PointID>,
     /// Cost and direction information for each point.
-    map: FnvHashMap<PointID, PointInfo>,
-    /// Information related to each point.
-    terrain_map: FnvHashMap<PointID, TerrainType>,
+    computed_info: FnvHashMap<PointID, PointComputedInfo>,
+    /// Points not treated by the algorithm.
+    disabled_points: FnvHashSet<PointID>,
 }
 
 impl DijkstraMap {
@@ -114,27 +121,32 @@ impl DijkstraMap {
         let read = read.unwrap_or(Read::InputIsDestination);
         let max_cost = max_cost.unwrap_or(Cost(std::f32::INFINITY));
 
-        // switches direction of connections
-        let connections = match read {
-            Read::InputIsDestination => &self.reverse_connections,
-            Read::InputIsOrigin => &self.connections,
-        };
-
         // initialize containers
-        self.map.clear();
+        self.computed_info.clear();
         self.sorted_points.clear();
+        let points_number = self.points.len();
         let capacity = std::cmp::max(
-            (f32::sqrt(self.connections.len() as f32) as usize) * 6,
+            (f32::sqrt(points_number as f32) as usize) * 6,
             origins.len(),
         );
         let mut open_queue =
             priority_queue::PriorityQueue::<PointID, QueuePriority>::with_capacity(capacity);
+
+        // switches direction of connections
+        let points = &self.points;
+        let connections = |src: &PointID| -> Option<&FnvHashMap<PointID, Weight>> {
+            points.get(src).map(|info| match read {
+                Read::InputIsDestination => &info.reverse_connections,
+                Read::InputIsOrigin => &info.connections,
+            })
+        };
+
         // add targets to open_queue
         for (i, src) in origins.iter().enumerate() {
-            if connections.get(src).is_some() {
-                self.map.insert(
+            if connections(src).is_some() {
+                self.computed_info.insert(
                     *src,
-                    PointInfo {
+                    PointComputedInfo {
                         direction: *src,
                         cost: *initial_costs.get(i).unwrap_or(&Cost(0.0)),
                     },
@@ -149,7 +161,7 @@ impl DijkstraMap {
             }
         }
 
-        let mut c = connections.len() as i32;
+        let mut c = points_number as i32;
         // iterate over open_queue
         while let Some((point1, _)) = open_queue.pop() {
             if c < 0 {
@@ -166,23 +178,19 @@ impl DijkstraMap {
             let weight_of_point1 = match point1_terrain {
                 TerrainType::DefaultTerrain => Weight(1.0), // terrain is default terrain => weight is 1.0
                 x => *terrain_weights
-                    .get(x) // you have x in passed dict => it is the weigh used
+                    .get(&x) // you have x in passed dict => it is the weigh used
                     .unwrap_or(&Weight::infinity()), // you dont have x => weight is infinity
             };
 
             // iterate over it's neighbours
             let empty_connections = FnvHashMap::default();
-            for (&point2, &dir_cost) in connections
-                .get(&point1)
-                .unwrap_or(&empty_connections)
-                .iter()
-            {
+            for (&point2, &dir_cost) in connections(&point1).unwrap_or(&empty_connections).iter() {
                 let cost: Cost = point1_cost
                     + dir_cost
                         * Weight(0.5)
                         * (weight_of_point1
                             + *terrain_weights
-                                .get(&self.terrain_map.get(&point2).unwrap())
+                                .get(&self.points.get(&point2).unwrap().terrain_type)
                                 .unwrap_or(&Weight(1.0))); // assumes default terrain
 
                 // add to the open set (or update values if already present)
@@ -192,9 +200,9 @@ impl DijkstraMap {
                     && !self.disabled_points.contains(&point2)
                 {
                     open_queue.push_increase(point2, QueuePriority { id: point2, cost });
-                    self.map.insert(
+                    self.computed_info.insert(
                         point2,
-                        PointInfo {
+                        PointComputedInfo {
                             direction: point1,
                             cost,
                         },
@@ -204,11 +212,3 @@ impl DijkstraMap {
         }
     }
 }
-
-use godot_interface::Interface;
-fn init(handle: gdnative::prelude::InitHandle) {
-    handle.add_class::<Interface>();
-}
-godot_gdnative_init!();
-godot_nativescript_init!(init);
-godot_gdnative_terminate!();

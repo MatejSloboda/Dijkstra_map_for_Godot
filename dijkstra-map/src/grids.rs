@@ -1,23 +1,36 @@
 use super::*;
 use euclid::Vector2D;
 impl DijkstraMap {
-    //function for common processing input of add_*grid methods.
-    /// Broken
+    /// Function for common processing input of add_*grid methods.
+    ///
+    /// It will allocate the new IDs, and associate them with points on the grid. \
+    /// However, points are only inserted in `self`, not connected between eachothers.
+    ///
+    /// # Parameters
+    ///
+    /// - `width` : width of the grid.
+    /// - `height` : height of the grid.
+    /// - `terrain_type_default` : Terrain type of each point in the new grid.
+    /// - `initial_offset` (default : `0`) : offset at which the function will try to map the points' IDs.
+    ///
+    /// # Return
+    ///
+    /// Returns the map between the points positions and their IDs.
     fn add_grid_internal(
         &mut self,
         width: usize,
         height: usize,
         terrain_type_default: TerrainType,
-        initial_offset: Option<PointID>,
+        mut initial_offset: Option<PointID>,
     ) -> FnvHashMap<Vector2D<i32, i32>, PointID> {
-        // add points both to DijkstraMap and the output dictionary
         let mut pos_to_id = FnvHashMap::<Vector2D<i32, i32>, PointID>::default();
 
         for x in 0..width {
             for y in 0..height {
                 let pos = Vector2D::<i32, i32>::from((x as i32, y as i32));
-                let id: PointID = self.get_available_id(initial_offset);
-                self.add_point(id, terrain_type_default).unwrap();
+                let id = self.get_available_id(initial_offset);
+                initial_offset = Some(PointID(id.0 + 1));
+                self.add_point_replace(id, terrain_type_default);
                 pos_to_id.insert(pos, id);
             }
         }
@@ -68,29 +81,23 @@ impl DijkstraMap {
             Vector2D::<i32, i32>::new(-1, -1),
         ];
 
-        for (pos, id_1) in pos_to_id.iter() {
+        for (&pos, &id_1) in pos_to_id.iter() {
             if orthogonal_cost < Weight(f32::INFINITY) {
-                for offs in ORTHOS.iter() {
-                    let sum = *offs + *pos;
-                    match pos_to_id.get(&sum) {
-                        None => {}
-                        Some(id_2) => {
-                            self.connect_points(*id_1, *id_2, Some(orthogonal_cost), Some(false))
-                                .expect("cant connect");
-                        }
+                for &offs in &ORTHOS {
+                    let sum = offs + pos;
+                    if let Some(&id_2) = pos_to_id.get(&sum) {
+                        // ignore error, we know it succeeded
+                        let _ = self.connect_points(id_1, id_2, Some(orthogonal_cost), Some(false));
                     }
                 }
             }
 
             if diagonal_cost < Weight(f32::INFINITY) {
-                for offs in DIAGS.iter() {
-                    let sum = *offs + *pos;
-                    match pos_to_id.get(&sum) {
-                        None => {}
-                        Some(id_2) => {
-                            self.connect_points(*id_1, *id_2, Some(diagonal_cost), Some(false))
-                                .expect("cant connect");
-                        }
+                for &offs in &DIAGS {
+                    let sum = offs + pos;
+                    if let Some(&id_2) = pos_to_id.get(&sum) {
+                        // ignore error, we know it succeeded
+                        let _ = self.connect_points(id_1, id_2, Some(diagonal_cost), Some(false));
                     }
                 }
             }
@@ -98,32 +105,41 @@ impl DijkstraMap {
         pos_to_id
     }
 
-    ///Adds a hexagonal grid of connected points. `initial_offset` specifies ID of the first point to be added.
-    /// returns a Dictionary, where keys are coordinates of points (Vector2) and values are their corresponding point IDs.
-    /// `cost` specifies cost of connections (default `1.0`) and `terrain_id` specifies terrain to be used (default `-1`).
+    /// Adds a hexagonal grid of connected points.
     ///
-    /// Note: hexgrid is in the "pointy" orentation by default (see example below).
-    /// To switch to "flat" orientation, swap x and y coordinates in the `bounds` and in keys of the output dictionary.
-    /// (Transform2D may be convenient there)
-    /// For example, this is what `Rect2(0,0,2,3)` would produce:
+    /// - `width` : Width of the grid.
+    /// - `height` : Height of the grid.
+    /// - `terrain_id` : specifies terrain to be used.
+    /// - `initial_offset` (default : `0`) : specifies ID of the first point to be added.
+    /// - `weight` (default : `1.0`) : specifies cost of connections
+    ///
+    /// # Returns
+    ///
+    /// Returns a `HashMap`, where keys are coordinates of points (Vector2) and values are their corresponding point IDs.
+    ///
+    /// # Note
+    ///
+    /// Hexgrid is in the "pointy" orentation by default (see example below).
+    ///
+    /// To switch to "flat" orientation, swap `width` and `height`, and switch `x` and `y` coordinates of the keys in the return `HashMap`.
+    ///
+    /// # Example
+    ///
+    /// This is what `add_hexagonal_grid(2, 3, ...)` would produce:
     ///
     ///```text
     ///    / \     / \
     ///  /     \ /     \
     /// |  0,0  |  1,0  |
-    /// |       |       |
     ///  \     / \     / \
     ///    \ /     \ /     \
     ///     |  0,1  |  1,1  |
-    ///     |       |       |
     ///    / \     / \     /
     ///  /     \ /     \ /
     /// |  0,2  |  1,2  |
-    /// |       |       |
     ///  \     / \     /
     ///    \ /     \ /
     ///```
-    ///
     pub fn add_hexagonal_grid(
         &mut self,
         width: usize,
@@ -133,39 +149,35 @@ impl DijkstraMap {
         weight: Option<Weight>,
     ) -> FnvHashMap<Vector2D<i32, i32>, PointID> {
         let pos_to_id = self.add_grid_internal(width, height, default_terrain, initial_offset);
-        //        let points_in_bounds: FnvHashMap<(i32, i32), i32>;
-        //add points covered by bounds
-        //now connect points
-        let connections = [
+        let weight = weight.unwrap_or(Weight(1.0));
+        // add points covered by bounds
+        // now connect points
+        const CONNECTIONS: [[Vector2D<i32, i32>; 6]; 2] = [
             [
-                Vector2D::<i32, i32>::from((-1, -1)),
-                Vector2D::<i32, i32>::from((0, -1)),
-                Vector2D::<i32, i32>::from((-1, 0)),
-                Vector2D::<i32, i32>::from((1, 0)),
-                Vector2D::<i32, i32>::from((-1, 1)),
-                Vector2D::<i32, i32>::from((0, 1)),
-            ], //for points with even y coordinate
+                Vector2D::<i32, i32>::new(-1, -1),
+                Vector2D::<i32, i32>::new(0, -1),
+                Vector2D::<i32, i32>::new(-1, 0),
+                Vector2D::<i32, i32>::new(1, 0),
+                Vector2D::<i32, i32>::new(-1, 1),
+                Vector2D::<i32, i32>::new(0, 1),
+            ], //for points with even x coordinate
             [
-                Vector2D::<i32, i32>::from((0, -1)),
-                Vector2D::<i32, i32>::from((1, -1)),
-                Vector2D::<i32, i32>::from((-1, 0)),
-                Vector2D::<i32, i32>::from((1, 0)),
-                Vector2D::<i32, i32>::from((0, 1)),
-                Vector2D::<i32, i32>::from((1, 1)),
-            ], //for points with odd y coordinate
+                Vector2D::<i32, i32>::new(0, -1),
+                Vector2D::<i32, i32>::new(1, -1),
+                Vector2D::<i32, i32>::new(-1, 0),
+                Vector2D::<i32, i32>::new(1, 0),
+                Vector2D::<i32, i32>::new(0, 1),
+                Vector2D::<i32, i32>::new(1, 1),
+            ], //for points with odd x coordinate
         ];
 
-        for (pos, id_1) in pos_to_id.iter() {
-            let weight = weight.unwrap_or(Weight(1.0));
+        for (&pos, &id_1) in pos_to_id.iter() {
             if weight < Weight(std::f32::INFINITY) {
-                for offs in connections[(pos.x % 2) as usize].iter() {
-                    let sum = *offs + *pos;
-                    match pos_to_id.get(&sum) {
-                        None => {}
-                        Some(id_2) => {
-                            self.connect_points(*id_1, *id_2, Some(weight), Some(false))
-                                .unwrap();
-                        }
+                for &offs in CONNECTIONS[(pos.x % 2) as usize].iter() {
+                    let sum = offs + pos;
+                    if let Some(id_2) = pos_to_id.get(&sum) {
+                        // ignore error, we know it succeeded
+                        let _ = self.connect_points(id_1, *id_2, Some(weight), Some(false));
                     }
                 }
             }

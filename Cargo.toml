@@ -1,17 +1,6 @@
-[package]
-name = "dijkstra_map_for_godot"
-version = "0.1.0"
-authors = ["Astrale", "Matej Sloboda"]
-edition = "2018"
-
-[dependencies]
-fnv = "1.0.7"
-priority-queue = "1.0"
-euclid = "0.22.1"
-gdnative = "0.9"
-
-[lib]
-crate-type = ["cdylib"]
+[workspace]
+members = ["dijkstra-map", "dijkstra-map-gd"]
+default-members = ["dijkstra-map-gd"]
 
 [profile.release]
 lto = true

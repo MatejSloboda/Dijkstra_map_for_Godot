@@ -2,5 +2,5 @@
 
 [resource]
 resource_name = "Interface"
-entry/X11.64 = "res://Dijkstra_map_library/bin/linux/libdijkstra_map_for_godot.so"
+entry/X11.64 = "res://Dijkstra_map_library/bin/linux/libdijkstra_map_gd.so"
 dependency/X11.64 = [  ]

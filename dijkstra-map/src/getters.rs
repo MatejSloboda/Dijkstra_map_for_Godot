@@ -17,42 +17,44 @@ impl DijkstraMap {
 
     /// Returns true if point exists.
     pub fn has_point(&self, id: PointID) -> bool {
-        self.connections.contains_key(&id)
+        self.points.contains_key(&id)
     }
 
     /// Returns true if source point and target point both exist and there's a connection from source to target.
     pub fn has_connection(&self, source: PointID, target: PointID) -> bool {
-        match self.connections.get(&source) {
+        match self.points.get(&source) {
             None => false,
-            Some(src) => src.contains_key(&target),
+            Some(PointInfo { connections, .. }) => connections.contains_key(&target),
         }
     }
 
-    /// Gets terrain for given point or None if not specified.
-    pub fn get_terrain_for_point(&self, id: PointID) -> Option<&TerrainType> {
-        self.terrain_map.get(&id)
+    /// Gets terrain for given point or `None` if not specified.
+    pub fn get_terrain_for_point(&self, id: PointID) -> Option<TerrainType> {
+        self.points
+            .get(&id)
+            .map(|PointInfo { terrain_type, .. }| *terrain_type)
     }
 
     /// Returns true if point exists and is disabled. Returns false otherwise.
     pub fn is_point_disabled(&mut self, point: PointID) -> bool {
-        self.connections.contains_key(&point) && self.disabled_points.contains(&point)
+        self.disabled_points.contains(&point)
     }
 
     /// Given a point, returns the id of the next point along the shortest path toward target or from source.
     /// If `point` is the target, returns itself. Returns `None` if target is inaccessible from this point.
     pub fn get_direction_at_point(&self, point: PointID) -> Option<PointID> {
-        self.map
+        self.computed_info
             .get(&point)
-            .map(|PointInfo { direction, .. }| *direction)
+            .map(|PointComputedInfo { direction, .. }| *direction)
     }
 
     /// Returns the cost of the shortest path from this point to the target.
     ///
     /// If there is no path, the cost is [`INFINITY`](std::f32::INFINITY).
     pub fn get_cost_at_point(&self, point: PointID) -> Cost {
-        self.map
+        self.computed_info
             .get(&point)
-            .map(|PointInfo { cost, .. }| *cost)
+            .map(|PointComputedInfo { cost, .. }| *cost)
             .unwrap_or(Cost(std::f32::INFINITY))
     }
 

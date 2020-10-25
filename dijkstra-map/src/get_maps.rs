@@ -7,8 +7,8 @@ impl DijkstraMap {
         &self.computed_info
     }
 
-    ///returns `PoolIntArray` of IDs of all points with costs between `min_cost` and `max_cost` (inclusive), sorted by cost.
-    pub fn get_all_points_with_cost_between(&self, min_cost: Cost, max_cost: Cost) -> Vec<PointID> {
+    /// Returns a slice of all points with costs between `min_cost` and `max_cost` (inclusive), sorted by cost.
+    pub fn get_all_points_with_cost_between(&self, min_cost: Cost, max_cost: Cost) -> &[PointID] {
         let start_point = match self.sorted_points.binary_search_by(|a| {
             if self.get_cost_at_point(*a) < min_cost {
                 std::cmp::Ordering::Less
@@ -16,8 +16,7 @@ impl DijkstraMap {
                 std::cmp::Ordering::Greater
             }
         }) {
-            Ok(a) => a,
-            Err(a) => a,
+            Ok(a) | Err(a) => a,
         };
         let end_point = match self.sorted_points.binary_search_by(|a| {
             if self.get_cost_at_point(*a) > max_cost {
@@ -26,16 +25,9 @@ impl DijkstraMap {
                 std::cmp::Ordering::Less
             }
         }) {
-            Ok(a) => a,
-            Err(a) => a,
+            Ok(a) | Err(a) => a,
         };
-        let slice = start_point..end_point;
-        let mut array = Vec::<Option<PointID>>::new();
-        array.resize(end_point - start_point, None);
-        for i in slice {
-            array[i - start_point] = Some(self.sorted_points[i]);
-        }
-        array.iter().map(|x| x.unwrap()).collect()
+        &self.sorted_points[start_point..end_point]
     }
 }
 
@@ -48,16 +40,16 @@ mod test {
     const ID0: PointID = PointID(0);
     const ID1: PointID = PointID(1);
     const ID2: PointID = PointID(2);
-    const DEFAULTTERRAIN: TerrainType = TerrainType::DefaultTerrain;
+    const DEFAULT_TERRAIN: TerrainType = TerrainType::DefaultTerrain;
 
     /// Create a new `DijkstraMap` with the connections :
     ///
     /// 0 -->₁ 1 -->₁ 2
     fn setup_id012_connect0to1_1to2() -> DijkstraMap {
         let mut d: DijkstraMap = DijkstraMap::new();
-        d.add_point(ID0, DEFAULTTERRAIN).unwrap();
-        d.add_point(ID1, DEFAULTTERRAIN).unwrap();
-        d.add_point(ID2, DEFAULTTERRAIN).unwrap();
+        d.add_point(ID0, DEFAULT_TERRAIN).unwrap();
+        d.add_point(ID1, DEFAULT_TERRAIN).unwrap();
+        d.add_point(ID2, DEFAULT_TERRAIN).unwrap();
         d.connect_points(ID0, ID1, None, Some(false)).unwrap();
         d.connect_points(ID1, ID2, None, Some(false)).unwrap();
         d
@@ -113,7 +105,7 @@ mod test {
     }
 
     #[test]
-    fn direction_map_input_is_origin_can_go_from() {
+    fn direction_map_input_is_origin_innacessible() {
         let mut d = setup_id012_connect0to1_1to2();
         // ID0 is origin
         d.recalculate(
@@ -170,8 +162,8 @@ mod test {
             .expect("cant add point");
         d.add_point(ID2, TerrainType::Terrain(1))
             .expect("cant add point");
-        d.connect_points(ID0, ID1, None, Some(false)).unwrap();
-        d.connect_points(ID1, ID2, None, Some(false)).unwrap();
+        d.connect_points(ID0, ID1, None, Some(false)).expect("cant connect points");
+        d.connect_points(ID1, ID2, None, Some(false)).expect("cant connect points");
         let mut terrain_weights = FnvHashMap::<TerrainType, Weight>::default();
         terrain_weights.insert(TerrainType::Terrain(1), Weight(2.0));
         d.recalculate(
@@ -185,5 +177,30 @@ mod test {
         assert_eq!(d.get_cost_at_point(ID0), Cost(4.0));
         assert_eq!(d.get_cost_at_point(ID1), Cost(2.0));
         assert_eq!(d.get_cost_at_point(ID2), Cost(0.0));
+    }
+
+    #[test]
+    fn cost_between() {
+        let mut dijkstra = setup_id012_connect0to1_1to2();
+        dijkstra.recalculate(
+            &[ID2],
+            None,
+            None,
+            Vec::new(),
+            FnvHashMap::default(),
+            FnvHashSet::default(),
+        );
+        assert_eq!(
+            dijkstra.get_all_points_with_cost_between(Cost(-f32::INFINITY), Cost(f32::INFINITY)),
+            [ID2, ID1, ID0]
+        );
+        assert_eq!(
+            dijkstra.get_all_points_with_cost_between(Cost(0.5), Cost(1.5)),
+            [ID1]
+        );
+        assert_eq!(
+            dijkstra.get_all_points_with_cost_between(Cost(1.0), Cost(1.0)),
+            [ID1]
+        )
     }
 }

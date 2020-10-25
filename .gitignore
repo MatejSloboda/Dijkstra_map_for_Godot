@@ -1,4 +1,4 @@
 /target
 Cargo.lock
 .import/
-*.import
+**.import

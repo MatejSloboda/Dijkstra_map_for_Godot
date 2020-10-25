@@ -537,8 +537,8 @@ impl Interface {
         let res = self
             .dijkstra
             .get_shortest_path_from_point(point_id.into())
-            .iter()
-            .map(|id: &PointID| (*id).into())
+            .into_iter()
+            .map(|id: PointID| id.into())
             .collect::<Vec<i32>>();
         Int32Array::from_vec(res)
     }

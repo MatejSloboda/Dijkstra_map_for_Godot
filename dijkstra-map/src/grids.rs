@@ -1,5 +1,6 @@
-use super::*;
+use super::{DijkstraMap, FnvHashMap, PointID, TerrainType, Weight};
 use euclid::Vector2D;
+
 impl DijkstraMap {
     /// Function for common processing input of add_*grid methods.
     ///
@@ -18,18 +19,19 @@ impl DijkstraMap {
     /// Returns the map between the points positions and their IDs.
     fn add_grid_internal(
         &mut self,
+        x_offset: usize,
+        y_offset: usize,
         width: usize,
         height: usize,
         terrain_type_default: TerrainType,
-        mut initial_offset: Option<PointID>,
     ) -> FnvHashMap<Vector2D<i32, i32>, PointID> {
+        let mut id = self.get_available_id(None);
         let mut pos_to_id = FnvHashMap::<Vector2D<i32, i32>, PointID>::default();
 
-        for x in 0..width {
-            for y in 0..height {
+        for x in x_offset..width + x_offset {
+            for y in y_offset..height + y_offset {
                 let pos = Vector2D::<i32, i32>::from((x as i32, y as i32));
-                let id = self.get_available_id(initial_offset);
-                initial_offset = Some(PointID(id.0 + 1));
+                id = self.get_available_id(Some(PointID(i32::from(id) + 1)));
                 self.add_point_replace(id, terrain_type_default);
                 pos_to_id.insert(pos, id);
             }
@@ -42,9 +44,9 @@ impl DijkstraMap {
     ///
     /// # Parameters
     ///
-    /// - `initial_offset` (default : `0`) : specifies ID of the first point to be added.
     /// - `width` : Width of the grid.
     /// - `height` : Height of the grid.
+    /// - `initial_offset` (default : `(0, 0)`) : specifies offset of the grid.
     /// - `default_terrain` : `TerrainType` to use for all points of the grid.
     /// - `orthogonal_cost` (default : `1.0`) : specifies cost of orthogonal connections (up, down, right and left). \
     ///  If `orthogonal_cost` is `INFINITY` or `Nan`, orthogonal connections are disabled.
@@ -53,21 +55,29 @@ impl DijkstraMap {
     ///
     /// # Returns
     ///
-    /// Returns a `HashMap` where keys are coordinates of points (Vector2) and values are their corresponding point IDs.
+    /// Returns a `HashMap` where keys are coordinates of points ([`Vector2D`](../euclid/struct.Vector2D.html))
+    /// and values are the corresponding point IDs.
     pub fn add_square_grid(
         &mut self,
         width: usize,
         height: usize,
-        initial_offset: Option<PointID>,
+        initial_offset: Option<Vector2D<usize, usize>>,
         default_terrain: TerrainType,
         orthogonal_cost: Option<Weight>,
         diagonal_cost: Option<Weight>,
     ) -> FnvHashMap<Vector2D<i32, i32>, PointID> {
-        let pos_to_id = self.add_grid_internal(width, height, default_terrain, initial_offset);
+        let initial_offset = initial_offset.unwrap_or_default();
+        let pos_to_id = self.add_grid_internal(
+            initial_offset.x,
+            initial_offset.y,
+            width,
+            height,
+            default_terrain,
+        );
 
         let orthogonal_cost = orthogonal_cost.unwrap_or(Weight(1.0));
         let diagonal_cost = diagonal_cost.unwrap_or(Weight(f32::INFINITY));
-        //now connect points
+        // now connect points
         const ORTHOS: [Vector2D<i32, i32>; 4] = [
             Vector2D::<i32, i32>::new(1, 0),
             Vector2D::<i32, i32>::new(-1, 0),
@@ -109,34 +119,34 @@ impl DijkstraMap {
     ///
     /// - `width` : Width of the grid.
     /// - `height` : Height of the grid.
+    /// - `initial_offset` (default : `(0, 0)`) : specifies offset of the grid.
     /// - `terrain_id` : specifies terrain to be used.
-    /// - `initial_offset` (default : `0`) : specifies ID of the first point to be added.
     /// - `weight` (default : `1.0`) : specifies cost of connections
     ///
     /// # Returns
     ///
-    /// Returns a `HashMap`, where keys are coordinates of points (Vector2) and values are their corresponding point IDs.
+    /// Returns a `HashMap`, where keys are coordinates of points ([`Vector2D`](../euclid/struct.Vector2D.html)) and values are their corresponding point IDs.
     ///
     /// # Note
     ///
     /// Hexgrid is in the "pointy" orentation by default (see example below).
     ///
-    /// To switch to "flat" orientation, swap `width` and `height`, and switch `x` and `y` coordinates of the keys in the return `HashMap`.
+    /// To switch to "flat" orientation, swap `width` and `height`, and switch `x` and `y` coordinates of the keys in the returned `HashMap`.
     ///
     /// # Example
     ///
-    /// This is what `add_hexagonal_grid(2, 3, ...)` would produce:
+    /// This is what `add_hexagonal_grid(2, 3, Some((5, 6)), ...)` would produce:
     ///
     ///```text
     ///    / \     / \
     ///  /     \ /     \
-    /// |  0,0  |  1,0  |
+    /// |  5,6  |  6,6  |
     ///  \     / \     / \
     ///    \ /     \ /     \
-    ///     |  0,1  |  1,1  |
+    ///     |  5,7  |  6,7  |
     ///    / \     / \     /
     ///  /     \ /     \ /
-    /// |  0,2  |  1,2  |
+    /// |  5,8  |  6,8  |
     ///  \     / \     /
     ///    \ /     \ /
     ///```
@@ -144,14 +154,20 @@ impl DijkstraMap {
         &mut self,
         width: usize,
         height: usize,
+        initial_offset: Option<Vector2D<usize, usize>>,
         default_terrain: TerrainType,
-        initial_offset: Option<PointID>,
         weight: Option<Weight>,
     ) -> FnvHashMap<Vector2D<i32, i32>, PointID> {
-        let pos_to_id = self.add_grid_internal(width, height, default_terrain, initial_offset);
+        let initial_offset = initial_offset.unwrap_or_default();
+        let pos_to_id = self.add_grid_internal(
+            initial_offset.x,
+            initial_offset.y,
+            width,
+            height,
+            default_terrain,
+        );
         let weight = weight.unwrap_or(Weight(1.0));
-        // add points covered by bounds
-        // now connect points
+
         const CONNECTIONS: [[Vector2D<i32, i32>; 6]; 2] = [
             [
                 Vector2D::<i32, i32>::new(-1, -1),
@@ -160,7 +176,7 @@ impl DijkstraMap {
                 Vector2D::<i32, i32>::new(1, 0),
                 Vector2D::<i32, i32>::new(-1, 1),
                 Vector2D::<i32, i32>::new(0, 1),
-            ], //for points with even x coordinate
+            ], // for points with even x coordinate
             [
                 Vector2D::<i32, i32>::new(0, -1),
                 Vector2D::<i32, i32>::new(1, -1),
@@ -168,9 +184,10 @@ impl DijkstraMap {
                 Vector2D::<i32, i32>::new(1, 0),
                 Vector2D::<i32, i32>::new(0, 1),
                 Vector2D::<i32, i32>::new(1, 1),
-            ], //for points with odd x coordinate
+            ], // for points with odd x coordinate
         ];
 
+        // Create connections
         for (&pos, &id_1) in pos_to_id.iter() {
             if weight < Weight(std::f32::INFINITY) {
                 for &offs in CONNECTIONS[(pos.x % 2) as usize].iter() {
@@ -194,6 +211,7 @@ mod test {
     const ID1: PointID = PointID(1);
     const ID2: PointID = PointID(2);
     const TERRAIN: TerrainType = TerrainType::DefaultTerrain;
+
     fn setup_add012() -> DijkstraMap {
         let mut djikstra = DijkstraMap::new();
         djikstra.add_point(ID0, TERRAIN).unwrap();
@@ -201,15 +219,15 @@ mod test {
         djikstra.add_point(ID2, TERRAIN).unwrap();
         djikstra
     }
+
     #[test]
     fn square_grid_works() {
         let mut d = DijkstraMap::new();
-        let dico = d.add_square_grid(5, 5, Some(PointID(0)), TERRAIN, None, None);
+        let dico = d.add_square_grid(5, 5, Some((3, 2).into()), TERRAIN, None, None);
         // verify we can access a pos for every pos(x in 0..5, y in 0..5)
-        for x in 0..5 {
-            for y in 0..5 {
-                let my_vec = euclid::Vector2D::<i32, i32>::new(x, y);
-                assert!(dico.keys().any(|&k| k == my_vec))
+        for x in 3..5 + 3 {
+            for y in 2..5 + 2 {
+                assert!(dico.keys().any(|&k| k == (x, y).into()))
             }
         }
     }

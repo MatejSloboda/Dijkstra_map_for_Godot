@@ -24,14 +24,21 @@ fn result_to_int(res: Result<(), ()>) -> i64 {
     }
 }
 
-/// Try to convert the given `Variant` into a pair of integers.
+/// Try to convert the given `Variant` into a rectangle of `usize`.
 ///
 /// Only works if `bounds` is a `Rect2D`.
-fn variant_to_width_and_height(bounds: Variant) -> Option<(usize, usize)> {
+///
+/// # Return
+///
+/// `(x_offset, y_offset, width, height)`
+fn variant_to_width_and_height(bounds: Variant) -> Option<(usize, usize, usize, usize)> {
     bounds.try_to_rect2().map(|rect| {
-        let width = rect.size.width as usize;
-        let height = rect.size.height as usize;
-        (width, height)
+        (
+            rect.origin.x as usize,
+            rect.origin.y as usize,
+            rect.size.width as usize,
+            rect.size.height as usize,
+        )
     })
 }
 
@@ -45,6 +52,7 @@ impl Interface {
         INITIAL_COSTS,
     ];
 
+    /// Create a new empty Dijkstra map.
     pub fn new(_owner: &Reference) -> Self {
         Interface {
             dijkstra: DijkstraMap::default(),
@@ -52,7 +60,7 @@ impl Interface {
     }
 
     #[export]
-    /// Clear the underlying [`DijkstraMap`](DijkstraMap).
+    /// Clear the underlying [`DijkstraMap`](../dijkstra_map/struct.DijkstraMap.html).
     pub fn clear(&mut self, _owner: &Reference) {
         self.dijkstra.clear()
     }
@@ -549,7 +557,6 @@ impl Interface {
     /// # Parameters
     ///
     /// - `bounds` : Dimensions of the grid. At the moment, only `Rect2` is supported.
-    /// - `initial_offset` (default : `0`) : first point to be added.
     /// - `terrain_type` (default : `-1`) : Terrain to use for all points of the grid.
     /// - `orthogonal_cost` (default : `1.0`) : specifies cost of orthogonal connections (up, down, right and left). \
     ///  If `orthogonal_cost` is `INFINITY` or `Nan`, orthogonal connections are disabled.
@@ -563,13 +570,11 @@ impl Interface {
         &mut self,
         _owner: &Reference,
         bounds: Variant,
-        #[opt] initial_offset: Option<i32>,
         #[opt] terrain_type: Option<i32>,
         #[opt] orthogonal_cost: Option<f32>,
         #[opt] diagonal_cost: Option<f32>,
     ) -> gdnative::core_types::Dictionary {
-        let initial_offset = PointID(initial_offset.unwrap_or(0));
-        let (width, height) =
+        let (x_offset, y_offset, width, height) =
             variant_to_width_and_height(bounds).expect("couldnt use bounds variant");
         let dict = Dictionary::new();
         for (&k, &v) in self
@@ -577,7 +582,7 @@ impl Interface {
             .add_square_grid(
                 width,
                 height,
-                Some(initial_offset),
+                Some((x_offset, y_offset).into()),
                 terrain_type.unwrap_or(-1).into(),
                 orthogonal_cost.map(Weight),
                 diagonal_cost.map(Weight),
@@ -598,7 +603,6 @@ impl Interface {
     /// # Parameters
     ///
     /// - `bounds` : Dimensions of the grid.
-    /// - `initial_offset` (default : `0`) : first point to be added.
     /// - `terrain_type` (default : `-1`) : specifies terrain to be used.
     /// - `weight` (default : `1.0`) : specifies cost of connections.
     ///
@@ -614,18 +618,18 @@ impl Interface {
     ///
     /// # Example
     ///
-    /// This is what `add_hexagonal_grid(Rect2(0, 0, 2, 3), ...)` would produce:
+    /// This is what `add_hexagonal_grid(Rect2(1, 4, 2, 3), ...)` would produce:
     ///
     ///```text
     ///    / \     / \
     ///  /     \ /     \
-    /// |  0,0  |  1,0  |
+    /// |  1,4  |  2,4  |
     ///  \     / \     / \
     ///    \ /     \ /     \
-    ///     |  0,1  |  1,1  |
+    ///     |  1,5  |  2,5  |
     ///    / \     / \     /
     ///  /     \ /     \ /
-    /// |  0,2  |  1,2  |
+    /// |  1,6  |  2,6  |
     ///  \     / \     /
     ///    \ /     \ /
     ///```
@@ -633,12 +637,10 @@ impl Interface {
         &mut self,
         _owner: &Reference,
         bounds: Variant,
-        #[opt] initial_offset: Option<i32>,
         #[opt] terrain_type: Option<i32>,
         #[opt] weight: Option<f32>,
     ) -> gdnative::core_types::Dictionary {
-        let initial_offset = Some(PointID(initial_offset.unwrap_or(0)));
-        let (width, height) =
+        let (x_offset, y_offset, width, height) =
             variant_to_width_and_height(bounds).expect("couldnt use bounds variant");
         let dict = Dictionary::new();
         for (&k, &v) in self
@@ -646,8 +648,8 @@ impl Interface {
             .add_hexagonal_grid(
                 width,
                 height,
+                Some((x_offset, y_offset).into()),
                 terrain_type.unwrap_or(-1).into(),
-                initial_offset,
                 weight.map(Weight),
             )
             .iter()

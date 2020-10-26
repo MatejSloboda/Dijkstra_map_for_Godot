@@ -1,4 +1,4 @@
-use super::*;
+use super::{DijkstraMap, FnvHashMap, FnvHashSet, PointID, PointInfo, TerrainType, Weight};
 
 impl Default for DijkstraMap {
     fn default() -> Self {
@@ -233,6 +233,7 @@ mod test {
     const ID1: PointID = PointID(1);
     const ID2: PointID = PointID(2);
     const TERRAIN: TerrainType = TerrainType::DefaultTerrain;
+
     fn setup_add012() -> DijkstraMap {
         let mut djikstra = DijkstraMap::new();
         djikstra.add_point(ID0, TERRAIN).unwrap();
@@ -240,32 +241,38 @@ mod test {
         djikstra.add_point(ID2, TERRAIN).unwrap();
         djikstra
     }
+
     fn setup_add012_connect0to1and1to2and2to3() -> DijkstraMap {
         let mut d = setup_add012();
         d.connect_points(ID0, ID1, None, None).unwrap();
         d.connect_points(ID1, ID2, None, None).unwrap();
         d
     }
+
     #[test]
     fn setup1() {
         setup_add012();
     }
+
     #[test]
     fn setup2() {
         setup_add012_connect0to1and1to2and2to3();
     }
+
     #[test]
     fn connecting_bidirectionnal_works_one_way() {
         let mut d = setup_add012();
         d.connect_points(ID0, ID1, None, None).unwrap();
         assert!(d.has_connection(ID0, ID1));
     }
+
     #[test]
     fn connecting_bidirectionnal_works_reverse_way() {
         let mut d = setup_add012();
         d.connect_points(ID0, ID1, None, None).unwrap();
         assert!(d.has_connection(ID1, ID0));
     }
+
     #[test]
     fn connecting_unidirect_connect0to1() {
         let mut d = setup_add012();
@@ -273,28 +280,33 @@ mod test {
         assert!(d.has_connection(ID0, ID1));
         assert!(!d.has_connection(ID1, ID0));
     }
+
     #[test]
     fn connecting_unidirect_dont_connect1to0() {
         let mut d = setup_add012();
         d.connect_points(ID0, ID1, None, Some(false)).unwrap();
         assert!(!d.has_connection(ID1, ID0));
     }
+
     #[test]
     fn add_point_works() {
         let _d = setup_add012();
     }
+
     #[test]
     #[should_panic]
     fn cant_uses_same_id_twice() {
         let mut d = setup_add012();
         d.add_point(ID0, TERRAIN).unwrap();
     }
+
     #[test]
     fn remove_points_works() {
         let mut d = setup_add012();
         d.remove_point(ID0).expect("failed remove points");
         d.add_point(ID0, TERRAIN).expect("failed to read point");
     }
+
     #[test]
     fn disable_points_works() {
         let mut d = setup_add012();
@@ -302,6 +314,7 @@ mod test {
         assert!(d.is_point_disabled(ID0));
         assert!(!d.is_point_disabled(ID1));
     }
+
     #[test]
     fn enable_point_works() {
         let mut d = setup_add012();
@@ -311,6 +324,7 @@ mod test {
         d.enable_point(ID0).unwrap();
         assert!(!d.is_point_disabled(ID0));
     }
+
     #[test]
     fn set_terrain4points_works() {
         let mut d = setup_add012();

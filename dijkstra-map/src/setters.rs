@@ -7,7 +7,7 @@ impl Default for DijkstraMap {
 }
 
 impl DijkstraMap {
-    /// The "constructor" of the class.
+    /// Creates a new empty `DijkstraMap`.
     pub fn new() -> Self {
         DijkstraMap {
             points: FnvHashMap::default(),
@@ -27,9 +27,12 @@ impl DijkstraMap {
 
     /// Adds new point with given ID and terrain type into the graph.
     ///
+    /// The new point will have no connections from or to other points.
+    ///
     /// # Errors
     ///
-    /// Returns `Err` if point with that ID already exists, without modifying the map.
+    /// If a point with that ID already exists, returns `Err` without
+    /// modifying the map.
     pub fn add_point(&mut self, id: PointID, terrain_type: TerrainType) -> Result<(), ()> {
         if self.has_point(id) {
             Err(())
@@ -48,7 +51,7 @@ impl DijkstraMap {
 
     /// Adds new point with given ID and terrain type into the graph.
     ///
-    /// If a point was already associated with `id`, it is erased.
+    /// If a point was already associated with `id`, it is replaced.
     pub fn add_point_replace(&mut self, id: PointID, terrain_type: TerrainType) {
         self.points.insert(
             id,
@@ -112,6 +115,9 @@ impl DijkstraMap {
 
     /// Enables point for pathfinding.
     ///
+    /// Useful if the point was previously deactivated by a call to
+    /// [`disable_point`](struct.DijkstraMap.html#method.disable_point).
+    ///
     /// # Errors
     ///
     /// Returns `Err` if point doesn't exist.
@@ -128,14 +134,16 @@ impl DijkstraMap {
         }
     }
 
-    /// Adds connection with given cost (or cost of existing existing connection) between a source point and target point if they exist.
+    /// Adds connection with given weight between a source point and target
+    /// point.
     ///
     /// # Parameters
     ///
     /// - `source` : source point of the connection.
     /// - `target` : target point of the connection.
     /// - `weight` (default : `1.0`) : weight of the connection.
-    /// - `bidirectional` (default : `true`) : wether or not the reciprocal connection should be made.
+    /// - `bidirectional` (default : `true`) : wether or not the reciprocal
+    /// connection should be made.
     ///
     /// # Errors
     ///
@@ -173,7 +181,8 @@ impl DijkstraMap {
     ///
     /// - `source` : source point of the connection.
     /// - `target` : target point of the connection.
-    /// - `bidirectional` (default : `true`) : if `true`, also removes connection from target to source.
+    /// - `bidirectional` (default : `true`) : if `true`, also removes the
+    /// connection from target to source.
     ///
     /// # Errors
     ///
@@ -203,17 +212,17 @@ impl DijkstraMap {
         }
     }
 
-    /// Sets terrain ID for given point.
+    /// Sets terrain type for a given point.
     ///
     /// # Errors
     ///
     /// Returns `Err` if the point does not exist.
     pub fn set_terrain_for_point(
         &mut self,
-        id: PointID,
+        point: PointID,
         terrain_type: TerrainType,
     ) -> Result<(), ()> {
-        match self.points.get_mut(&id) {
+        match self.points.get_mut(&point) {
             Some(PointInfo {
                 terrain_type: terrain,
                 ..
@@ -234,6 +243,7 @@ mod test {
     const ID2: PointID = PointID(2);
     const TERRAIN: TerrainType = TerrainType::DefaultTerrain;
 
+    /// Creates a new `DijkstraMap` with 3 non connected points.
     fn setup_add012() -> DijkstraMap {
         let mut djikstra = DijkstraMap::new();
         djikstra.add_point(ID0, TERRAIN).unwrap();
@@ -242,6 +252,9 @@ mod test {
         djikstra
     }
 
+    /// Creates a new `DijkstraMap` with 3 points and 2 connections :
+    ///
+    /// 0 ₁<-->₁ 1 ₁<-->₁ 2
     fn setup_add012_connect0to1and1to2and2to3() -> DijkstraMap {
         let mut d = setup_add012();
         d.connect_points(ID0, ID1, None, None).unwrap();
@@ -267,13 +280,15 @@ mod test {
     }
 
     #[test]
-    fn connecting_bidirectionnal_works_reverse_way() {
+    /// Test a single bidirectional connection.
+    fn connecting_bidirectionnal_works() {
         let mut d = setup_add012();
         d.connect_points(ID0, ID1, None, None).unwrap();
         assert!(d.has_connection(ID1, ID0));
     }
 
     #[test]
+    /// Test a single unidirectional connection.
     fn connecting_unidirect_connect0to1() {
         let mut d = setup_add012();
         d.connect_points(ID0, ID1, None, Some(false)).unwrap();

@@ -134,6 +134,41 @@ impl DijkstraMap {
         }
     }
 
+    /// Return the connections of `source`, and the reverse connections of `target`.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` if `source` or `target` does not exist.
+    #[allow(clippy::type_complexity)]
+    fn get_connections_and_reverse(
+        &mut self,
+        source: PointID,
+        target: PointID,
+    ) -> Result<
+        (
+            &mut FnvHashMap<PointID, Weight>,
+            &mut FnvHashMap<PointID, Weight>,
+        ),
+        (),
+    > {
+        /// Transmute limited to the lifetime.
+        ///
+        /// A bit safer than a raw `transmute`.
+        #[inline]
+        unsafe fn transmute_lifetime<'a, 'b, T>(e: &'a mut T) -> &'b mut T {
+            std::mem::transmute(e)
+        }
+
+        let PointInfo { connections, .. } = self.points.get_mut(&source).ok_or(())?;
+        // this is safe, because `connections` and `reverse_connections` are always disjoints, and we make no changes to `self.points`.
+        let connections: &'static mut _ = unsafe { transmute_lifetime(connections) };
+        let PointInfo {
+            reverse_connections,
+            ..
+        } = self.points.get_mut(&target).ok_or(())?;
+        Ok((connections, reverse_connections))
+    }
+
     /// Adds connection with given weight between a source point and target
     /// point.
     ///
@@ -161,15 +196,9 @@ impl DijkstraMap {
             self.connect_points(source, target, Some(weight), Some(false))
                 .and(self.connect_points(target, source, Some(weight), Some(false)))
         } else {
-            if !self.has_point(target) {
-                return Err(());
-            }
-            let PointInfo { connections, .. } = self.points.get_mut(&source).ok_or(())?;
+            let (connections, reverse_connections) =
+                self.get_connections_and_reverse(source, target)?;
             connections.insert(target, weight);
-            let PointInfo {
-                reverse_connections,
-                ..
-            } = self.points.get_mut(&target).ok_or(())?;
             reverse_connections.insert(source, weight);
             Ok(())
         }
@@ -198,15 +227,9 @@ impl DijkstraMap {
             self.remove_connection(source, target, Some(false))
                 .and(self.remove_connection(target, source, Some(false)))
         } else {
-            if !self.has_point(target) {
-                return Err(());
-            }
-            let PointInfo { connections, .. } = self.points.get_mut(&source).ok_or(())?;
+            let (connections, reverse_connections) =
+                self.get_connections_and_reverse(source, target)?;
             connections.remove(&target);
-            let PointInfo {
-                reverse_connections,
-                ..
-            } = self.points.get_mut(&target).ok_or(())?;
             reverse_connections.remove(&source);
             Ok(())
         }

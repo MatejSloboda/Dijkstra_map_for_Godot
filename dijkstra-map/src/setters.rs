@@ -1,4 +1,4 @@
-use super::*;
+use super::{DijkstraMap, FnvHashMap, FnvHashSet, PointID, PointInfo, TerrainType, Weight};
 
 impl Default for DijkstraMap {
     fn default() -> Self {
@@ -7,7 +7,7 @@ impl Default for DijkstraMap {
 }
 
 impl DijkstraMap {
-    /// The "constructor" of the class.
+    /// Creates a new empty `DijkstraMap`.
     pub fn new() -> Self {
         DijkstraMap {
             points: FnvHashMap::default(),
@@ -27,9 +27,12 @@ impl DijkstraMap {
 
     /// Adds new point with given ID and terrain type into the graph.
     ///
+    /// The new point will have no connections from or to other points.
+    ///
     /// # Errors
     ///
-    /// Returns `Err` if point with that ID already exists, without modifying the map.
+    /// If a point with that ID already exists, returns `Err` without
+    /// modifying the map.
     pub fn add_point(&mut self, id: PointID, terrain_type: TerrainType) -> Result<(), ()> {
         if self.has_point(id) {
             Err(())
@@ -48,7 +51,7 @@ impl DijkstraMap {
 
     /// Adds new point with given ID and terrain type into the graph.
     ///
-    /// If a point was already associated with `id`, it is erased.
+    /// If a point was already associated with `id`, it is replaced.
     pub fn add_point_replace(&mut self, id: PointID, terrain_type: TerrainType) {
         self.points.insert(
             id,
@@ -112,6 +115,9 @@ impl DijkstraMap {
 
     /// Enables point for pathfinding.
     ///
+    /// Useful if the point was previously deactivated by a call to
+    /// [`disable_point`](struct.DijkstraMap.html#method.disable_point).
+    ///
     /// # Errors
     ///
     /// Returns `Err` if point doesn't exist.
@@ -128,14 +134,51 @@ impl DijkstraMap {
         }
     }
 
-    /// Adds connection with given cost (or cost of existing existing connection) between a source point and target point if they exist.
+    /// Return the connections of `source`, and the reverse connections of `target`.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` if `source` or `target` does not exist.
+    #[allow(clippy::type_complexity)]
+    fn get_connections_and_reverse(
+        &mut self,
+        source: PointID,
+        target: PointID,
+    ) -> Result<
+        (
+            &mut FnvHashMap<PointID, Weight>,
+            &mut FnvHashMap<PointID, Weight>,
+        ),
+        (),
+    > {
+        /// Transmute limited to the lifetime.
+        ///
+        /// A bit safer than a raw `transmute`.
+        #[inline]
+        unsafe fn transmute_lifetime<'a, 'b, T>(e: &'a mut T) -> &'b mut T {
+            std::mem::transmute(e)
+        }
+
+        let PointInfo { connections, .. } = self.points.get_mut(&source).ok_or(())?;
+        // this is safe, because `connections` and `reverse_connections` are always disjoints, and we make no changes to `self.points`.
+        let connections: &'static mut _ = unsafe { transmute_lifetime(connections) };
+        let PointInfo {
+            reverse_connections,
+            ..
+        } = self.points.get_mut(&target).ok_or(())?;
+        Ok((connections, reverse_connections))
+    }
+
+    /// Adds connection with given weight between a source point and target
+    /// point.
     ///
     /// # Parameters
     ///
     /// - `source` : source point of the connection.
     /// - `target` : target point of the connection.
     /// - `weight` (default : `1.0`) : weight of the connection.
-    /// - `bidirectional` (default : `true`) : wether or not the reciprocal connection should be made.
+    /// - `bidirectional` (default : `true`) : wether or not the reciprocal
+    /// connection should be made.
     ///
     /// # Errors
     ///
@@ -153,15 +196,9 @@ impl DijkstraMap {
             self.connect_points(source, target, Some(weight), Some(false))
                 .and(self.connect_points(target, source, Some(weight), Some(false)))
         } else {
-            if !self.has_point(target) {
-                return Err(());
-            }
-            let PointInfo { connections, .. } = self.points.get_mut(&source).ok_or(())?;
+            let (connections, reverse_connections) =
+                self.get_connections_and_reverse(source, target)?;
             connections.insert(target, weight);
-            let PointInfo {
-                reverse_connections,
-                ..
-            } = self.points.get_mut(&target).ok_or(())?;
             reverse_connections.insert(source, weight);
             Ok(())
         }
@@ -173,7 +210,8 @@ impl DijkstraMap {
     ///
     /// - `source` : source point of the connection.
     /// - `target` : target point of the connection.
-    /// - `bidirectional` (default : `true`) : if `true`, also removes connection from target to source.
+    /// - `bidirectional` (default : `true`) : if `true`, also removes the
+    /// connection from target to source.
     ///
     /// # Errors
     ///
@@ -189,31 +227,25 @@ impl DijkstraMap {
             self.remove_connection(source, target, Some(false))
                 .and(self.remove_connection(target, source, Some(false)))
         } else {
-            if !self.has_point(target) {
-                return Err(());
-            }
-            let PointInfo { connections, .. } = self.points.get_mut(&source).ok_or(())?;
+            let (connections, reverse_connections) =
+                self.get_connections_and_reverse(source, target)?;
             connections.remove(&target);
-            let PointInfo {
-                reverse_connections,
-                ..
-            } = self.points.get_mut(&target).ok_or(())?;
             reverse_connections.remove(&source);
             Ok(())
         }
     }
 
-    /// Sets terrain ID for given point.
+    /// Sets terrain type for a given point.
     ///
     /// # Errors
     ///
     /// Returns `Err` if the point does not exist.
     pub fn set_terrain_for_point(
         &mut self,
-        id: PointID,
+        point: PointID,
         terrain_type: TerrainType,
     ) -> Result<(), ()> {
-        match self.points.get_mut(&id) {
+        match self.points.get_mut(&point) {
             Some(PointInfo {
                 terrain_type: terrain,
                 ..
@@ -233,6 +265,8 @@ mod test {
     const ID1: PointID = PointID(1);
     const ID2: PointID = PointID(2);
     const TERRAIN: TerrainType = TerrainType::DefaultTerrain;
+
+    /// Creates a new `DijkstraMap` with 3 non connected points.
     fn setup_add012() -> DijkstraMap {
         let mut djikstra = DijkstraMap::new();
         djikstra.add_point(ID0, TERRAIN).unwrap();
@@ -240,61 +274,41 @@ mod test {
         djikstra.add_point(ID2, TERRAIN).unwrap();
         djikstra
     }
-    fn setup_add012_connect0to1and1to2and2to3() -> DijkstraMap {
-        let mut d = setup_add012();
-        d.connect_points(ID0, ID1, None, None).unwrap();
-        d.connect_points(ID1, ID2, None, None).unwrap();
-        d
-    }
+
     #[test]
-    fn setup1() {
-        setup_add012();
-    }
-    #[test]
-    fn setup2() {
-        setup_add012_connect0to1and1to2and2to3();
-    }
-    #[test]
-    fn connecting_bidirectionnal_works_one_way() {
+    /// Test a single bidirectional connection.
+    fn connecting_bidirectionnal_works() {
         let mut d = setup_add012();
         d.connect_points(ID0, ID1, None, None).unwrap();
         assert!(d.has_connection(ID0, ID1));
-    }
-    #[test]
-    fn connecting_bidirectionnal_works_reverse_way() {
-        let mut d = setup_add012();
-        d.connect_points(ID0, ID1, None, None).unwrap();
         assert!(d.has_connection(ID1, ID0));
     }
+
     #[test]
+    /// Test a single unidirectional connection.
     fn connecting_unidirect_connect0to1() {
         let mut d = setup_add012();
         d.connect_points(ID0, ID1, None, Some(false)).unwrap();
         assert!(d.has_connection(ID0, ID1));
         assert!(!d.has_connection(ID1, ID0));
     }
-    #[test]
-    fn connecting_unidirect_dont_connect1to0() {
-        let mut d = setup_add012();
-        d.connect_points(ID0, ID1, None, Some(false)).unwrap();
-        assert!(!d.has_connection(ID1, ID0));
-    }
-    #[test]
-    fn add_point_works() {
-        let _d = setup_add012();
-    }
+
     #[test]
     #[should_panic]
     fn cant_uses_same_id_twice() {
-        let mut d = setup_add012();
+        let mut d = DijkstraMap::new();
+        d.add_point(ID0, TERRAIN).unwrap();
         d.add_point(ID0, TERRAIN).unwrap();
     }
+
     #[test]
     fn remove_points_works() {
-        let mut d = setup_add012();
-        d.remove_point(ID0).expect("failed remove points");
-        d.add_point(ID0, TERRAIN).expect("failed to read point");
+        let mut d = DijkstraMap::new();
+        d.add_point(ID0, TERRAIN).unwrap();
+        d.remove_point(ID0).expect("failed to remove point");
+        d.add_point(ID0, TERRAIN).expect("failed to add point");
     }
+
     #[test]
     fn disable_points_works() {
         let mut d = setup_add012();
@@ -302,6 +316,7 @@ mod test {
         assert!(d.is_point_disabled(ID0));
         assert!(!d.is_point_disabled(ID1));
     }
+
     #[test]
     fn enable_point_works() {
         let mut d = setup_add012();
@@ -311,8 +326,9 @@ mod test {
         d.enable_point(ID0).unwrap();
         assert!(!d.is_point_disabled(ID0));
     }
+
     #[test]
-    fn set_terrain4points_works() {
+    fn set_terrain_works() {
         let mut d = setup_add012();
         let terrain = d.get_terrain_for_point(ID0).unwrap();
         assert_eq!(terrain, TerrainType::DefaultTerrain);

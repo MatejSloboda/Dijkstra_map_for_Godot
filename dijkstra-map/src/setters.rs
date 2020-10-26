@@ -252,38 +252,12 @@ mod test {
         djikstra
     }
 
-    /// Creates a new `DijkstraMap` with 3 points and 2 connections :
-    ///
-    /// 0 ₁<-->₁ 1 ₁<-->₁ 2
-    fn setup_add012_connect0to1and1to2and2to3() -> DijkstraMap {
-        let mut d = setup_add012();
-        d.connect_points(ID0, ID1, None, None).unwrap();
-        d.connect_points(ID1, ID2, None, None).unwrap();
-        d
-    }
-
-    #[test]
-    fn setup1() {
-        setup_add012();
-    }
-
-    #[test]
-    fn setup2() {
-        setup_add012_connect0to1and1to2and2to3();
-    }
-
-    #[test]
-    fn connecting_bidirectionnal_works_one_way() {
-        let mut d = setup_add012();
-        d.connect_points(ID0, ID1, None, None).unwrap();
-        assert!(d.has_connection(ID0, ID1));
-    }
-
     #[test]
     /// Test a single bidirectional connection.
     fn connecting_bidirectionnal_works() {
         let mut d = setup_add012();
         d.connect_points(ID0, ID1, None, None).unwrap();
+        assert!(d.has_connection(ID0, ID1));
         assert!(d.has_connection(ID1, ID0));
     }
 
@@ -297,29 +271,19 @@ mod test {
     }
 
     #[test]
-    fn connecting_unidirect_dont_connect1to0() {
-        let mut d = setup_add012();
-        d.connect_points(ID0, ID1, None, Some(false)).unwrap();
-        assert!(!d.has_connection(ID1, ID0));
-    }
-
-    #[test]
-    fn add_point_works() {
-        let _d = setup_add012();
-    }
-
-    #[test]
     #[should_panic]
     fn cant_uses_same_id_twice() {
-        let mut d = setup_add012();
+        let mut d = DijkstraMap::new();
+        d.add_point(ID0, TERRAIN).unwrap();
         d.add_point(ID0, TERRAIN).unwrap();
     }
 
     #[test]
     fn remove_points_works() {
-        let mut d = setup_add012();
-        d.remove_point(ID0).expect("failed remove points");
-        d.add_point(ID0, TERRAIN).expect("failed to read point");
+        let mut d = DijkstraMap::new();
+        d.add_point(ID0, TERRAIN).unwrap();
+        d.remove_point(ID0).expect("failed to remove point");
+        d.add_point(ID0, TERRAIN).expect("failed to add point");
     }
 
     #[test]
@@ -341,7 +305,7 @@ mod test {
     }
 
     #[test]
-    fn set_terrain4points_works() {
+    fn set_terrain_works() {
         let mut d = setup_add012();
         let terrain = d.get_terrain_for_point(ID0).unwrap();
         assert_eq!(terrain, TerrainType::DefaultTerrain);

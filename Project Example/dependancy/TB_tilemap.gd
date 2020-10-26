@@ -9,11 +9,11 @@ func _ready():
 	#we need to initialize the dijkstra map with appropriate graph for pathfinding.
 	#we will use "add_square_grid()" method to do this
 	var rect = self.get_used_rect()
-	#first argument is initial offset for the point IDs, second is the rectangle
-	#third argument is terrain_id. We can ignore that one, since will will specify terrain later
+	#first argument is the rectangle.
+	#second argument is terrain_id. We can ignore that one, since will will specify terrain later
 	#last two arguments are costs for orthogonal/diagonal movement.
 	#the method will return a dictionary of position to ID.
-	position_to_id = dijkstra_map.add_square_grid(0, rect, -1, 1.0, 1.4)
+	position_to_id = dijkstra_map.add_square_grid(rect, -1, 1.0, 1.4)
 
 	#now we will itterate through the positions and change the terrain to appropriate value
 	for pos in position_to_id.keys():

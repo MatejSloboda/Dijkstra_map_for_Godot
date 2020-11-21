@@ -1,6 +1,6 @@
 [workspace]
 members = ["dijkstra-map", "dijkstra-map-gd"]
-default-members = ["dijkstra-map-gd"]
+default-members = ["dijkstra-map", "dijkstra-map-gd"]
 
 [profile.release]
 lto = true

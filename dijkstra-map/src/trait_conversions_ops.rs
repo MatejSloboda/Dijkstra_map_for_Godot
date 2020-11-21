@@ -32,7 +32,7 @@ mod cost {
         }
     }
     impl Cost {
-        pub fn infinity() -> Self {
+        pub const fn infinity() -> Self {
             Cost(f32::INFINITY)
         }
     }
@@ -57,7 +57,7 @@ mod cost {
 mod weight {
     use super::*;
     impl Weight {
-        pub fn infinity() -> Self {
+        pub const fn infinity() -> Self {
             Weight(f32::INFINITY)
         }
     }

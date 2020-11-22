@@ -1,13 +1,14 @@
 use super::{Cost, DijkstraMap, PointComputedInfo, PointID, PointInfo, TerrainType};
 
 impl DijkstraMap {
-    /// Gives the smallest `PointID` not yet used.
+    /// Gives the smallest [`PointID`] not yet used.
     ///
-    /// The search will start at `above`, or `0` if it is `None`.
+    /// The search will start at `above`, or `0` if it is [`None`].
     ///
     /// ### Note
     ///
-    /// This function makes the (reasonable) assumption that there is an unused id. If this is not the case, it might enter an infinite loop.
+    /// This function makes the (reasonable) assumption that there is an unused
+    /// id. If this is not the case, it might enter an infinite loop.
     pub fn get_available_id(&self, above: Option<PointID>) -> PointID {
         let mut id: i32 = above.unwrap_or(PointID(0)).into();
         while self.has_point(PointID(id)) {
@@ -16,12 +17,13 @@ impl DijkstraMap {
         PointID(id)
     }
 
-    /// Returns `true` if `point` exists in the map.
+    /// Returns [`true`] if `point` exists in the map.
     pub fn has_point(&self, point: PointID) -> bool {
         self.points.contains_key(&point)
     }
 
-    /// Returns `true` if both `source` and `target` exist, and there's a connection from `source` to `target`.
+    /// Returns [`true`] if both `source` and `target` exist, and there's a
+    /// connection from `source` to `target`.
     pub fn has_connection(&self, source: PointID, target: PointID) -> bool {
         match self.points.get(&source) {
             None => false,
@@ -29,38 +31,40 @@ impl DijkstraMap {
         }
     }
 
-    /// Gets terrain for given point, or `None` if not specified.
+    /// Gets the terrain type for the given point, or [`None`] if not specified.
     pub fn get_terrain_for_point(&self, id: PointID) -> Option<TerrainType> {
         self.points
             .get(&id)
             .map(|PointInfo { terrain_type, .. }| *terrain_type)
     }
 
-    /// Returns `true` if `point` exists and is disabled.
+    /// Returns [`true`] if `point` exists and is disabled.
     pub fn is_point_disabled(&mut self, point: PointID) -> bool {
         self.disabled_points.contains(&point)
     }
 
-    /// Given a `point`, returns the id of the next point along the shortest path computed with [`recalculate`](struct.DijkstraMap.html#method.recalculate).
+    /// Given a `point`, returns the id of the next point along the shortest
+    /// path computed with [`recalculate`](DijkstraMap::recalculate).
     ///
-    /// If there is no path, returns `None`.
+    /// If there is no path, returns [`None`].
     pub fn get_direction_at_point(&self, point: PointID) -> Option<PointID> {
         self.computed_info
             .get(&point)
             .map(|PointComputedInfo { direction, .. }| *direction)
     }
 
-    /// Returns the cost of the shortest path computed with [`recalculate`](struct.DijkstraMap.html#method.recalculate).
+    /// Returns the cost of the shortest path computed with [`recalculate`](DijkstraMap::recalculate).
     ///
-    /// If there is no path, the cost is `INFINITY`.
+    /// If there is no path, the cost is [`INFINITY`](Cost::infinity).
     pub fn get_cost_at_point(&self, point: PointID) -> Cost {
         self.computed_info
             .get(&point)
             .map(|PointComputedInfo { cost, .. }| *cost)
-            .unwrap_or(Cost(std::f32::INFINITY))
+            .unwrap_or(Cost::infinity())
     }
 
-    /// Returns an iterator over the components of the shortest path from given `point` (note that `point` isn't included).
+    /// Returns an iterator over the components of the shortest path from the
+    /// given `point` (note that `point` isn't included).
     ///
     /// If `point` is a target or is inaccessible, the iterator will be empty.
     pub fn get_shortest_path_from_point(&self, point: PointID) -> ShortestPathIterator {
@@ -71,7 +75,11 @@ impl DijkstraMap {
     }
 }
 
-/// Iterator over the components of a shortest path in a `DijkstraMap\.
+/// Iterator over the components of a shortest path in a [`DijkstraMap`].
+///
+/// This is created via the
+/// [`get_shortest_path_from_point`](DijkstraMap::get_shortest_path_from_point)
+/// function.
 pub struct ShortestPathIterator<'a> {
     /// Reference to the dijkstra map
     dijkstra_map: &'a DijkstraMap,

@@ -31,7 +31,7 @@ impl DijkstraMap {
     ///
     /// # Errors
     ///
-    /// If a point with that ID already exists, returns `Err` without
+    /// If a point with that ID already exists, returns [`Err`] without
     /// modifying the map.
     pub fn add_point(&mut self, id: PointID, terrain_type: TerrainType) -> Result<(), ()> {
         if self.has_point(id) {
@@ -67,7 +67,7 @@ impl DijkstraMap {
     ///
     /// # Errors
     ///
-    /// Returns `Err` if `point` doesn't exist in the map.
+    /// Returns [`Err`] if `point` doesn't exist in the map.
     pub fn remove_point(&mut self, point: PointID) -> Result<(), ()> {
         self.disabled_points.remove(&point);
         // remove this point's entry from connections
@@ -99,7 +99,7 @@ impl DijkstraMap {
     ///
     /// # Errors
     ///
-    /// Returns `Err` if point doesn't exist.
+    /// Returns [`Err`] if point doesn't exist.
     ///
     /// ## Note
     ///
@@ -120,7 +120,7 @@ impl DijkstraMap {
     ///
     /// # Errors
     ///
-    /// Returns `Err` if point doesn't exist.
+    /// Returns [`Err`] if point doesn't exist.
     ///
     /// ## Note
     ///
@@ -138,7 +138,7 @@ impl DijkstraMap {
     ///
     /// # Errors
     ///
-    /// Returns `Err` if `source` or `target` does not exist.
+    /// Returns [`Err`] if `source` or `target` does not exist.
     #[allow(clippy::type_complexity)]
     fn get_connections_and_reverse(
         &mut self,
@@ -177,12 +177,12 @@ impl DijkstraMap {
     /// - `source` : source point of the connection.
     /// - `target` : target point of the connection.
     /// - `weight` (default : `1.0`) : weight of the connection.
-    /// - `bidirectional` (default : `true`) : wether or not the reciprocal
+    /// - `bidirectional` (default : [`true`]) : wether or not the reciprocal
     /// connection should be made.
     ///
     /// # Errors
     ///
-    /// Returns `Err` if one of the point does not exist.
+    /// Returns [`Err`] if one of the point does not exist.
     pub fn connect_points(
         &mut self,
         source: PointID,
@@ -210,12 +210,12 @@ impl DijkstraMap {
     ///
     /// - `source` : source point of the connection.
     /// - `target` : target point of the connection.
-    /// - `bidirectional` (default : `true`) : if `true`, also removes the
+    /// - `bidirectional` (default : [`true`]) : if [`true`], also removes the
     /// connection from target to source.
     ///
     /// # Errors
     ///
-    /// Returns `Err` if one of the point does not exist.
+    /// Returns [`Err`] if one of the point does not exist.
     pub fn remove_connection(
         &mut self,
         source: PointID,
@@ -239,7 +239,7 @@ impl DijkstraMap {
     ///
     /// # Errors
     ///
-    /// Returns `Err` if the point does not exist.
+    /// Returns [`Err`] if the point does not exist.
     pub fn set_terrain_for_point(
         &mut self,
         point: PointID,

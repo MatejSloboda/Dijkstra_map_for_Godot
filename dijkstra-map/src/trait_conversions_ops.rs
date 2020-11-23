@@ -1,10 +1,8 @@
 use super::*;
 use std::ops::{Add, Mul};
 
-/// Implementations for [`Cost`].
 mod cost {
     use super::*;
-
     impl Mul<Cost> for Cost {
         type Output = Cost;
         fn mul(self, rhs: Self::Output) -> Self::Output {
@@ -12,7 +10,6 @@ mod cost {
             Cost(x * y)
         }
     }
-
     impl Mul<Weight> for Cost {
         type Output = Cost;
         fn mul(self, rhs: Weight) -> Self::Output {
@@ -20,7 +17,6 @@ mod cost {
             Cost(x * y)
         }
     }
-
     impl Add<Cost> for Cost {
         type Output = Cost;
         fn add(self, rhs: Self::Output) -> Self::Output {
@@ -28,7 +24,6 @@ mod cost {
             Cost(x + y)
         }
     }
-
     impl Add<Weight> for Cost {
         type Output = Cost;
         fn add(self, rhs: Weight) -> Self::Output {
@@ -36,26 +31,21 @@ mod cost {
             Cost(x + y)
         }
     }
-
     impl Cost {
-        /// Creates an [infinite](f32::INFINITY) `Cost`.
-        pub const fn infinity() -> Self {
+        pub fn infinity() -> Self {
             Cost(f32::INFINITY)
         }
     }
-
     impl Default for Cost {
         fn default() -> Self {
             Cost(f32::INFINITY)
         }
     }
-
     impl From<f32> for Cost {
         fn from(x: f32) -> Cost {
             Cost(x)
         }
     }
-
     impl Into<f32> for Cost {
         fn into(self) -> f32 {
             let Cost(x) = self;
@@ -64,12 +54,10 @@ mod cost {
     }
 }
 
-/// Implementations for [`Weight`].
 mod weight {
     use super::*;
     impl Weight {
-        /// Creates an [infinite](f32::INFINITY) `Weight`.
-        pub const fn infinity() -> Self {
+        pub fn infinity() -> Self {
             Weight(f32::INFINITY)
         }
     }
@@ -112,7 +100,6 @@ mod weight {
     }
 }
 
-/// Implementations for [`PointID`].
 mod point_id {
     use super::*;
 
@@ -128,8 +115,6 @@ mod point_id {
         }
     }
 }
-
-/// Implementations for [`TerrainType`].
 mod terrain_type {
     use super::*;
 
@@ -148,7 +133,6 @@ mod terrain_type {
             }
         }
     }
-
     impl Into<i32> for TerrainType {
         fn into(self) -> i32 {
             match self {
@@ -157,7 +141,6 @@ mod terrain_type {
             }
         }
     }
-
     #[cfg(test)]
     mod test {
         use super::*;

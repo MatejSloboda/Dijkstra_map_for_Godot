@@ -337,6 +337,8 @@ impl Interface {
         origin: gdnative::core_types::Variant,
         #[opt] optional_params: Option<Dictionary>,
     ) -> i64 {
+        use gdnative::core_types::VariantType;
+
         const TERRAIN_WEIGHT: &str = "terrain_weights";
         const TERMINATION_POINTS: &str = "termination_points";
         const INPUT_IS_DESTINATION: &str = "input_is_destination";
@@ -349,6 +351,52 @@ impl Interface {
             MAXIMUM_COST,
             INITIAL_COSTS,
         ];
+
+        fn display_type(t: VariantType) -> &'static str {
+            match t {
+                VariantType::Nil => "nil",
+                VariantType::Bool => "bool",
+                VariantType::I64 => "integer",
+                VariantType::F64 => "float",
+                VariantType::GodotString => "string",
+                VariantType::Vector2 => "Vector2",
+                VariantType::Rect2 => "Rect2",
+                VariantType::Vector3 => "Vector3",
+                VariantType::Transform2D => "Transform2D",
+                VariantType::Plane => "Plane",
+                VariantType::Quat => "Quat",
+                VariantType::Aabb => "Aabb",
+                VariantType::Basis => "Basis",
+                VariantType::Transform => "Transform",
+                VariantType::Color => "Color",
+                VariantType::NodePath => "NodePath",
+                VariantType::Rid => "Rid",
+                VariantType::Object => "Object",
+                VariantType::Dictionary => "Dictionary",
+                VariantType::VariantArray => "array",
+                VariantType::ByteArray => "array of bytes",
+                VariantType::Int32Array => "array of integers",
+                VariantType::Float32Array => "array of floats",
+                VariantType::StringArray => "array of strings",
+                VariantType::Vector2Array => "array of Vector2",
+                VariantType::Vector3Array => "array of Vector3",
+                VariantType::ColorArray => "array of Color",
+            }
+        }
+
+        /// Helper function for type errors
+        ///
+        /// Ensure the style of error reporting is consistent.
+        fn type_warning(object: &str, expected: VariantType, got: VariantType, line: u32) {
+            godot_warn!(
+                "[{}:{}] {} has incorrect type : expected {}, got {}",
+                file!(),
+                line,
+                object,
+                display_type(expected),
+                display_type(got)
+            );
+        }
 
         let optional_params = optional_params.unwrap_or_default();
 
@@ -379,9 +427,12 @@ impl Interface {
                 for i in origin.to_array().iter() {
                     match i.try_to_i64() {
                         Some(intval) => res_origins.push(PointID(intval as i32)),
-                        None => {
-                            godot_error!("element is not an integer : {:?}", i)
-                        }
+                        None => type_warning(
+                            "element of 'origin'",
+                            VariantType::I64,
+                            i.get_type(),
+                            line!(),
+                        ),
                     }
                 }
             }
@@ -394,58 +445,117 @@ impl Interface {
         // ===================
         // Optional parameters
         // ===================
-        let read: Option<Read> = optional_params
-            .get(&gdnative::core_types::Variant::from_str(
-                INPUT_IS_DESTINATION,
-            ))
-            .try_to_bool()
-            .map(|b| {
-                if b {
-                    Read::InputIsDestination
-                } else {
-                    Read::InputIsOrigin
+        let read: Option<Read> = {
+            // we need to check that the parameter exists first, because
+            // `optional_params.get` will create a `Nil` entry if it does not.
+            if optional_params.contains(INPUT_IS_DESTINATION) {
+                let value = optional_params.get(INPUT_IS_DESTINATION);
+                match value.try_to_bool() {
+                    Some(b) => Some(if b {
+                        Read::InputIsDestination
+                    } else {
+                        Read::InputIsOrigin
+                    }),
+                    None => {
+                        type_warning(
+                            "'input_is_destination' key",
+                            VariantType::Bool,
+                            value.get_type(),
+                            line!(),
+                        );
+                        None
+                    }
                 }
-            });
+            } else {
+                None
+            }
+        };
 
-        let max_cost: Option<Cost> = optional_params
-            .get(&gdnative::core_types::Variant::from_str(MAXIMUM_COST))
-            .try_to_f64()
-            .map(|f| Cost(f as f32));
+        let max_cost: Option<Cost> = {
+            if optional_params.contains(MAXIMUM_COST) {
+                let value = optional_params.get(MAXIMUM_COST);
+                match value.try_to_f64() {
+                    Some(f) => Some(Cost(f as f32)),
+                    None => {
+                        type_warning(
+                            "'max_cost' key",
+                            VariantType::F64,
+                            value.get_type(),
+                            line!(),
+                        );
+                        None
+                    }
+                }
+            } else {
+                None
+            }
+        };
 
         let initial_costs: Vec<Cost> = {
-            let mut initial_costs = Vec::<Cost>::new();
-            let val = optional_params.get(&gdnative::core_types::Variant::from_str(INITIAL_COSTS));
-            match val.get_type() {
-                gdnative::core_types::VariantType::Float32Array => {
-                    for f in val.to_float32_array().read().iter() {
-                        initial_costs.push(Cost(*f))
+            if optional_params.contains(INITIAL_COSTS) {
+                let mut initial_costs = Vec::<Cost>::new();
+                let value = optional_params.get(INITIAL_COSTS);
+                match value.get_type() {
+                    gdnative::core_types::VariantType::Float32Array => {
+                        for f in value.to_float32_array().read().iter() {
+                            initial_costs.push(Cost(*f))
+                        }
                     }
-                }
-                gdnative::core_types::VariantType::VariantArray => {
-                    for f in val.to_array().iter() {
-                        initial_costs.push(match f.try_to_f64() {
-                            Some(fval) => Cost(fval as f32),
-                            None => Cost(0.0),
-                        })
+                    gdnative::core_types::VariantType::VariantArray => {
+                        for f in value.to_array().iter() {
+                            initial_costs.push(match f.try_to_f64() {
+                                Some(fval) => Cost(fval as f32),
+                                None => {
+                                    type_warning(
+                                        "element of 'initial_costs'",
+                                        VariantType::F64,
+                                        f.get_type(),
+                                        line!(),
+                                    );
+                                    Cost(0.0)
+                                }
+                            })
+                        }
                     }
+                    incorrect_type => type_warning(
+                        "'initial_costs' key",
+                        VariantType::Float32Array,
+                        incorrect_type,
+                        line!(),
+                    ),
                 }
-                _ => {}
+                initial_costs
+            } else {
+                Vec::new()
             }
-            initial_costs
         };
 
         let mut terrain_weights = FnvHashMap::<TerrainType, Weight>::default();
-        {
-            let val = optional_params.get(&gdnative::core_types::Variant::from_str(TERRAIN_WEIGHT));
-            if let Some(dict) = val.try_to_dictionary() {
+        if optional_params.contains(TERRAIN_WEIGHT) {
+            let value = optional_params.get(TERRAIN_WEIGHT);
+            if let Some(dict) = value.try_to_dictionary() {
                 for key in dict.keys() {
                     if let Some(id) = key.try_to_i64() {
                         terrain_weights.insert(
                             TerrainType::from(id as i32),
                             Weight(dict.get(key).try_to_f64().unwrap_or(1.0) as f32),
                         );
+                    } else {
+                        type_warning(
+                            "key in 'terrain_weights'",
+                            VariantType::I64,
+                            key.get_type(),
+                            line!(),
+                        );
                     }
                 }
+            } else {
+                type_warning(
+                    "'terrain_weights' key",
+                    VariantType::Int32Array,
+                    value.get_type(),
+                    line!(),
+                );
             }
         }
 
@@ -453,27 +563,47 @@ impl Interface {
             godot_warn!("no terrain weights specified : all terrains will have infinite cost !")
         }
 
-        let termination_points = {
-            let val =
-                optional_params.get(&gdnative::core_types::Variant::from_str(TERMINATION_POINTS));
-            match val.get_type() {
+        let termination_points = if optional_params.contains(TERMINATION_POINTS) {
+            let value = optional_params.get(TERMINATION_POINTS);
+            match value.get_type() {
                 gdnative::core_types::VariantType::I64 => {
-                    std::iter::once(PointID(val.to_i64() as i32)).collect()
+                    std::iter::once(PointID(value.to_i64() as i32)).collect()
                 }
-                gdnative::core_types::VariantType::Int32Array => val
+                gdnative::core_types::VariantType::Int32Array => value
                     .to_int32_array()
                     .read()
                     .iter()
                     .map(|&x| PointID::from(x))
                     .collect(),
-                gdnative::core_types::VariantType::VariantArray => val
+                gdnative::core_types::VariantType::VariantArray => value
                     .to_array()
                     .iter()
-                    .filter_map(|i| i.try_to_i64())
+                    .filter_map(|i| {
+                        let int = i.try_to_i64();
+                        if int.is_none() {
+                            type_warning(
+                                "value in 'termination_points'",
+                                VariantType::I64,
+                                i.get_type(),
+                                line!(),
+                            );
+                        }
+                        int
+                    })
                     .map(|ival| PointID(ival as i32))
                     .collect(),
-                _ => FnvHashSet::<PointID>::default(),
+                incorrect_type => {
+                    type_warning(
+                        "'termination_points' key",
+                        VariantType::Int32Array,
+                        incorrect_type,
+                        line!(),
+                    );
+                    FnvHashSet::<PointID>::default()
+                }
             }
+        } else {
+            FnvHashSet::default()
         };
 
         self.dijkstra.recalculate(

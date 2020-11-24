@@ -363,7 +363,9 @@ impl Interface {
                 for i in origin.to_array().iter() {
                     match i.try_to_i64() {
                         Some(intval) => res_origins.push(PointID(intval as i32)),
-                        None => res_origins.push(PointID(-1)), //TODO -1 is invalid ID
+                        None => {
+                            godot_error!("element is not an integer : {:?}", i)
+                        }
                     }
                 }
             }

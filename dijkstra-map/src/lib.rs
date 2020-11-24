@@ -80,7 +80,10 @@ struct QueuePriority(Cost);
 
 impl Ord for QueuePriority {
     fn cmp(&self, other: &QueuePriority) -> std::cmp::Ordering {
-        self.partial_cmp(other).unwrap_or(std::cmp::Ordering::Equal)
+        other
+            .0
+            .partial_cmp(&self.0)
+            .unwrap_or(std::cmp::Ordering::Equal)
     }
 }
 

@@ -9,12 +9,6 @@ pub struct Interface {
     dijkstra: DijkstraMap,
 }
 
-const TERRAIN_WEIGHT: &str = "terrain_weights";
-const TERMINATION_POINTS: &str = "termination_points";
-const INPUT_IS_DESTINATION: &str = "input_is_destination";
-const MAXIMUM_COST: &str = "maximum_cost";
-const INITIAL_COSTS: &str = "initial_costs";
-
 /// Change a Rust's [`Result`] to an integer (which is how errors are reported
 /// to Godot).
 ///
@@ -46,14 +40,6 @@ fn variant_to_width_and_height(bounds: Variant) -> Option<(usize, usize, usize, 
 
 #[methods]
 impl Interface {
-    const VALID_KEYS: [&'static str; 5] = [
-        TERRAIN_WEIGHT,
-        TERMINATION_POINTS,
-        INPUT_IS_DESTINATION,
-        MAXIMUM_COST,
-        INITIAL_COSTS,
-    ];
-
     /// Create a new empty Dijkstra map.
     pub fn new(_owner: &Reference) -> Self {
         Interface {
@@ -336,12 +322,25 @@ impl Interface {
         origin: gdnative::core_types::Variant,
         #[opt] optional_params: Option<Dictionary>,
     ) -> i64 {
+        const TERRAIN_WEIGHT: &str = "terrain_weights";
+        const TERMINATION_POINTS: &str = "termination_points";
+        const INPUT_IS_DESTINATION: &str = "input_is_destination";
+        const MAXIMUM_COST: &str = "maximum_cost";
+        const INITIAL_COSTS: &str = "initial_costs";
+        const VALID_KEYS: [&str; 5] = [
+            TERRAIN_WEIGHT,
+            TERMINATION_POINTS,
+            INPUT_IS_DESTINATION,
+            MAXIMUM_COST,
+            INITIAL_COSTS,
+        ];
+
         let optional_params = optional_params.unwrap_or_default();
 
         // verify keys makes sense
         for k in optional_params.keys().into_iter() {
             let string: String = k.to_string();
-            if !Self::VALID_KEYS.contains(&string.as_str()) {
+            if !VALID_KEYS.contains(&string.as_str()) {
                 godot_error!("Invalid Key `{}` in parameter", string);
                 return 1;
             }

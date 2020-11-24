@@ -294,8 +294,8 @@ impl Interface {
     ///
     /// - `origin` : ID of the origin point, or array of IDs (preferably
     /// [`Int32Array`]).
-    /// - `optional_params: `[`Dictionary`] : Specifies optional arguments.
-    /// Note that values of incorrect type are ignored. Valid arguments are :
+    /// - `optional_params: `[`Dictionary`] : Specifies optional arguments. \
+    /// Valid arguments are :
     ///   - `"input_is_destination" -> bool` (default : [`true`]) : \
     ///     Wether or not the `origin` points are seen as destination.
     ///   - `"maximum_cost" -> float`
@@ -318,6 +318,8 @@ impl Interface {
     ///   - `"termination_points" -> int OR int Array` (default : empty) : \
     ///     A set of points that stop the computation if they are reached by
     ///     the algorithm.
+    ///
+    ///   Note that keys of incorrect types are ignored with a warning.
     ///
     /// # Errors
     ///

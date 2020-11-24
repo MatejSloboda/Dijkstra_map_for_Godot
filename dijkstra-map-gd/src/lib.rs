@@ -1,8 +1,15 @@
+//! Implementation of [Dijkstra's algorithm](https://en.wikipedia.org/wiki/Dijkstra's_algorithm) in Rust.
+//!
+//! This internally uses the [dijkstra-map](dijkstra_map) crate.
+
 use dijkstra_map::{Cost, DijkstraMap, PointID, Read, TerrainType, Weight};
 use fnv::FnvHashMap;
 use fnv::FnvHashSet;
 use gdnative::prelude::*;
 
+/// Interface exported to Godot
+///
+/// All public method of this struct are usable in gdscript.
 #[derive(NativeClass)]
 #[inherit(Reference)]
 pub struct Interface {

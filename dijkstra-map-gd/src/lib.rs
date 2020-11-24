@@ -144,7 +144,8 @@ impl Interface {
     #[export]
     /// Get the terrain type for the given point.
     ///
-    /// This function returns `-1` if no point with the given id exists in the map.
+    /// This function returns `-1` if no point with the given id exists in the
+    /// map.
     pub fn get_terrain_for_point(&mut self, _owner: &Reference, point_id: i32) -> i32 {
         self.dijkstra
             .get_terrain_for_point(point_id.into())
@@ -206,7 +207,8 @@ impl Interface {
     /// - `source` : source point of the connection.
     /// - `target` : target point of the connection.
     /// - `weight` : weight of the connection. Defaults to `1.0`.
-    /// - `bidirectional` : wether or not the reciprocal connection should be made. Defaults to [`true`].
+    /// - `bidirectional` : wether or not the reciprocal connection should be
+    /// made. Defaults to [`true`].
     ///
     /// # Errors
     ///
@@ -234,7 +236,8 @@ impl Interface {
     ///
     /// - `source` : source point of the connection.
     /// - `target` : target point of the connection.
-    /// - `bidirectional` (default : [`true`]) : if [`true`], also removes connection from target to source.
+    /// - `bidirectional` (default : [`true`]) : if [`true`], also removes
+    /// connection from target to source.
     ///
     /// # Errors
     ///
@@ -253,13 +256,15 @@ impl Interface {
     }
 
     #[export]
-    /// Returns [`true`] if there is a connection from `source` to `target` (and they both exist).
+    /// Returns [`true`] if there is a connection from `source` to `target`
+    /// (and they both exist).
     pub fn has_connection(&mut self, _owner: &Reference, source: i32, target: i32) -> bool {
         self.dijkstra.has_connection(source.into(), target.into())
     }
 
     #[export]
-    /// Given a point, returns the id of the next point along the shortest path toward the target.
+    /// Given a point, returns the id of the next point along the shortest path
+    /// toward the target.
     ///
     /// # Errors
     ///
@@ -280,27 +285,40 @@ impl Interface {
     }
 
     #[export]
-    /// Recalculates cost map and direction map information fo each point, overriding previous results.
+    /// Recalculates cost map and direction map information fo each point,
+    /// overriding previous results.
     ///
-    /// This is the central function of the library, the one that actually uses Dijkstra's algorithm.
+    /// This is the central function of the library, the one that actually uses
+    /// Dijkstra's algorithm.
     ///
     /// # Parameters
     ///
-    /// - `origin` : ID of the origin point, or array of IDs (preferably [`Int32Array`]).
-    /// - `optional_params: `[`Dictionary`] : Specifies optional arguments. Note that values of incorrect type are ignored. Valid arguments are :
+    /// - `origin` : ID of the origin point, or array of IDs (preferably
+    /// [`Int32Array`]).
+    /// - `optional_params: `[`Dictionary`] : Specifies optional arguments.
+    /// Note that values of incorrect type are ignored. Valid arguments are :
     ///   - `"input_is_destination" -> bool` (default : [`true`]) : \
     ///     Wether or not the `origin` points are seen as destination.
     ///   - `"maximum_cost" -> float`
     ///         (default : [`INFINITY`](f32::INFINITY)) : \
-    ///     Specifies maximum cost. Once all shortest paths no longer than maximum cost are found, algorithm terminates. All points with cost bigger than this are treated as inaccessible.
+    ///     Specifies maximum cost. Once all shortest paths no longer than
+    ///     maximum cost are found, algorithm terminates. All points with cost
+    ///     bigger than this are treated as inaccessible.
     ///   - `"initial_costs" -> float Array` (default : empty) : \
-    ///     Specifies initial costs for given origins. Values are paired with corresponding indices in the origin argument. Every unspecified cost is defaulted to `0.0`. \
+    ///     Specifies initial costs for given origins. Values are paired with
+    ///     corresponding indices in the origin argument. Every unspecified
+    ///     cost is defaulted to `0.0`. \
     ///     Can be used to weigh the origins with a preference.
     ///   - `"terrain_weights" -> Dictionary` (default : empty) : \
-    ///     Specifies weights of terrain types. Keys are terrain type IDs and values are floats. Unspecified terrains will have [`INFINITE`](f32::INFINITY) weight. \
-    ///     Note that `-1` correspond to the default terrain (which have a weight of `1.0`), and will thus be ignored if it appears in the keys.
+    ///     Specifies weights of terrain types. Keys are terrain type IDs and
+    ///     values are floats. Unspecified terrains will have
+    ///     [`INFINITE`](f32::INFINITY) weight. \
+    ///     Note that `-1` correspond to the default terrain (which have a
+    ///     weight of `1.0`), and will thus be ignored if it appears in the
+    ///     keys.
     ///   - `"termination_points" -> int OR int Array` (default : empty) : \
-    ///     A set of points that stop the computation if they are reached by the algorithm.
+    ///     A set of points that stop the computation if they are reached by
+    ///     the algorithm.
     ///
     /// # Errors
     ///
@@ -449,9 +467,11 @@ impl Interface {
     }
 
     #[export]
-    /// For each point in the given array, returns the id of the next point along the shortest path toward the target.
+    /// For each point in the given array, returns the id of the next point
+    /// along the shortest path toward the target.
     ///
-    /// If a point does not exists, or there is not path from it to the target, the corresponding point will be `-1`.
+    /// If a point does not exists, or there is not path from it to the target,
+    /// the corresponding point will be `-1`.
     pub fn get_direction_at_points(
         &mut self,
         _owner: &Reference,
@@ -472,9 +492,11 @@ impl Interface {
     }
 
     #[export]
-    /// For each point in the given array, returns the cost of the shortest path from this point to the target.
+    /// For each point in the given array, returns the cost of the shortest
+    /// path from this point to the target.
     ///
-    /// If there is no path from a point to the target, the cost is [`INFINITY`](f32::INFINITY).
+    /// If there is no path from a point to the target, the cost is
+    /// [`INFINITY`](f32::INFINITY).
     pub fn get_cost_at_points(
         &mut self,
         _owner: &Reference,
@@ -496,7 +518,8 @@ impl Interface {
     #[export]
     /// Returns the entire Dijktra map of costs in form of a Dictionary.
     ///
-    /// Keys are points' IDs, and values are costs. Inaccessible points are not present in the dictionary.
+    /// Keys are points' IDs, and values are costs. Inaccessible points are not
+    /// present in the dictionary.
     pub fn get_cost_map(&mut self, _owner: &Reference) -> gdnative::core_types::Dictionary {
         let dict = Dictionary::new();
         for (&point, info) in self.dijkstra.get_direction_and_cost_map().iter() {
@@ -508,9 +531,11 @@ impl Interface {
     }
 
     #[export]
-    /// Returns the entire Dijkstra map of directions in form of a [`Dictionary`].
+    /// Returns the entire Dijkstra map of directions in form of a
+    /// [`Dictionary`].
     ///
-    /// Keys are points' IDs, and values are the next point along the shortest path.
+    /// Keys are points' IDs, and values are the next point along the shortest
+    /// path.
     ///
     /// TODO : What about innacessible points ?
     pub fn get_direction_map(&mut self, _owner: &Reference) -> Dictionary {
@@ -524,7 +549,8 @@ impl Interface {
     }
 
     #[export]
-    /// Returns an array of all the points whose cost is between `min_cost` and `max_cost`.
+    /// Returns an array of all the points whose cost is between `min_cost` and
+    /// `max_cost`.
     ///
     /// The array will be sorted by cost.
     pub fn get_all_points_with_cost_between(
@@ -543,8 +569,15 @@ impl Interface {
     }
 
     #[export]
-    /// Returns an [array] of points describing the shortest path from a starting point (note: the starting point itself is not included). \
-    /// If the starting point is a target or is inaccessible, the [array] will be empty.
+    /// Returns an [array] of points describing the shortest path from a
+    /// starting point.
+    ///
+    /// If the starting point is a target or is inaccessible, the [array] will
+    /// be empty.
+    ///
+    /// ## Note
+    ///
+    /// The starting point itself is not included.
     ///
     /// [array]: gdnative::core_types::Int32Array
     pub fn get_shortest_path_from_point(
@@ -566,16 +599,23 @@ impl Interface {
     ///
     /// # Parameters
     ///
-    /// - `bounds` : Dimensions of the grid. At the moment, only [`Rect2`] is supported.
-    /// - `terrain_type` (default : `-1`) : Terrain to use for all points of the grid.
-    /// - `orthogonal_cost` (default : `1.0`) : specifies cost of orthogonal connections (up, down, right and left). \
-    ///  If `orthogonal_cost` is [`INFINITY`] or [`Nan`], orthogonal connections are disabled.
-    /// - `diagonal_cost` (default : [`INFINITY`]) : specifies cost of diagonal connections. \
-    ///   If `diagonal_cost` is [`INFINITY`] or [`Nan`], diagonal connections are disabled.
+    /// - `bounds` : Dimensions of the grid. At the moment, only [`Rect2`] is
+    ///   supported.
+    /// - `terrain_type` (default : `-1`) : Terrain to use for all points of
+    ///   the grid.
+    /// - `orthogonal_cost` (default : `1.0`) : specifies cost of orthogonal
+    ///   connections (up, down, right and left). \
+    ///   If `orthogonal_cost` is [`INFINITY`] or [`Nan`], orthogonal
+    ///   connections are disabled.
+    /// - `diagonal_cost` (default : [`INFINITY`]) : specifies cost of diagonal
+    ///   connections. \
+    ///   If `diagonal_cost` is [`INFINITY`] or [`Nan`], diagonal connections
+    ///   are disabled.
     ///
     /// # Returns
     ///
-    /// This function returns a Dictionary where keys are coordinates of points ([`Vector2`]) and values are their corresponding point IDs.
+    /// This function returns a Dictionary where keys are coordinates of points
+    /// ([`Vector2`]) and values are their corresponding point IDs.
     ///
     /// [`INFINITY`]: f32::INFINITY
     /// [`Nan`]: f32::NAN
@@ -621,13 +661,16 @@ impl Interface {
     ///
     /// # Returns
     ///
-    /// This function returns a [`Dictionary`] where keys are coordinates of points ([`Vector2`]) and values are their corresponding point IDs.
+    /// This function returns a [`Dictionary`] where keys are coordinates of
+    /// points ([`Vector2`]) and values are their corresponding point IDs.
     ///
     /// # Note
     ///
     /// Hexgrid is in the "pointy" orentation by default (see example below).
     ///
-    /// To switch to "flat" orientation, swap `width` and `height`, and switch `x` and `y` coordinates of the keys in the return [`Dictionary`]. ([`Transform2D`] may be convenient there)
+    /// To switch to "flat" orientation, swap `width` and `height`, and switch
+    /// `x` and `y` coordinates of the keys in the return [`Dictionary`].
+    /// ([`Transform2D`] may be convenient there)
     ///
     /// # Example
     ///

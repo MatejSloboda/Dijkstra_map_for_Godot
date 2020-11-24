@@ -205,4 +205,23 @@ mod test {
             [ID1]
         )
     }
+
+    #[test]
+    fn unreacheable_point() {
+        let mut dijkstra = setup_id012_connect0to1_1to2();
+        dijkstra
+            .add_point(PointID(3), TerrainType::DefaultTerrain)
+            .unwrap();
+        dijkstra.recalculate(
+            &[ID0],
+            None,
+            None,
+            Vec::new(),
+            FnvHashMap::default(),
+            FnvHashSet::default(),
+        );
+
+        // unreacheable points are not in the computed map.
+        assert_eq!(dijkstra.get_direction_and_cost_map().get(&PointID(3)), None)
+    }
 }

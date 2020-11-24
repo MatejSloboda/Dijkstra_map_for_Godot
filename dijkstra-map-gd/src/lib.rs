@@ -7,6 +7,9 @@ use fnv::FnvHashMap;
 use fnv::FnvHashSet;
 use gdnative::prelude::*;
 
+const GODOT_SUCCESS: i64 = 0;
+const GODOT_ERROR: i64 = 1;
+
 /// Interface exported to Godot
 ///
 /// All public method of this struct are usable in gdscript.
@@ -22,8 +25,8 @@ pub struct Interface {
 /// [`Ok`] becomes `0`, and [`Err`] becomes `1`.
 fn result_to_int(res: Result<(), ()>) -> i64 {
     match res {
-        Ok(()) => 0,
-        Err(()) => 1,
+        Ok(()) => GODOT_SUCCESS,
+        Err(()) => GODOT_ERROR,
     }
 }
 
@@ -47,7 +50,7 @@ fn variant_to_width_and_height(bounds: Variant) -> Option<(usize, usize, usize, 
 
 #[methods]
 impl Interface {
-    /// Create a new empty Dijkstra map.
+    /// Create a new empty [`DijkstraMap`].
     pub fn new(_owner: &Reference) -> Self {
         Interface {
             dijkstra: DijkstraMap::default(),
@@ -61,7 +64,8 @@ impl Interface {
     }
 
     #[export]
-    /// If `source_instance` is a DijkstraMap, it is cloned into `self`.
+    /// If `source_instance` is a [dijkstra map](Interface), it is cloned into
+    /// `self`.
     ///
     /// # Errors
     ///
@@ -78,10 +82,10 @@ impl Interface {
                     })
                     .ok()
             }) {
-            Some(_) => 0,
+            Some(_) => GODOT_SUCCESS,
             None => {
                 godot_error!("Failed to convert Variant to DijkstraMap.");
-                1
+                GODOT_ERROR
             }
         }
     }
@@ -349,7 +353,7 @@ impl Interface {
             let string: String = k.to_string();
             if !VALID_KEYS.contains(&string.as_str()) {
                 godot_error!("Invalid Key `{}` in parameter", string);
-                return 1;
+                return GODOT_ERROR;
             }
         }
 
@@ -379,7 +383,7 @@ impl Interface {
             }
             _ => {
                 godot_error!("Invalid argument type : Expected int or Array of ints");
-                return 1;
+                return GODOT_ERROR;
             }
         };
 
@@ -476,8 +480,7 @@ impl Interface {
             terrain_weights,
             termination_points,
         );
-        // success !
-        0
+        GODOT_SUCCESS
     }
 
     #[export]

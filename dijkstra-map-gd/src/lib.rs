@@ -345,7 +345,8 @@ impl Interface {
                 return 1;
             }
         }
-        // get params from dict
+
+        // get origin points
         let mut res_origins = Vec::<PointID>::new();
         match origin.get_type() {
             gdnative::core_types::VariantType::I64 => {
@@ -374,6 +375,10 @@ impl Interface {
                 return 1;
             }
         };
+
+        // ===================
+        // Optional parameters
+        // ===================
         let read: Option<Read> = optional_params
             .get(&gdnative::core_types::Variant::from_str(
                 INPUT_IS_DESTINATION,
@@ -464,6 +469,7 @@ impl Interface {
             terrain_weights,
             termination_points,
         );
+        // success !
         0
     }
 
@@ -538,7 +544,9 @@ impl Interface {
     /// Keys are points' IDs, and values are the next point along the shortest
     /// path.
     ///
-    /// TODO : What about innacessible points ?
+    /// ## Note
+    ///
+    /// Unreacheable points are not present in the map.
     pub fn get_direction_map(&mut self, _owner: &Reference) -> Dictionary {
         let dict = Dictionary::new();
         for (&point, info) in self.dijkstra.get_direction_and_cost_map().iter() {

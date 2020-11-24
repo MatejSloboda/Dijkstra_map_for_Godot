@@ -76,14 +76,18 @@ pub enum Read {
 
 /// Priority for Dijkstra's algorithm.
 #[derive(Copy, Clone, PartialEq)]
-struct QueuePriority(Cost);
+struct QueuePriority {
+    id: PointID,
+    cost: Cost,
+}
 
 impl Ord for QueuePriority {
     fn cmp(&self, other: &QueuePriority) -> std::cmp::Ordering {
         other
-            .0
-            .partial_cmp(&self.0)
+            .cost
+            .partial_cmp(&self.cost)
             .unwrap_or(std::cmp::Ordering::Equal)
+            .then_with(|| other.id.cmp(&self.id))
     }
 }
 
@@ -208,7 +212,13 @@ impl DijkstraMap {
                         cost: *initial_costs.get(i).unwrap_or(&Cost(0.0)),
                     },
                 );
-                open_queue.push(*src, QueuePriority(self.get_cost_at_point(*src)));
+                open_queue.push(
+                    *src,
+                    QueuePriority {
+                        id: *src,
+                        cost: self.get_cost_at_point(*src),
+                    },
+                );
             }
         }
 
@@ -250,7 +260,7 @@ impl DijkstraMap {
                     && cost <= max_cost
                     && !self.disabled_points.contains(&point2)
                 {
-                    open_queue.push_increase(point2, QueuePriority(cost));
+                    open_queue.push_increase(point2, QueuePriority { id: point2, cost });
                     self.computed_info.insert(
                         point2,
                         PointComputedInfo {

@@ -8,15 +8,17 @@ use gdnative::prelude::*;
 pub struct Interface {
     dijkstra: DijkstraMap,
 }
+
 const TERRAIN_WEIGHT: &str = "terrain_weights";
 const TERMINATION_POINTS: &str = "termination_points";
 const INPUT_IS_DESTINATION: &str = "input_is_destination";
 const MAXIMUM_COST: &str = "maximum_cost";
 const INITIAL_COSTS: &str = "initial_costs";
 
-/// Change a Rust's `Result` to an integer (which is how errors are reported to Godot).
+/// Change a Rust's [`Result`] to an integer (which is how errors are reported
+/// to Godot).
 ///
-/// `Ok(())` becomes `0`, and `Err(())` becomes `1`.
+/// [`Ok`] becomes `0`, and [`Err`] becomes `1`.
 fn result_to_int(res: Result<(), ()>) -> i64 {
     match res {
         Ok(()) => 0,
@@ -24,9 +26,9 @@ fn result_to_int(res: Result<(), ()>) -> i64 {
     }
 }
 
-/// Try to convert the given `Variant` into a rectangle of `usize`.
+/// Try to convert the given [`Variant`] into a rectangle of `usize`.
 ///
-/// Only works if `bounds` is a `Rect2D`.
+/// Only works if `bounds` is a [`Rect2D`].
 ///
 /// # Return
 ///
@@ -60,7 +62,7 @@ impl Interface {
     }
 
     #[export]
-    /// Clear the underlying [`DijkstraMap`](../dijkstra_map/struct.DijkstraMap.html).
+    /// Clear the underlying [`DijkstraMap`].
     pub fn clear(&mut self, _owner: &Reference) {
         self.dijkstra.clear()
     }
@@ -100,11 +102,12 @@ impl Interface {
     #[export]
     /// Add a new point with the given `terrain_type`.
     ///
-    /// If `terrain_type` is `None`, `-1` is used.
+    /// If `terrain_type` is [`None`], `-1` is used.
     ///
     /// # Errors
     ///
-    /// If a point with the given id already exists, the map is unchanged and `1` is returned.
+    /// If a point with the given id already exists, the map is unchanged and
+    /// `1` is returned.
     pub fn add_point(
         &mut self,
         _owner: &Reference,
@@ -119,7 +122,7 @@ impl Interface {
     #[export]
     /// Set the terrain type for `point_id`.
     ///
-    /// If `terrain_id` is `None`, `-1` is used.
+    /// If `terrain_id` is [`None`], `-1` is used.
     ///
     /// # Errors
     ///
@@ -141,7 +144,7 @@ impl Interface {
     #[export]
     /// Get the terrain type for the given point.
     ///
-    /// This function returns -1 if no point with the given id exists in the map.
+    /// This function returns `-1` if no point with the given id exists in the map.
     pub fn get_terrain_for_point(&mut self, _owner: &Reference, point_id: i32) -> i32 {
         self.dijkstra
             .get_terrain_for_point(point_id.into())
@@ -161,7 +164,7 @@ impl Interface {
     }
 
     #[export]
-    /// Returns `true` if the map contains the given point.
+    /// Returns [`true`] if the map contains the given point.
     pub fn has_point(&mut self, _owner: &Reference, point_id: i32) -> bool {
         self.dijkstra.has_point(point_id.into())
     }
@@ -189,7 +192,8 @@ impl Interface {
     }
 
     #[export]
-    /// Returns `true` if the point exists and is disabled, otherwise returns `false`.
+    /// Returns [`true`] if the point exists and is disabled, otherwise returns
+    /// [`false`].
     pub fn is_point_disabled(&mut self, _owner: &Reference, point_id: i32) -> bool {
         self.dijkstra.is_point_disabled(point_id.into())
     }
@@ -202,7 +206,7 @@ impl Interface {
     /// - `source` : source point of the connection.
     /// - `target` : target point of the connection.
     /// - `weight` : weight of the connection. Defaults to `1.0`.
-    /// - `bidirectional` : wether or not the reciprocal connection should be made. Defaults to `true`.
+    /// - `bidirectional` : wether or not the reciprocal connection should be made. Defaults to [`true`].
     ///
     /// # Errors
     ///
@@ -230,7 +234,7 @@ impl Interface {
     ///
     /// - `source` : source point of the connection.
     /// - `target` : target point of the connection.
-    /// - `bidirectional` (default : `true`) : if `true`, also removes connection from target to source.
+    /// - `bidirectional` (default : [`true`]) : if [`true`], also removes connection from target to source.
     ///
     /// # Errors
     ///
@@ -249,7 +253,7 @@ impl Interface {
     }
 
     #[export]
-    /// Returns `true` if there is a connection from `source` to `target` (and they both exist).
+    /// Returns [`true`] if there is a connection from `source` to `target` (and they both exist).
     pub fn has_connection(&mut self, _owner: &Reference, source: i32, target: i32) -> bool {
         self.dijkstra.has_connection(source.into(), target.into())
     }
@@ -270,7 +274,7 @@ impl Interface {
     #[export]
     /// Returns the cost of the shortest path from this point to the target.
     ///
-    /// If there is no path, the cost is `INFINITY`.
+    /// If there is no path, the cost is [`INFINITY`](f32::INFINITY).
     pub fn get_cost_at_point(&mut self, _owner: &Reference, point_id: i32) -> f32 {
         self.dijkstra.get_cost_at_point(point_id.into()).into()
     }
@@ -282,17 +286,18 @@ impl Interface {
     ///
     /// # Parameters
     ///
-    /// - `origin` : ID of the origin point, or array of IDs (preferably `PoolIntArray`).
-    /// - `optional_params: Dictionary` : Specifies optional arguments. Note that values of incorrect type are ignored. Valid arguments are :
-    ///   - `"input_is_destination" -> bool` (default : `true`) : \
+    /// - `origin` : ID of the origin point, or array of IDs (preferably [`Int32Array`]).
+    /// - `optional_params: `[`Dictionary`] : Specifies optional arguments. Note that values of incorrect type are ignored. Valid arguments are :
+    ///   - `"input_is_destination" -> bool` (default : [`true`]) : \
     ///     Wether or not the `origin` points are seen as destination.
-    ///   - `"maximum_cost" -> float` (default : `INFINITY`) : \
+    ///   - `"maximum_cost" -> float`
+    ///         (default : [`INFINITY`](f32::INFINITY)) : \
     ///     Specifies maximum cost. Once all shortest paths no longer than maximum cost are found, algorithm terminates. All points with cost bigger than this are treated as inaccessible.
     ///   - `"initial_costs" -> float Array` (default : empty) : \
     ///     Specifies initial costs for given origins. Values are paired with corresponding indices in the origin argument. Every unspecified cost is defaulted to `0.0`. \
     ///     Can be used to weigh the origins with a preference.
-    ///   - `"terrain_weights" -> Dictionnary` (default : empty) : \
-    ///     Specifies weights of terrain types. Keys are terrain type IDs and values are floats. Unspecified terrains will have `INFINITE` weight. \
+    ///   - `"terrain_weights" -> Dictionary` (default : empty) : \
+    ///     Specifies weights of terrain types. Keys are terrain type IDs and values are floats. Unspecified terrains will have [`INFINITE`](f32::INFINITY) weight. \
     ///     Note that `-1` correspond to the default terrain (which have a weight of `1.0`), and will thus be ignored if it appears in the keys.
     ///   - `"termination_points" -> int OR int Array` (default : empty) : \
     ///     A set of points that stop the computation if they are reached by the algorithm.
@@ -301,7 +306,12 @@ impl Interface {
     ///
     /// `1` is returned if :
     /// - One of the keys in `optional_params` is invalid.
-    /// - `origin` is neither an I64, a Int32Array or a VariantArray.
+    /// - `origin` is neither an [`I64`], a [`Int32Array`] or a [`VariantArray`].
+    ///
+    /// [`Int32Array`]: gdnative::core_types::VariantType::Int32Array
+    /// [`I64`]: gdnative::core_types::VariantType::I64
+    /// [`VariantArray`]: gdnative::core_types::VariantType::VariantArray
+    /// [`PoolIntArray`]: https://docs.godotengine.org/en/stable/classes/class_poolintarray.html#class-poolintarray
     pub fn recalculate(
         &mut self,
         _owner: &Reference,
@@ -341,9 +351,7 @@ impl Interface {
                 }
             }
             _ => {
-                godot_error!(
-                    "Invalid argument type. Expected int, Array (of ints) or PoolIntArray"
-                );
+                godot_error!("Invalid argument type : Expected int or Array of ints");
                 return 1;
             }
         };
@@ -466,7 +474,7 @@ impl Interface {
     #[export]
     /// For each point in the given array, returns the cost of the shortest path from this point to the target.
     ///
-    /// If there is no path from a point to the target, the cost is `INFINITY`.
+    /// If there is no path from a point to the target, the cost is [`INFINITY`](f32::INFINITY).
     pub fn get_cost_at_points(
         &mut self,
         _owner: &Reference,
@@ -500,12 +508,12 @@ impl Interface {
     }
 
     #[export]
-    /// Returns the entire Dijkstra map of directions in form of a Dictionary.
+    /// Returns the entire Dijkstra map of directions in form of a [`Dictionary`].
     ///
     /// Keys are points' IDs, and values are the next point along the shortest path.
     ///
     /// TODO : What about innacessible points ?
-    pub fn get_direction_map(&mut self, _owner: &Reference) -> gdnative::core_types::Dictionary {
+    pub fn get_direction_map(&mut self, _owner: &Reference) -> Dictionary {
         let dict = Dictionary::new();
         for (&point, info) in self.dijkstra.get_direction_and_cost_map().iter() {
             let point: i32 = point.into();
@@ -535,8 +543,10 @@ impl Interface {
     }
 
     #[export]
-    /// Returns a vector of points describing the shortest path from a starting point (note: the starting point itself is not included). \
-    /// If the starting point is a target or is inaccessible, the vector will be empty.
+    /// Returns an [array] of points describing the shortest path from a starting point (note: the starting point itself is not included). \
+    /// If the starting point is a target or is inaccessible, the [array] will be empty.
+    ///
+    /// [array]: gdnative::core_types::Int32Array
     pub fn get_shortest_path_from_point(
         &mut self,
         _owner: &Reference,
@@ -556,16 +566,19 @@ impl Interface {
     ///
     /// # Parameters
     ///
-    /// - `bounds` : Dimensions of the grid. At the moment, only `Rect2` is supported.
+    /// - `bounds` : Dimensions of the grid. At the moment, only [`Rect2`] is supported.
     /// - `terrain_type` (default : `-1`) : Terrain to use for all points of the grid.
     /// - `orthogonal_cost` (default : `1.0`) : specifies cost of orthogonal connections (up, down, right and left). \
-    ///  If `orthogonal_cost` is `INFINITY` or `Nan`, orthogonal connections are disabled.
-    /// - `diagonal_cost` (default : `INFINITY`) : specifies cost of diagonal connections. \
-    ///   If `diagonal_cost` is `INFINITY` or `Nan`, diagonal connections are disabled.
+    ///  If `orthogonal_cost` is [`INFINITY`] or [`Nan`], orthogonal connections are disabled.
+    /// - `diagonal_cost` (default : [`INFINITY`]) : specifies cost of diagonal connections. \
+    ///   If `diagonal_cost` is [`INFINITY`] or [`Nan`], diagonal connections are disabled.
     ///
     /// # Returns
     ///
-    /// This function returns a Dictionary where keys are coordinates of points (Vector2) and values are their corresponding point IDs.
+    /// This function returns a Dictionary where keys are coordinates of points ([`Vector2`]) and values are their corresponding point IDs.
+    ///
+    /// [`INFINITY`]: f32::INFINITY
+    /// [`Nan`]: f32::NAN
     pub fn add_square_grid(
         &mut self,
         _owner: &Reference,
@@ -573,7 +586,7 @@ impl Interface {
         #[opt] terrain_type: Option<i32>,
         #[opt] orthogonal_cost: Option<f32>,
         #[opt] diagonal_cost: Option<f32>,
-    ) -> gdnative::core_types::Dictionary {
+    ) -> Dictionary {
         let (x_offset, y_offset, width, height) =
             variant_to_width_and_height(bounds).expect("couldnt use bounds variant");
         let dict = Dictionary::new();
@@ -608,13 +621,13 @@ impl Interface {
     ///
     /// # Returns
     ///
-    /// This function returns a `Dictionary` where keys are coordinates of points (Vector2) and values are their corresponding point IDs.
+    /// This function returns a [`Dictionary`] where keys are coordinates of points ([`Vector2`]) and values are their corresponding point IDs.
     ///
     /// # Note
     ///
     /// Hexgrid is in the "pointy" orentation by default (see example below).
     ///
-    /// To switch to "flat" orientation, swap `width` and `height`, and switch `x` and `y` coordinates of the keys in the return `Dictionary`. (`Transform2D` may be convenient there)
+    /// To switch to "flat" orientation, swap `width` and `height`, and switch `x` and `y` coordinates of the keys in the return [`Dictionary`]. ([`Transform2D`] may be convenient there)
     ///
     /// # Example
     ///
@@ -639,7 +652,7 @@ impl Interface {
         bounds: Variant,
         #[opt] terrain_type: Option<i32>,
         #[opt] weight: Option<f32>,
-    ) -> gdnative::core_types::Dictionary {
+    ) -> Dictionary {
         let (x_offset, y_offset, width, height) =
             variant_to_width_and_height(bounds).expect("couldnt use bounds variant");
         let dict = Dictionary::new();

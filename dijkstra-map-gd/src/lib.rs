@@ -7,7 +7,9 @@ use fnv::FnvHashMap;
 use fnv::FnvHashSet;
 use gdnative::prelude::*;
 
+/// Integer representing success in gdscript
 const GODOT_SUCCESS: i64 = 0;
+/// Integer representing failure in gdscript
 const GODOT_ERROR: i64 = 1;
 
 /// Interface exported to Godot
@@ -155,7 +157,7 @@ impl Interface {
     ///
     /// # Errors
     ///
-    /// Returns `1` if the point doesnot exists in the map.
+    /// Returns `1` if the point does not exists in the map.
     pub fn remove_point(&mut self, _owner: &Reference, point_id: i32) -> i64 {
         let res = self.dijkstra.remove_point(point_id.into());
         result_to_int(res)
@@ -238,7 +240,7 @@ impl Interface {
     ///
     /// # Errors
     ///
-    /// Returns `1` if one of the point does not exist.
+    /// Returns `1` if one of the points does not exist.
     pub fn remove_connection(
         &mut self,
         _owner: &Reference,
@@ -282,7 +284,7 @@ impl Interface {
     }
 
     #[export]
-    /// Recalculates cost map and direction map information fo each point,
+    /// Recalculates cost map and direction map information for each point,
     /// overriding previous results.
     ///
     /// This is the central function of the library, the one that actually uses

@@ -75,15 +75,24 @@ pub enum Read {
 }
 
 /// Priority for Dijkstra's algorithm.
+///
+/// We also keep an `id` field to differentiate between points that have the
+/// same cost, and keep the algorithm deterministic.
 #[derive(Copy, Clone, PartialEq)]
-struct QueuePriority(Cost);
+struct QueuePriority {
+    /// Secondary comparison, used is `cost`s are equal
+    id: PointID,
+    /// Primary comparison
+    cost: Cost,
+}
 
 impl Ord for QueuePriority {
     fn cmp(&self, other: &QueuePriority) -> std::cmp::Ordering {
         other
-            .0
-            .partial_cmp(&self.0)
+            .cost
+            .partial_cmp(&self.cost)
             .unwrap_or(std::cmp::Ordering::Equal)
+            .then_with(|| other.id.cmp(&self.id))
     }
 }
 
@@ -208,7 +217,13 @@ impl DijkstraMap {
                         cost: *initial_costs.get(i).unwrap_or(&Cost(0.0)),
                     },
                 );
-                open_queue.push(*src, QueuePriority(self.get_cost_at_point(*src)));
+                open_queue.push(
+                    *src,
+                    QueuePriority {
+                        id: *src,
+                        cost: self.get_cost_at_point(*src),
+                    },
+                );
             }
         }
 
@@ -250,7 +265,7 @@ impl DijkstraMap {
                     && cost <= max_cost
                     && !self.disabled_points.contains(&point2)
                 {
-                    open_queue.push_increase(point2, QueuePriority(cost));
+                    open_queue.push_increase(point2, QueuePriority { id: point2, cost });
                     self.computed_info.insert(
                         point2,
                         PointComputedInfo {
@@ -260,6 +275,101 @@ impl DijkstraMap {
                     );
                 }
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Test the deterministic nature of the algorithm described in
+    /// [`QueuePriority`].
+    ///
+    /// # Note
+    /// Removing the `id` field of [`QueuePriority`] does not make this
+    /// test fail. This is because :
+    /// - [`fnv`] uses a deterministic hasher.
+    /// - [`priority_queue`] is deterministic :
+    /// ```
+    /// let mut priority_queue = priority_queue::PriorityQueue::<i32, i32>::new();
+    /// priority_queue.push(0, 1);
+    /// priority_queue.push(1, 1); // same priority
+    ///
+    /// assert_eq!(priority_queue.pop().unwrap().0, 0);
+    /// assert_eq!(priority_queue.pop().unwrap().0, 1);
+    /// ```
+    /// However, this is not a documented effect of [`priority_queue`]
+    /// (as of `1.0.3`), so we should not rely on it.
+    #[test]
+    fn deterministic_dijkstra_map() {
+        fn create_map(reverse_order: bool) -> DijkstraMap {
+            let mut dijkstra_map = DijkstraMap::new();
+            dijkstra_map
+                .add_point(PointID(0), TerrainType::DefaultTerrain)
+                .unwrap();
+            dijkstra_map
+                .add_point(PointID(3), TerrainType::DefaultTerrain)
+                .unwrap();
+            if reverse_order {
+                for i in (1..=2).rev() {
+                    dijkstra_map
+                        .add_point(PointID(i), TerrainType::DefaultTerrain)
+                        .unwrap();
+                    dijkstra_map
+                        .connect_points(PointID(0), PointID(i), None, None)
+                        .unwrap();
+                    dijkstra_map
+                        .connect_points(PointID(3), PointID(i), None, None)
+                        .unwrap();
+                }
+            } else {
+                for i in 1..=2 {
+                    dijkstra_map
+                        .add_point(PointID(i), TerrainType::DefaultTerrain)
+                        .unwrap();
+                    dijkstra_map
+                        .connect_points(PointID(3), PointID(i), None, None)
+                        .unwrap();
+                    dijkstra_map
+                        .connect_points(PointID(0), PointID(i), None, None)
+                        .unwrap();
+                }
+            }
+            dijkstra_map
+        }
+        // graph :
+        //     3
+        //    / \
+        //   1   2
+        //    \ /
+        //     0 <- origin
+        let mut dijkstra_map = create_map(false);
+
+        dijkstra_map.recalculate(
+            &[PointID(0)],
+            None,
+            None,
+            Vec::new(),
+            FnvHashMap::default(),
+            FnvHashSet::default(),
+        );
+        let directions_and_costs = dijkstra_map.get_direction_and_cost_map().clone();
+        for i in 0..100 {
+            // mess up the order of creation.
+            let mut dijkstra_map = create_map(i % 2 == 0);
+            dijkstra_map.recalculate(
+                &[PointID(0)],
+                None,
+                None,
+                Vec::new(),
+                FnvHashMap::default(),
+                FnvHashSet::default(),
+            );
+            assert_eq!(
+                &directions_and_costs,
+                dijkstra_map.get_direction_and_cost_map()
+            )
         }
     }
 }

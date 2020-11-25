@@ -75,6 +75,9 @@ pub enum Read {
 }
 
 /// Priority for Dijkstra's algorithm.
+///
+/// We also keep an `id` field to differentiate between points that have the
+/// same cost, and keep the algorithm deterministic.
 #[derive(Copy, Clone, PartialEq)]
 struct QueuePriority {
     id: PointID,
@@ -280,6 +283,24 @@ mod tests {
 
     use super::*;
 
+    /// Test the deterministic nature of the algorithm described in
+    /// [`QueuePriority`].
+    ///
+    /// # Note
+    /// Removing the `id` field of [`QueuePriority`] does not make this
+    /// test fail. This is because :
+    /// - [`fnv`] uses a deterministic hasher.
+    /// - [`priority_queue`] is deterministic :
+    /// ```
+    /// let mut priority_queue = priority_queue::PriorityQueue::<i32, i32>::new();
+    /// priority_queue.push(0, 1);
+    /// priority_queue.push(1, 1); // same priority
+    ///
+    /// assert_eq!(priority_queue.pop().unwrap().0, 0);
+    /// assert_eq!(priority_queue.pop().unwrap().0, 1);
+    /// ```
+    /// However, this is not a documented effect of [`priority_queue`]
+    /// (as of `1.0.3`), so we should not rely on it.
     #[test]
     fn deterministic_dijkstra_map() {
         let mut dijkstra_map = DijkstraMap::new();

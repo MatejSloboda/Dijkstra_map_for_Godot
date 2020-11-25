@@ -121,7 +121,9 @@ pub struct PointInfo {
 /// structure.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct PointComputedInfo {
+    /// Cost of this point's shortest path
     pub cost: Cost,
+    /// Next point along the shortest path
     pub direction: PointID,
 }
 

@@ -273,3 +273,41 @@ impl DijkstraMap {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use euclid::Vector2D;
+
+    use super::*;
+
+    #[test]
+    fn deterministic_dijkstra_map() {
+        let mut dijkstra_map = DijkstraMap::new();
+        let ids = dijkstra_map.add_square_grid(7, 7, None, TerrainType::DefaultTerrain, None, None);
+        let origin = *ids.get(&Vector2D::new(3, 3)).unwrap();
+
+        dijkstra_map.recalculate(
+            &[origin],
+            None,
+            None,
+            Vec::new(),
+            FnvHashMap::default(),
+            FnvHashSet::default(),
+        );
+        let directions_and_costs = dijkstra_map.get_direction_and_cost_map().clone();
+        for _ in 0..100 {
+            dijkstra_map.recalculate(
+                &[origin],
+                None,
+                None,
+                Vec::new(),
+                FnvHashMap::default(),
+                FnvHashSet::default(),
+            );
+            assert_eq!(
+                &directions_and_costs,
+                dijkstra_map.get_direction_and_cost_map()
+            )
+        }
+    }
+}

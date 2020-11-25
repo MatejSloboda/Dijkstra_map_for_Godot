@@ -80,7 +80,9 @@ pub enum Read {
 /// same cost, and keep the algorithm deterministic.
 #[derive(Copy, Clone, PartialEq)]
 struct QueuePriority {
+    /// Secondary comparison, used is `cost`s are equal
     id: PointID,
+    /// Primary comparison
     cost: Cost,
 }
 
@@ -119,9 +121,7 @@ pub struct PointInfo {
 /// structure.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct PointComputedInfo {
-    /// Cost of this point's shortest path
     pub cost: Cost,
-    /// Next point along the shortest path
     pub direction: PointID,
 }
 
@@ -279,8 +279,6 @@ impl DijkstraMap {
 
 #[cfg(test)]
 mod tests {
-    use euclid::Vector2D;
-
     use super::*;
 
     /// Test the deterministic nature of the algorithm described in
@@ -303,12 +301,51 @@ mod tests {
     /// (as of `1.0.3`), so we should not rely on it.
     #[test]
     fn deterministic_dijkstra_map() {
-        let mut dijkstra_map = DijkstraMap::new();
-        let ids = dijkstra_map.add_square_grid(7, 7, None, TerrainType::DefaultTerrain, None, None);
-        let origin = *ids.get(&Vector2D::new(3, 3)).unwrap();
+        fn create_map(reverse_order: bool) -> DijkstraMap {
+            let mut dijkstra_map = DijkstraMap::new();
+            dijkstra_map
+                .add_point(PointID(0), TerrainType::DefaultTerrain)
+                .unwrap();
+            dijkstra_map
+                .add_point(PointID(3), TerrainType::DefaultTerrain)
+                .unwrap();
+            if reverse_order {
+                for i in (1..=2).rev() {
+                    dijkstra_map
+                        .add_point(PointID(i), TerrainType::DefaultTerrain)
+                        .unwrap();
+                    dijkstra_map
+                        .connect_points(PointID(0), PointID(i), None, None)
+                        .unwrap();
+                    dijkstra_map
+                        .connect_points(PointID(3), PointID(i), None, None)
+                        .unwrap();
+                }
+            } else {
+                for i in 1..=2 {
+                    dijkstra_map
+                        .add_point(PointID(i), TerrainType::DefaultTerrain)
+                        .unwrap();
+                    dijkstra_map
+                        .connect_points(PointID(3), PointID(i), None, None)
+                        .unwrap();
+                    dijkstra_map
+                        .connect_points(PointID(0), PointID(i), None, None)
+                        .unwrap();
+                }
+            }
+            dijkstra_map
+        }
+        // graph :
+        //     3
+        //    / \
+        //   1   2
+        //    \ /
+        //     0 <- origin
+        let mut dijkstra_map = create_map(false);
 
         dijkstra_map.recalculate(
-            &[origin],
+            &[PointID(0)],
             None,
             None,
             Vec::new(),
@@ -316,9 +353,11 @@ mod tests {
             FnvHashSet::default(),
         );
         let directions_and_costs = dijkstra_map.get_direction_and_cost_map().clone();
-        for _ in 0..100 {
+        for i in 0..100 {
+            // mess up the order of creation.
+            let mut dijkstra_map = create_map(i % 2 == 0);
             dijkstra_map.recalculate(
-                &[origin],
+                &[PointID(0)],
                 None,
                 None,
                 Vec::new(),

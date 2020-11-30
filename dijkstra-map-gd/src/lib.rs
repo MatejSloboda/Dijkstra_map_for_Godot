@@ -673,7 +673,7 @@ impl Interface {
     ///
     /// Keys are points' IDs, and values are costs. Inaccessible points are not
     /// present in the dictionary.
-    pub fn get_cost_map(&mut self, _owner: &Reference) -> gdnative::core_types::Dictionary {
+    pub fn get_cost_map(&mut self, _owner: &Reference) -> Dictionary {
         let dict = Dictionary::new();
         for (&point, info) in self.dijkstra.get_direction_and_cost_map().iter() {
             let point: i32 = point.into();

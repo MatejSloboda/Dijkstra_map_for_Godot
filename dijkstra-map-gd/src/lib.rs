@@ -623,7 +623,7 @@ impl Interface {
     /// For each point in the given array, returns the id of the next point
     /// along the shortest path toward the target.
     ///
-    /// If a point does not exists, or there is not path from it to the target,
+    /// If a point does not exists, or there is no path from it to the target,
     /// the corresponding point will be `-1`.
     pub fn get_direction_at_points(
         &mut self,

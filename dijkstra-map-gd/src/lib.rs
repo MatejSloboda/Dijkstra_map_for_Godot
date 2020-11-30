@@ -386,9 +386,9 @@ impl Interface {
             }
         }
 
-        /// Helper function for type errors
+        /// Helper function for type warnings
         ///
-        /// Ensure the style of error reporting is consistent.
+        /// Ensure the style of warning reporting is consistent.
         fn type_warning(object: &str, expected: VariantType, got: VariantType, line: u32) {
             godot_warn!(
                 "[{}:{}] {} has incorrect type : expected {}, got {}",

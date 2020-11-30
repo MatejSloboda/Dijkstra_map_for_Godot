@@ -146,6 +146,8 @@ impl Interface {
     /// This function returns `-1` if no point with the given id exists in the
     /// map.
     pub fn get_terrain_for_point(&mut self, _owner: &Reference, point_id: i32) -> i32 {
+        // TODO : TerrainType::DefaultTerrain also convert into -1, so this function cannot separate points that exists and have a default terrain, and those that do not exist.
+        // We need a different convention here.
         self.dijkstra
             .get_terrain_for_point(point_id.into())
             .unwrap_or(TerrainType::Terrain(-1))

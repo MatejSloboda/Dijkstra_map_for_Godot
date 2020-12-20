@@ -16,7 +16,7 @@ Note that the API is now stable! Some features may be added over time.
 
 ### Installing
 
-This repository contains pre-compiled binaries for Windows x64 and Linux x64. The project should just run after download on these platforms. The binaries may be slightly out-of-date, depending on branch in question. For other platforms you will have to compile the project yourself.
+This repository contains pre-compiled binaries for Windows x64, Linux x64 and Macos x86. The project should just run after download on these platforms. The binaries may be slightly out-of-date, depending on branch in question. For other platforms you will have to compile the project yourself.
 
 You will have to : 
 * [install rust compiler](https://www.rust-lang.org/tools/install) and you will most likely have to install the dependencies described in [GDNative bindings for rust github](https://github.com/GodotNativeTools/godot-rust).
@@ -31,7 +31,7 @@ It will compile the DLL binary file (or equivalent) and put it into "res://targe
 
 ## Getting Started
 
-After having followed *Installing* direction, open the godot project and open and run one of the demo scenes 
+After having followed *Installing* instructions, open the godot project and open and run one of the demo scenes 
 *  un the main scene (F5)
 *  /Project Example/dragon_attack.tscn
 *  /Project Example/Turn based.tscn
@@ -64,7 +64,7 @@ or automatically with `add_*_grid` methods (`add_square_grid` or `add_hexagonal_
 
 #### More recalculate flags
 
-`recalculate` method has various optionional arguments that modify its behavior. It is possible to:
+`recalculate` method has various optional arguments that modify its behavior. It is possible to:
 
 * switch intended direction of movement (useful when connections are not bidirectional).
 

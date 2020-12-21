@@ -42,8 +42,8 @@ func redraw_movement_access(position, max_cost, terrain_weights):
 	#now we highlight all the tiles in the highlight tilemap
 	var highlight = get_node("highlight")
 	highlight.clear()
-	for id in point_ids:
-		pos = id_to_position[id]
+	for point_id in point_ids:
+		pos = id_to_position[point_id]
 		highlight.set_cellv(pos, 4)
 
 

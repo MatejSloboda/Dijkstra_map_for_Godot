@@ -33,8 +33,8 @@ It will compile the DLL binary file (or equivalent) and put it into "res://targe
 
 After having followed *Installing* instructions, open the Godot project:
 *  Run the main scene (F5)
-*  Open and run /Project Example/project_example.tscn
-*  Open and run /Project Example/Turn based.tscn
+*  Open and run /Project_Example/project_example.tscn
+*  Open and run /Project_Example/Turn based.tscn
 Toy around with it, the code of project_example is heavily commented. Mess with the exports variable in demo.tscn (click on the root node and tweak the values at the top of the inspector)
 
 You can also look at the unit tests in Tests/unit/*

@@ -12,7 +12,7 @@ _global_script_classes=[ {
 "base": "",
 "class": "DijkstraMap",
 "language": "NativeScript",
-"path": "res://Dijkstra_map_library/nativescript.gdns"
+"path": "res://addons/dijkstra-map/Dijkstra_map_library/nativescript.gdns"
 } ]
 _global_script_class_icons={
 "DijkstraMap": ""
@@ -21,7 +21,7 @@ _global_script_class_icons={
 [application]
 
 config/name="djikstra map for godot"
-run/main_scene="res://visualization demo/visualisation.tscn"
+run/main_scene="res://addons/dijkstra-map/visualization demo/visualisation.tscn"
 
 [input]
 

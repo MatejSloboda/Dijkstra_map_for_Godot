@@ -15,6 +15,12 @@ var terrain_weights = {0: 1.0, 1: 4.0, 2: INF, 3: 1.0}
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	var event = InputEventMouseButton.new()
+	event.button_index = BUTTON_LEFT
+	InputMap.add_action("left_mouse_button")
+	InputMap.action_add_event("left_mouse_button",event)
+	
+	
 	dijkstramap = DijkstraMap.new()
 	var bmp = Rect2(0, 0, 23, 19)
 	pos_to_id = dijkstramap.add_square_grid(bmp)

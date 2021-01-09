@@ -11,7 +11,7 @@ Common use cases include: pre-computing pathfinding for tower-defense games, RTS
 
 The library is written in Rust programming language and performance should be comparable to C/C++ (approximately 10-20x faster than GDScript).
 
-Note that the [API](https://github.com/MatejSloboda/Dijkstra_map_for_Godot/blob/v1.0/DOCUMENTATION.md) is now stable! Some features may be added over time.
+Note that the [API](./addons/dijkstra-map/DOCUMENTATION.md) is now stable! Some features may be added over time.
 
 
 ## Installing
@@ -70,7 +70,7 @@ In Godot project you start by creating a new DijkstraMap Node.
 
 * Set weights for different terrain types.
 
-Please, see DOCUMENTATION.md for full explanation.
+Please, see [DOCUMENTATION.md](./addons/dijkstra-map/DOCUMENTATION.md) for full explanation.
 
 #### The usefulness of terrain
 
@@ -124,7 +124,7 @@ Before doing that pull request, if you modified the rust code be sure you have b
 
 
 ## TODO
-* find a way to compile it to all platforms in order to ship it via the godot asset store
+
 * if performance on djikstra is a real heavy consideration, consider implementing threading 
 
 ## Acknowledgments

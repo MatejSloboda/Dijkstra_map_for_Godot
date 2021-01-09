@@ -194,4 +194,3 @@ func test_duplicate_graph_from_works():
 	assert_true(copy.has_point(3))
 	assert_true(copy.has_connection(1,2))
 	assert_false(copy.has_point(4))
-

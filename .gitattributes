@@ -1,0 +1,22 @@
+# Exclude all top-level files and directories
+# (except addons/dijkstra-map) from zip downloads.
+# This makes installing Gut through the AssetLib
+# easier, because no files and folders need to
+# be unchecked.
+
+/.git			export-ignore
+/.gitattributes	export-ignore
+/.github		export-ignore
+/.gitignore		export-ignore
+/.import		export-ignore
+/addons/gut		export-ignore
+/Cargo.toml		export-ignore
+/dijkstra-map		export-ignore
+/dijkstra-map-gd	export-ignore
+/icon.png		export-ignore
+/icon.png.import	export-ignore
+/LICENSE		export-ignore
+/project.godot		export-ignore
+/Project_Example	export-ignore
+/README.md		export-ignore
+/Tests			export-ignore

@@ -1,0 +1,10 @@
+[gd_resource type="GDNativeLibrary" format=2]
+
+[resource]
+resource_name = "Interface"
+entry/OSX.64 = "res://addons/dijkstra-map/Dijkstra_map_library/bin/macos/libdijkstra_map_gd.dylib"
+entry/Windows.64 = "res://addons/dijkstra-map/Dijkstra_map_library/bin/windows/dijkstra_map_gd.dll"
+entry/X11.64 = "res://addons/dijkstra-map/Dijkstra_map_library/bin/linux/libdijkstra_map_gd.so"
+dependency/OSX.64 = [  ]
+dependency/Windows.64 = [  ]
+dependency/X11.64 = [  ]

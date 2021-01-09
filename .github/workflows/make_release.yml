@@ -102,17 +102,17 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: libdijkstra_map_gd.so
-        path: Dijkstra_map_library/bin/linux/
+        path: addons/dijkstra_map/Dijkstra_map_library/bin/linux/
     - name: Download dijkstra_map_gd.dll
       uses: actions/download-artifact@v2
       with:
         name: dijkstra_map_gd.dll
-        path: Dijkstra_map_library/bin/windows/
+        path: addons/dijkstra_map/Dijkstra_map_library/bin/windows/
     - name: Download libdijkstra_map_gd.dylib
       uses: actions/download-artifact@v2
       with:
         name: libdijkstra_map_gd.dylib
-        path: Dijkstra_map_library/bin/macos/
+        path: addons/dijkstra_map/Dijkstra_map_library/bin/macos/
     - uses: stefanzweifel/git-auto-commit-action@v4
       with:
         commit_message: "Release ${{ github.event.inputs.version }}\n${{ github.event.inputs.body }}"

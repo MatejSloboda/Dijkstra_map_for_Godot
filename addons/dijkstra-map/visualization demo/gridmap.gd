@@ -1,9 +1,6 @@
 extends TileMap
 
 var dijkstramap
-# Declare member variables here. Examples:
-# var a = 2
-# var b = "text"
 var id_to_pos = {}
 var pos_to_id = {}
 
@@ -26,7 +23,6 @@ func _ready():
 	pos_to_id = dijkstramap.add_square_grid(bmp)
 	for pos in pos_to_id:
 		id_to_pos[pos_to_id[pos]] = pos
-	#print(id_to_pos)
 	update_terrain_ids()
 	recalculate()
 

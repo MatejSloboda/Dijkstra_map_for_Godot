@@ -8,11 +8,12 @@ var speed_modifiers: Dictionary = {}
 
 
 func _ready() -> void:
-	# We create our Dijkstra maps. We will need 2 - one for archers, one for pikemen
+	# We create our Dijkstra maps. We will need 2: one for archers, one for pikemen
 	dijkstra_map_for_archers = DijkstraMap.new()
 	dijkstra_map_for_pikemen = DijkstraMap.new()
+
 	# First we must add all points and connections to the dijkstra maps.
-	# This only has to be done once, when project loads
+	# This only has to be done once, when project loads.
 
 	# We collect all walkable tiles from the tilemap
 	var walkable_tiles: Array = []
@@ -56,12 +57,12 @@ func _ready() -> void:
 		for offset in orthogonal:
 			var pos_of_neighbour: Vector2 = pos + offset
 			var id_of_neighbour: int = point_position_to_id.get(pos_of_neighbour, -1)
-			# We skip adding connection if point doesnt exist
+			# We skip adding the connection if the point does not exist
 			if id_of_neighbour == -1:
 				continue
 			# Now we make the connection.
-			# Note: last parameter specifies whether to also make the reverse connection
-			# too.
+			# Note: the last parameter specifies whether to also make the reverse
+			# connection.
 			# Since we loop through all points and their neighbours in both directions
 			# anyway, this would be unnecessary. 
 			dijkstra_map_for_archers.connect_points(
@@ -74,7 +75,7 @@ func _ready() -> void:
 		for offset in diagonal:
 			var pos_of_neighbour: Vector2 = pos + offset
 			var id_of_neighbour: int = point_position_to_id.get(pos_of_neighbour, -1)
-			# We skip adding connection if point doesnt exist
+			# We skip adding the connection if the point does not exist
 			if id_of_neighbour == -1:
 				continue
 			dijkstra_map_for_archers.connect_points(
@@ -105,7 +106,7 @@ func recalculate_dijkstra_maps() -> void:
 	)
 
 	# - We want pikemen to charge the dragon_position_id head on.
-	# - We .recalculate the DijkstraMap.
+	# - We .recalculate() the DijkstraMap.
 	# - First argument is the origin (be default) or destination (ie. the ID of the
 	# point where dragon_position_id is).
 	# - Second argument is a dictionary of optional parameters. For absent entries,
@@ -126,8 +127,8 @@ func recalculate_dijkstra_maps() -> void:
 	# within firing range.
 	# - Dragon_position_id flies, so terrain doesnt matter.
 	# - First we recalculate their Dijkstra map with dragon_position_id as the origin.
-	# - We also do not need to calculate entire DijkstraMap, only until we have points
-	# at required distance
+	# - We also do not need to calculate the entire DijkstraMap, only until we have
+	# points at the required distance
 	# - This can be achieved by providing optional parameter "maximum cost".
 	res = dijkstra_map_for_archers.recalculate(dragon_position_id, optional_parameters)
 	assert(res == 0)
@@ -154,8 +155,8 @@ func get_speed_modifier(pos: Vector2) -> float:
 	return 1.0 / speed_modifiers.get(get_cellv(world_to_map(pos)), 0.5)
 
 
-# Given position of a pikeman, this method will look up the indented direction of
-# movement for the pikeman.
+# Given the position of a pikeman, this method will look up its intended direction of
+# movement.
 func get_direction_for_pikeman(pos: Vector2) -> Vector2:
 	var map_coords: Vector2 = world_to_map(pos)
 
@@ -164,13 +165,15 @@ func get_direction_for_pikeman(pos: Vector2) -> Vector2:
 		point_position_to_id[map_coords]
 	)
 	# If dragon_position_id is inaccessible from current position, then Dijkstra map
-	# spits out -1
+	# spits out -1, and we don't move.
 	if target_ID == -1:
 		return Vector2(0, 0)
 	var target_coords: Vector2 = point_id_to_position[target_ID]
 	return map_coords.direction_to(target_coords)
 
 
+# Given the position of an archer, this method will look up its intended direction of
+# movement.
 func get_direction_for_archer(pos: Vector2) -> Vector2:
 	var map_coords: Vector2 = world_to_map(pos)
 
@@ -179,7 +182,7 @@ func get_direction_for_archer(pos: Vector2) -> Vector2:
 		point_position_to_id[map_coords]
 	)
 	# If dragon_position_id is inaccessible from current position, then Dijkstra map
-	# spits out -1
+	# spits out -1, and we don't move.
 	if target_ID == -1:
 		return Vector2(0, 0)
 	var target_coords: Vector2 = point_id_to_position[target_ID]
@@ -187,6 +190,7 @@ func get_direction_for_archer(pos: Vector2) -> Vector2:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Move the dragon on mouse click
 	if event is InputEventMouseButton:
 		var pos: Vector2 = get_local_mouse_position()
 		var dragon_position_id: KinematicBody2D = get_node("dragon")

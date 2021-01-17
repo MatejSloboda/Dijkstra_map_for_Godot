@@ -9,15 +9,15 @@ func _ready() -> void:
 	# We need to initialize the dijkstra map with appropriate graph for pathfinding.
 	# We will use "add_square_grid()" method to do this
 	var rect: Rect2 = self.get_used_rect()
-	# - First argument is the rectangle.
+	# - First argument is the dimensions on the map.
 	# - Second argument is terrain_id. We can ignore that one, since we will specify
 	# terrain later.
 	# - Last two arguments are costs for orthogonal/diagonal movement.
-	# - The method will return a dictionary of position to ID.
+	# - The method will return a dictionary of positions to IDs.
 	position_to_id = dijkstra_map.add_square_grid(rect, -1, 1.0, 1.4)
 
-	# Now we will itterate through the positions and change the terrain to appropriate
-	# value
+	# Now we will iterate through the positions and change the terrains to the
+	# appropriate values
 	for pos in position_to_id.keys():
 		var id: int = position_to_id[pos]
 		# We will simply use the IDs of the tiles in tileset
@@ -41,13 +41,14 @@ func redraw_movement_access(
 	var id: int = position_to_id[pos]
 	dijkstra_map.recalculate(id, {"terrain_weights": terrain_weights})
 
-	# Now highlight the tiles
-	# First we get all tiles with cost below "max_cost"
+	# Now highlight the tiles:
+	# 1. First we get all tiles with cost below "max_cost", aka all the tiles our knight
+	# can reach
 	var point_ids: PoolIntArray = dijkstra_map.get_all_points_with_cost_between(
 		0.0, max_cost
 	)
 
-	# Now we highlight all the tiles in the highlight tilemap
+	# 2. Now we highlight these tiles in the highlight tilemap
 	var highlight: TileMap = get_node("highlight")
 	highlight.clear()
 	for point_id in point_ids:

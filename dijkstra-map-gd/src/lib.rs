@@ -130,7 +130,7 @@ impl Interface {
         &mut self,
         _owner: &Reference,
         point_id: i32,
-        terrain_id: Option<i32>,
+        #[opt] terrain_id: Option<i32>,
     ) -> i64 {
         let terrain_id = terrain_id.unwrap_or(-1);
         let terrain: TerrainType = terrain_id.into();

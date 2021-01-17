@@ -1,5 +1,6 @@
 # Dijkstra Algorithm for Godot
 
+![](assets/icon.png)
 
 ## What it does
 

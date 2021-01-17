@@ -48,17 +48,20 @@ This will work for linux x64, macos x86 and windows x64 :
 5. Copy the `addons/dijkstra-map` directory into your project's `res://addons` directory.
 6. Open Godot and add path to the binary file into the `res://addons/dijkstra-map/Dijkstra_map_library/dijkstra_map_library.tres` GDNativeLibrary resource. This resource tells Godot which binary to use for which system. For more info see the [GDNative C example in Godot's documentation](https://docs.godotengine.org/en/stable/tutorials/plugins/gdnative/gdnative-c-example.html).
 
-## Getting Started
+## Examples
 
-After having followed [Installing](#Installing) instructions, open the Godot project:
-*  Run the main scene (F5)
-*  Open and run /Project_Example/project_example.tscn
-*  Open and run /Project_Example/Turn based.tscn
-Toy around with it, the code of project_example is heavily commented. Mess with the exports variable in demo.tscn (click on the root node and tweak the values at the top of the inspector)
+There are 3 examples scenes in the github repository:
+* `addons/dijkstra-map/visualization demo/visualisation.tscn`
 
-You can also look at the unit tests in Tests/unit/*
+    Also available through the [asset store installation](#method-1-from-the-asset-store-recommended)
+* `Project_Example/project_example.tscn`
+* `Project_Example/Turn based.tscn`
 
-To use the Dijkstra Map in your own projects, you can copy the /Dijkstra_map_library/ directory to the root of your project (warning: putting it to subdirectories may crash Godot, because paths in GDNativeLibrary resource are not relative).
+    The `knight` node contains exports variable that can be tweaked
+
+And heavily commented code in `Project_Example/dependancy/`.
+
+You can also look at the unit tests in `Tests/unit/*`.
 
 ## Features && How-To's
 

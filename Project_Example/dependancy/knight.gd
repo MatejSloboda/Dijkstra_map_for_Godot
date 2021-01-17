@@ -7,12 +7,10 @@ export var speed: float = 30.0
 var path: Array = []
 
 
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	pass
 
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	if ! path.empty():
 		var vec: Vector2 = (path[-1] - self.position).normalized()

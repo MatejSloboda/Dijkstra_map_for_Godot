@@ -124,38 +124,22 @@ func _on_visualisation_selection_item_selected(index):
 [sub_resource type="GDScript" id=4]
 script/source = "extends ItemList
 
-# Declare member variables here. Examples:
-# var a = 2
-# var b = \"text\"
 
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	add_item(\"smooth terrain\")
 	add_item(\"rough terrain\")
 	add_item(\"wall\")
 	add_item(\"origin point\")
-
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-#func _process(delta):
-#	pass
 "
 
 [sub_resource type="GDScript" id=5]
 script/source = "extends ItemList
 
-# Declare member variables here. Examples:
-# var a = 2
-# var b = \"text\"
 
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	add_item(\"_hide_\")
 	add_item(\"cost map\")
 	add_item(\"direction map\")
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-#func _process(delta):
-#	pass
 "
 
 [node name="visualisation_demo" type="Node2D"]

@@ -1,6 +1,6 @@
 extends TileMap
 
-# warning-ignore:unused_class_variable
+
 var dijkstra_map_for_pikemen: DijkstraMap
 var dijkstra_map_for_archers: DijkstraMap
 
@@ -9,7 +9,6 @@ var point_position_to_id: Dictionary = {}
 var speed_modifiers: Dictionary = {}
 
 
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	#we create our Dijkstra maps. We will need 2 - one for archers, one for pikemen
 	dijkstra_map_for_archers = DijkstraMap.new()
@@ -59,15 +58,14 @@ func _ready() -> void:
 			var pos_of_neighbour: Vector2 = pos + offset
 			var id_of_neighbour: int = point_position_to_id.get(pos_of_neighbour, -1)
 			#we skip adding connection if point doesnt exist
-#			if id_of_neighbour == -1:
-#				continue
+			if id_of_neighbour == -1:
+				continue
 			#now we make the connection.
 			#Note: last parameter specifies whether to also make the reverse connection too.
 			#since we loop through all points and their neighbours in both directions anyway, this would be unnecessary. 
 			dijkstra_map_for_archers.connect_points(
 				id_of_current_tile, id_of_neighbour, cost, false
 			)
-			#dijkstra_map_for_pikemen.connect_points(id_of_current_tile,id_of_neighbour,cost,false)
 
 		#we do the same for diagonal tiles, except cost is further multiplied by sqrt(2)
 		cost = sqrt(2.0)
@@ -80,7 +78,6 @@ func _ready() -> void:
 			dijkstra_map_for_archers.connect_points(
 				id_of_current_tile, id_of_neighbour, cost, false
 			)
-			#dijkstra_map_for_pikemen.connect_points(id_of_current_tile,id_of_neighbour,cost,false)
 
 	#now we will duplicate the points and connections into dijkstra_map_for_pikemen
 	#This way we dont have to manually add them in, each time we need independent dijkstra map with the same graph.
@@ -126,7 +123,6 @@ func recalculate_dijkstra_maps() -> void:
 	var stand_over_here: PoolIntArray = dijkstra_map_for_archers.get_all_points_with_cost_between(4.0, 5.0)
 	var cost_map: Dictionary = dijkstra_map_for_archers.get_cost_map()
 	var direction_map: Dictionary = dijkstra_map_for_archers.get_direction_map()
-#	breakpoint
 	optional_parameters = {"terrain_weights": speed_modifiers, "input_is_destination": true}
 	#and we pass those points as new destinations for the archers to walk towards
 	res = dijkstra_map_for_archers.recalculate(stand_over_here, {"terrain_weights": speed_modifiers})

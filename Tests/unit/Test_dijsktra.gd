@@ -152,7 +152,6 @@ func test_connect_point_unilateral() -> void:
 func test_connect_point_bilateral() -> void:
 	pending()
 	map.connect_points(1, 2, 1.0, true)
-	#map.recalculate_for_target(1,INF,false)
 	map.recalculate(1, {'input_is_destination': true})
 
 	assert_true(map.has_point(1))

@@ -5,12 +5,9 @@ var id_to_pos: Dictionary = {}
 var pos_to_id: Dictionary = {}
 
 var tile_draw: int = 0
-
-# warning-ignore:unused_class_variable
 var terrain_weights: Dictionary = {0: 1.0, 1: 4.0, 2: INF, 3: 1.0}
 
 
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	var event: InputEventMouseButton = InputEventMouseButton.new()
 	event.button_index = BUTTON_LEFT

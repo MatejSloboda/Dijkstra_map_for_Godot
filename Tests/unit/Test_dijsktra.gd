@@ -3,11 +3,11 @@ extends "res://addons/gut/test.gd"
 """
 
 var map: DijkstraMap
-var res
-const _len = 5
+var res: int
+const _len: int = 5
 
 
-func before_each():
+func before_each() -> void:
 	gut.p("#-----Start Test-----#")
 	map = DijkstraMap.new()
 	map.add_point(0)
@@ -15,11 +15,11 @@ func before_each():
 	map.add_point(2)
 
 
-func after_each():
+func after_each() -> void:
 	gut.p("#------End Test------#")
 
 
-func test_add_point():
+func test_add_point() -> void:
 	res = map.add_point(3, 0)
 	assert_eq(res, OK, "you can add a point once")
 	res = map.add_point(3, 0)
@@ -28,7 +28,7 @@ func test_add_point():
 	assert_eq(res, FAILED, "you cannot even change the terrain this way")
 
 
-func test_set_terrain():
+func test_set_terrain() -> void:
 	res = map.set_terrain_for_point(0, 1)
 	assert_eq(res, OK, "you can set the point terrain")
 	assert_eq(map.get_terrain_for_point(0), 1, "the terrain corresponds")
@@ -42,13 +42,13 @@ func test_set_terrain():
 	assert_eq(map.get_terrain_for_point(0), -1, "the default terrain corresponds")
 
 
-func test_has_points():
+func test_has_points() -> void:
 	assert_true(map.has_point(1))
 	assert_true(map.has_point(2))
 	assert_false(map.has_point(3))
 
 
-func test_connect_points():
+func test_connect_points() -> void:
 	res = map.connect_points(1, 3, 1.0, false)
 	assert_eq(res, FAILED, "id absent should failed")
 
@@ -59,7 +59,7 @@ func test_connect_points():
 	assert_eq(res, OK, "id both exist, connects ok")
 
 
-func test_connect_defaut_args():
+func test_connect_defaut_args() -> void:
 	res = map.connect_points(1, 3)
 	assert_eq(res, FAILED, "id absent should failed")
 
@@ -70,7 +70,7 @@ func test_connect_defaut_args():
 	assert_eq(res, OK, "id both exist, connects ok")
 
 
-func test_connect_points_recalculate():
+func test_connect_points_recalculate() -> void:
 	gut.p("reversed, unilateral : point as target from which you start")
 	res = map.connect_points(1, 2, 1.0, false)
 	assert_eq(res, OK, "connected 1 -> 2 succesfully")
@@ -94,14 +94,14 @@ func test_connect_points_recalculate():
 	gut.p(map.get_cost_map())
 
 
-func test_recalculate_fails_if_nonsensical_key():
+func test_recalculate_fails_if_nonsensical_key() -> void:
 	res = map.recalculate(0, {"some str": 4})
 	assert_eq(res, 1)
 
 
-func test_connect_points_recalculate_default_args():
+func test_connect_points_recalculate_default_args() -> void:
 	res = map.connect_points(2, 1, 1.0, false)
-	var other_res = map.recalculate(1)
+	var other_res: int = map.recalculate(1)
 	assert_eq(other_res, 0, "recalculate successful")
 
 	res = map.get_cost_at_point(1)
@@ -112,7 +112,7 @@ func test_connect_points_recalculate_default_args():
 	gut.p(map.get_cost_map())
 
 
-func test_disable_enables():
+func test_disable_enables() -> void:
 	map.add_point(3, 0)
 	map.connect_points(1, 2, 1.0, false)
 	map.connect_points(2, 3, 1.0, false)
@@ -132,7 +132,7 @@ func test_disable_enables():
 	assert_eq(map.get_cost_at_point(3), 2.0, "back to ok")
 
 
-func test_connect_point_unilateral():
+func test_connect_point_unilateral() -> void:
 	map.connect_points(1, 2, 1.0, false)
 	map.connect_points(2, 3, 1.0, false)
 
@@ -149,7 +149,7 @@ func test_connect_point_unilateral():
 	assert_eq(map.get_cost_at_point(2), 1.0, "")
 
 
-func test_connect_point_bilateral():
+func test_connect_point_bilateral() -> void:
 	pending()
 	map.connect_points(1, 2, 1.0, true)
 	#map.recalculate_for_target(1,INF,false)
@@ -170,7 +170,7 @@ func test_connect_point_bilateral():
 
 
 
-func test_get_points_with_cost_between():
+func test_get_points_with_cost_between() -> void:
 	pending()
 	map = DijkstraMap.new()
 	#connect 10 points cost ranges from 0 to 10.0
@@ -184,9 +184,9 @@ func test_get_points_with_cost_between():
 	
 	
 
-func test_duplicate_graph_from_works():
-	var d = DijkstraMap.new()
-	var copy = DijkstraMap.new()
+func test_duplicate_graph_from_works() -> void:
+	var d: DijkstraMap = DijkstraMap.new()
+	var copy: DijkstraMap = DijkstraMap.new()
 	d.add_point(1)
 	d.add_point(2)
 	d.add_point(3)

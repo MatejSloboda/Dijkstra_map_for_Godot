@@ -129,7 +129,7 @@ script/source = "extends ItemList
 # var b = \"text\"
 
 # Called when the node enters the scene tree for the first time.
-func _ready():
+func _ready() -> void:
 	add_item(\"smooth terrain\")
 	add_item(\"rough terrain\")
 	add_item(\"wall\")
@@ -149,7 +149,7 @@ script/source = "extends ItemList
 # var b = \"text\"
 
 # Called when the node enters the scene tree for the first time.
-func _ready():
+func _ready() -> void:
 	add_item(\"_hide_\")
 	add_item(\"cost map\")
 	add_item(\"direction map\")

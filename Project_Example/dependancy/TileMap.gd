@@ -162,7 +162,7 @@ func get_direction_for_pikeman(pos: Vector2) -> Vector2:
 
 	# We look up in the Dijkstra map where the pikeman should go next
 	var target_ID: int = dijkstra_map_for_pikemen.get_direction_at_point(
-		point_position_to_id[map_coords]
+		point_position_to_id.get(map_coords, 0)
 	)
 	# If dragon_position_id is inaccessible from current position, then Dijkstra map
 	# spits out -1, and we don't move.
@@ -179,7 +179,7 @@ func get_direction_for_archer(pos: Vector2) -> Vector2:
 
 	# We look up in the Dijkstra map where the archer should go next
 	var target_ID: int = dijkstra_map_for_archers.get_direction_at_point(
-		point_position_to_id[map_coords]
+		point_position_to_id.get(map_coords, 0)
 	)
 	# If dragon_position_id is inaccessible from current position, then Dijkstra map
 	# spits out -1, and we don't move.

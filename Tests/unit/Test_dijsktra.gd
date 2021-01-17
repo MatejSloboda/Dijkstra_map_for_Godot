@@ -36,6 +36,10 @@ func test_set_terrain():
 	res = map.set_terrain_for_point(0, 2)
 	assert_eq(res, OK, "has much as you want")
 	assert_eq(map.get_terrain_for_point(0), 2, "the terrain corresponds")
+	
+	res = map.set_terrain_for_point(0) # default terrain
+	assert_eq(res, OK, "has much as you want")
+	assert_eq(map.get_terrain_for_point(0), -1, "the default terrain corresponds")
 
 
 func test_has_points():

@@ -3,18 +3,17 @@ extends TileMap
 var dijkstramap: DijkstraMap
 var id_to_pos: Dictionary = {}
 var pos_to_id: Dictionary = {}
-
 var tile_draw: int = 0
 var terrain_weights: Dictionary = {0: 1.0, 1: 4.0, 2: INF, 3: 1.0}
+var dragging: bool = false
 
 
 func _ready() -> void:
 	var event: InputEventMouseButton = InputEventMouseButton.new()
 	event.button_index = BUTTON_LEFT
 	InputMap.add_action("left_mouse_button")
-	InputMap.action_add_event("left_mouse_button",event)
-	
-	
+	InputMap.action_add_event("left_mouse_button", event)
+
 	dijkstramap = DijkstraMap.new()
 	var bmp: Rect2 = Rect2(0, 0, 23, 19)
 	pos_to_id = dijkstramap.add_square_grid(bmp)
@@ -31,7 +30,7 @@ func recalculate() -> void:
 		target_ids.push_back(pos_to_id[pos])
 	dijkstramap.recalculate(target_ids, {"terrain_weights": terrain_weights})
 
-	#visualize
+	# Visualize
 	var costs: Dictionary = dijkstramap.get_cost_map()
 	var costgrid: TileMap = get_node("costs")
 	costgrid.clear()
@@ -68,15 +67,12 @@ func recalculate() -> void:
 
 func update_terrain_ids() -> void:
 	for id in id_to_pos.keys():
-		var pos: Vector2= id_to_pos[id]
+		var pos: Vector2 = id_to_pos[id]
 		dijkstramap.set_terrain_for_point(id, self.get_cellv(pos))
 
 
 func _on_terrain_selection_item_selected(index: int) -> void:
 	tile_draw = index
-
-
-var dragging: bool = false
 
 
 func _unhandled_input(event: InputEvent) -> void:

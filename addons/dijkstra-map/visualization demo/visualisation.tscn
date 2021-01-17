@@ -7,16 +7,12 @@
 [sub_resource type="GDScript" id=1]
 script/source = "extends Node2D
 
-	
-
 
 func _on_visualisation_selection_item_selected(index):
-	var costmap=get_node(\"gridmap/costs\")
-	var dirmap=get_node(\"gridmap/directions\")
-	costmap.visible=index==1
-	dirmap.visible=index==2
-	
-	
+	var costmap = get_node(\"gridmap/costs\")
+	var dirmap = get_node(\"gridmap/directions\")
+	costmap.visible = index == 1
+	dirmap.visible = index == 2
 "
 
 [sub_resource type="TileSet" id=2]

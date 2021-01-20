@@ -1,25 +1,24 @@
 extends Node2D
 
-export var energy = 10.0
-export var terrain_weights = {0: 1.0, 1: INF, 2: 3.0, 3: 0.7}  #grass  #water  #bushes  #road
-export var speed = 30.0
+export var energy: float = 10.0
+#grass  #water  #bushes  #road
+export var terrain_weights: Dictionary = {0: 1.0, 1: INF, 2: 3.0, 3: 0.7}
+export var speed: float = 30.0
 
-var path = []
+var path: Array = []
 
 
-# Called when the node enters the scene tree for the first time.
-func _ready():
+func _ready() -> void:
 	pass
 
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta):
+func _process(delta: float) -> void:
 	if ! path.empty():
-		var vec = (path[-1] - self.position).normalized()
-		#speed modifier
-		var map = get_parent()
-		var terrain = map.get_cellv(map.world_to_map(self.position))
-		var speed_modifier = 1.0 / terrain_weights.get(terrain, 1.0)
+		var vec: Vector2 = (path[-1] - self.position).normalized()
+		# Speed modifier
+		var map: TileMap = get_parent()
+		var terrain: int = map.get_cellv(map.world_to_map(self.position))
+		var speed_modifier: float = 1.0 / terrain_weights.get(terrain, 1.0)
 		self.position += vec * delta * speed * speed_modifier
 		if self.position.distance_to(path[-1]) <= delta * speed * speed_modifier:
 			self.position = path.pop_back()
@@ -28,9 +27,9 @@ func _process(delta):
 			stopped()
 
 
-#this function is called when movement stops
-func stopped():
-	var map = get_parent()
+# This function is called when movement stops
+func stopped() -> void:
+	var map: TileMap = get_parent()
 	if ! map:
 		return
 	map.redraw_movement_access(self.position, energy, terrain_weights)

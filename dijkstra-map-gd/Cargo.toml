@@ -11,3 +11,6 @@ crate-type = ["cdylib"]
 fnv = "1.0.7"
 gdnative = "0.9"
 dijkstra_map = { path = "../dijkstra-map" }
+
+[build-dependencies]
+gdnative-doc = "0.0.4"

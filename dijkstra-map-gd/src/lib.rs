@@ -171,7 +171,7 @@ impl Interface {
     /// var dijkstra_map = DijkstraMap.new()
     /// dijkstra_map.add_point(0)
     /// dijkstra_map.add_point(1)
-    /// assert(dijkstra_map.get_available_point_id() == 2)
+    /// assert_eq(dijkstra_map.get_available_point_id(), 2)
     /// ```
     pub fn get_available_point_id(&mut self, _owner: &Reference) -> i32 {
         self.dijkstra.get_available_id(None).into()
@@ -218,9 +218,9 @@ impl Interface {
     /// var dijkstra_map = DijkstraMap.new()
     /// dijkstra_map.add_point(0, 2)
     /// dijkstra_map.set_terrain_for_point(0, 1)
-    /// assert(dijkstra_map.get_terrain_for_point(0) == 1)
+    /// assert_eq(dijkstra_map.get_terrain_for_point(0), 1)
     /// dijkstra_map.set_terrain_for_point(0)
-    /// assert(dijkstra_map.get_terrain_for_point(0) == -1)
+    /// assert_eq(dijkstra_map.get_terrain_for_point(0), -1)
     /// ```
     pub fn set_terrain_for_point(
         &mut self,
@@ -247,10 +247,10 @@ impl Interface {
     /// var dijkstra_map = DijkstraMap.new()
     /// dijkstra_map.add_point(0, 1)
     /// dijkstra_map.add_point(1, -1)
-    /// assert(dijkstra_map.get_terrain_for_point(0) == 1)
-    /// assert(dijkstra_map.get_terrain_for_point(1) == -1)
+    /// assert_eq(dijkstra_map.get_terrain_for_point(0), 1)
+    /// assert_eq(dijkstra_map.get_terrain_for_point(1), -1)
     /// # `2` is not in the map, so this returns `-1`
-    /// assert(dijkstra_map.get_terrain_for_point(2) == -1)
+    /// assert_eq(dijkstra_map.get_terrain_for_point(2), -1)
     /// ```
     pub fn get_terrain_for_point(&mut self, _owner: &Reference, point_id: i32) -> i32 {
         // TODO : TerrainType::DefaultTerrain also convert into -1, so this function cannot separate points that exists and have a default terrain, and those that do not exist.
@@ -273,8 +273,8 @@ impl Interface {
     /// ```gdscript
     /// var dijkstra_map = DijkstraMap.new()
     /// dijkstra_map.add_point(0)
-    /// assert(dijkstra_map.remove_point(0) == 0)
-    /// assert(dijkstra_map.remove_point(0) == 1)
+    /// assert_eq(dijkstra_map.remove_point(0), 0)
+    /// assert_eq(dijkstra_map.remove_point(0), 1)
     /// ```
     pub fn remove_point(&mut self, _owner: &Reference, point_id: i32) -> i64 {
         let res = self.dijkstra.remove_point(point_id.into());
@@ -298,8 +298,8 @@ impl Interface {
     /// ```gdscript
     /// var dijkstra_map = DijkstraMap.new()
     /// dijkstra_map.add_point(0)
-    /// assert(dijkstra_map.disable_point(0) == 0)
-    /// assert(dijkstra_map.disable_point(1) == 1)
+    /// assert_eq(dijkstra_map.disable_point(0), 0)
+    /// assert_eq(dijkstra_map.disable_point(1), 1)
     /// ```
     pub fn disable_point(&mut self, _owner: &Reference, point_id: i32) -> i64 {
         let res = self.dijkstra.disable_point(point_id.into());
@@ -319,8 +319,8 @@ impl Interface {
     /// ```gdscript
     /// var dijkstra_map = DijkstraMap.new()
     /// dijkstra_map.add_point(0)
-    /// assert(dijkstra_map.enable_point(0) == 0)
-    /// assert(dijkstra_map.enable_point(1) == 1)
+    /// assert_eq(dijkstra_map.enable_point(0), 0)
+    /// assert_eq(dijkstra_map.enable_point(1), 1)
     /// ```
     pub fn enable_point(&mut self, _owner: &Reference, point_id: i32) -> i64 {
         let res = self.dijkstra.enable_point(point_id.into());
@@ -370,7 +370,7 @@ impl Interface {
     /// # produces the graph :
     /// # 0 <---> 1 ----> 2
     /// #    2.0     1.0
-    /// assert(dijkstra_map.connect_points(1, 3) == 1) # 3 does not exists in the map
+    /// assert_eq(dijkstra_map.connect_points(1, 3), 1) # 3 does not exists in the map
     /// ```
     pub fn connect_points(
         &mut self,
@@ -409,7 +409,7 @@ impl Interface {
     /// dijkstra_map.add_point(1)
     /// dijkstra_map.connect_points(0, 1)
     /// dijkstra_map.remove_connection(0, 1)
-    /// assert(dijkstra_map.remove_connection(0, 2) == 1) # 2 does not exists in the map
+    /// assert_eq(dijkstra_map.remove_connection(0, 2), 1) # 2 does not exists in the map
     /// dijkstra_map.connect_points(0, 1)
     /// # only removes connection from 0 to 1
     /// dijkstra_map.remove_connection(0, 1, false)
@@ -463,9 +463,9 @@ impl Interface {
     /// dijkstra_map.add_point(2)
     /// dijkstra_map.connect_points(0, 1)
     /// dijkstra_map.recalculate(0)
-    /// assert(dijkstra_map.get_direction_at_point(0) == 0)
-    /// assert(dijkstra_map.get_direction_at_point(1) == 0)
-    /// assert(dijkstra_map.get_direction_at_point(2) == -1)
+    /// assert_eq(dijkstra_map.get_direction_at_point(0), 0)
+    /// assert_eq(dijkstra_map.get_direction_at_point(1), 0)
+    /// assert_eq(dijkstra_map.get_direction_at_point(2), -1)
     /// ```
     pub fn get_direction_at_point(&mut self, _owner: &Reference, point_id: i32) -> i32 {
         self.dijkstra
@@ -488,9 +488,9 @@ impl Interface {
     /// dijkstra_map.add_point(2)
     /// dijkstra_map.connect_points(0, 1)
     /// dijkstra_map.recalculate(0)
-    /// assert(dijkstra_map.get_cost_at_point(0) == 0.0)
-    /// assert(dijkstra_map.get_cost_at_point(1) == 1.0)
-    /// assert(dijkstra_map.get_cost_at_point(2) == INF)
+    /// assert_eq(dijkstra_map.get_cost_at_point(0), 0.0)
+    /// assert_eq(dijkstra_map.get_cost_at_point(1), 1.0)
+    /// assert_eq(dijkstra_map.get_cost_at_point(2), INF)
     /// ```
     pub fn get_cost_at_point(&mut self, _owner: &Reference, point_id: i32) -> f32 {
         self.dijkstra.get_cost_at_point(point_id.into()).into()
@@ -549,16 +549,14 @@ impl Interface {
     /// dijkstra_map.connect_points(1, 2, 10.0)
     /// var optional_params = {
     ///     "terrain_weights": { 0: 1.0, 1: 2.0 },
-    ///     "termination_points": null,
     ///     "input_is_destination": true,
     ///     "maximum_cost": 2.0,
-    ///     "initial_costs": null,
     /// }
     /// dijkstra_map.recalculate(0, optional_params)
-    /// assert(dijkstra_map.get_direction_at_point(0) == 0)
-    /// assert(dijkstra_map.get_direction_at_point(1) == 0)
+    /// assert_eq(dijkstra_map.get_direction_at_point(0), 0)
+    /// assert_eq(dijkstra_map.get_direction_at_point(1), 0)
     /// # 2 is too far from 0, so because we set "maximum_cost" to 2.0, it is innaccessible.
-    /// assert(dijkstra_map.get_direction_at_point(2) == -1)
+    /// assert_eq(dijkstra_map.get_direction_at_point(2), -1)
     /// ```
     pub fn recalculate(
         &mut self,
@@ -861,7 +859,7 @@ impl Interface {
     /// dijkstra_map.add_point(2)
     /// dijkstra_map.connect_points(0, 1)
     /// dijkstra_map.recalculate(0)
-    /// assert(Array(dijkstra_map.get_direction_at_points(PoolIntArray([0, 1, 2]))) == [0, 0, -1])
+    /// assert_eq(Array(dijkstra_map.get_direction_at_points(PoolIntArray([0, 1, 2]))), [0, 0, -1])
     /// ```
     pub fn get_direction_at_points(
         &mut self,
@@ -897,7 +895,7 @@ impl Interface {
     /// dijkstra_map.add_point(2)
     /// dijkstra_map.connect_points(0, 1)
     /// dijkstra_map.recalculate(0)
-    /// assert(Array(dijkstra_map.get_cost_at_points(PoolIntArray([0, 1, 2]))) == [0.0, 1.0, INF])
+    /// assert_eq(Array(dijkstra_map.get_cost_at_points(PoolIntArray([0, 1, 2]))), [0.0, 1.0, INF])
     /// ```
     pub fn get_cost_at_points(
         &mut self,
@@ -935,7 +933,7 @@ impl Interface {
     /// var cost_map = { 0: 0.0, 1: 1.0 }
     /// var computed_cost_map = dijkstra_map.get_cost_map()
     /// for id in computed_cost_map.keys():
-    ///     assert(computed_cost_map[id] == cost_map[id])
+    ///     assert_eq(computed_cost_map[id], cost_map[id])
     /// ```
     pub fn get_cost_map(&mut self, _owner: &Reference) -> Dictionary {
         let dict = Dictionary::new();
@@ -968,7 +966,7 @@ impl Interface {
     /// var direction_map = { 0: 0, 1: 0 }
     /// var computed_direction_map = dijkstra_map.get_direction_map()
     /// for id in computed_direction_map.keys():
-    ///     assert(computed_direction_map[id] == direction_map[id])
+    ///     assert_eq(computed_direction_map[id], direction_map[id])
     /// ```
     pub fn get_direction_map(&mut self, _owner: &Reference) -> Dictionary {
         let dict = Dictionary::new();
@@ -994,7 +992,7 @@ impl Interface {
     /// dijkstra_map.add_point(2)
     /// dijkstra_map.connect_points(0, 1)
     /// dijkstra_map.recalculate(0)
-    /// assert(Array(dijkstra_map.get_all_points_with_cost_between(0.5, 1.5)) == [1])
+    /// assert_eq(Array(dijkstra_map.get_all_points_with_cost_between(0.5, 1.5)), [1])
     /// ```
     pub fn get_all_points_with_cost_between(
         &mut self,

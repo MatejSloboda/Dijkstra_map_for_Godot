@@ -118,7 +118,7 @@ Returns the first positive available id.
 var dijkstra_map = DijkstraMap.new()
 dijkstra_map.add_point(0)
 dijkstra_map.add_point(1)
-assert(dijkstra_map.get_available_point_id() == 2)
+assert_eq(dijkstra_map.get_available_point_id(), 2)
 ```
 ### <a id="func-add_point"></a>func add_point(point_id: [int], terrain_type: [int] (opt)) -> [int]
 ________
@@ -153,9 +153,9 @@ If the given id does not exists in the map, [`FAILED`] is returned, else
 var dijkstra_map = DijkstraMap.new()
 dijkstra_map.add_point(0, 2)
 dijkstra_map.set_terrain_for_point(0, 1)
-assert(dijkstra_map.get_terrain_for_point(0) == 1)
+assert_eq(dijkstra_map.get_terrain_for_point(0), 1)
 dijkstra_map.set_terrain_for_point(0)
-assert(dijkstra_map.get_terrain_for_point(0) == -1)
+assert_eq(dijkstra_map.get_terrain_for_point(0), -1)
 ```
 ### <a id="func-get_terrain_for_point"></a>func get_terrain_for_point(point_id: [int]) -> [int]
 ________
@@ -170,10 +170,10 @@ map.
 var dijkstra_map = DijkstraMap.new()
 dijkstra_map.add_point(0, 1)
 dijkstra_map.add_point(1, -1)
-assert(dijkstra_map.get_terrain_for_point(0) == 1)
-assert(dijkstra_map.get_terrain_for_point(1) == -1)
+assert_eq(dijkstra_map.get_terrain_for_point(0), 1)
+assert_eq(dijkstra_map.get_terrain_for_point(1), -1)
 # `2` is not in the map, so this returns `-1`
-assert(dijkstra_map.get_terrain_for_point(2) == -1)
+assert_eq(dijkstra_map.get_terrain_for_point(2), -1)
 ```
 ### <a id="func-remove_point"></a>func remove_point(point_id: [int]) -> [int]
 ________
@@ -188,8 +188,8 @@ Returns [`FAILED`] if the point does not exists in the map, else
 ```gdscript
 var dijkstra_map = DijkstraMap.new()
 dijkstra_map.add_point(0)
-assert(dijkstra_map.remove_point(0) == 0)
-assert(dijkstra_map.remove_point(0) == 1)
+assert_eq(dijkstra_map.remove_point(0), 0)
+assert_eq(dijkstra_map.remove_point(0), 1)
 ```
 ### <a id="func-has_point"></a>func has_point(point_id: [int]) -> [bool]
 ________
@@ -208,8 +208,8 @@ Returns [`FAILED`] if the point does not exists in the map, else [`OK`].
 ```gdscript
 var dijkstra_map = DijkstraMap.new()
 dijkstra_map.add_point(0)
-assert(dijkstra_map.disable_point(0) == 0)
-assert(dijkstra_map.disable_point(1) == 1)
+assert_eq(dijkstra_map.disable_point(0), 0)
+assert_eq(dijkstra_map.disable_point(1), 1)
 ```
 ### <a id="func-enable_point"></a>func enable_point(point_id: [int]) -> [int]
 ________
@@ -226,8 +226,8 @@ Points are enabled by default.
 ```gdscript
 var dijkstra_map = DijkstraMap.new()
 dijkstra_map.add_point(0)
-assert(dijkstra_map.enable_point(0) == 0)
-assert(dijkstra_map.enable_point(1) == 1)
+assert_eq(dijkstra_map.enable_point(0), 0)
+assert_eq(dijkstra_map.enable_point(1), 1)
 ```
 ### <a id="func-is_point_disabled"></a>func is_point_disabled(point_id: [int]) -> [bool]
 ________
@@ -270,7 +270,7 @@ dijkstra_map.connect_points(1, 2, 1.0, false)
 # produces the graph :
 # 0 <---> 1 ----> 2
 #    2.0     1.0
-assert(dijkstra_map.connect_points(1, 3) == 1) # 3 does not exists in the map
+assert_eq(dijkstra_map.connect_points(1, 3), 1) # 3 does not exists in the map
 ```
 ### <a id="func-remove_connection"></a>func remove_connection(source: [int], target: [int], bidirectional: [bool] (opt)) -> [int]
 ________
@@ -292,7 +292,7 @@ dijkstra_map.add_point(0)
 dijkstra_map.add_point(1)
 dijkstra_map.connect_points(0, 1)
 dijkstra_map.remove_connection(0, 1)
-assert(dijkstra_map.remove_connection(0, 2) == 1) # 2 does not exists in the map
+assert_eq(dijkstra_map.remove_connection(0, 2), 1) # 2 does not exists in the map
 dijkstra_map.connect_points(0, 1)
 # only removes connection from 0 to 1
 dijkstra_map.remove_connection(0, 1, false)
@@ -332,9 +332,9 @@ dijkstra_map.add_point(1)
 dijkstra_map.add_point(2)
 dijkstra_map.connect_points(0, 1)
 dijkstra_map.recalculate(0)
-assert(dijkstra_map.get_direction_at_point(0) == 0)
-assert(dijkstra_map.get_direction_at_point(1) == 0)
-assert(dijkstra_map.get_direction_at_point(2) == -1)
+assert_eq(dijkstra_map.get_direction_at_point(0), 0)
+assert_eq(dijkstra_map.get_direction_at_point(1), 0)
+assert_eq(dijkstra_map.get_direction_at_point(2), -1)
 ```
 ### <a id="func-get_cost_at_point"></a>func get_cost_at_point(point_id: [int]) -> [float]
 ________
@@ -352,9 +352,9 @@ dijkstra_map.add_point(1)
 dijkstra_map.add_point(2)
 dijkstra_map.connect_points(0, 1)
 dijkstra_map.recalculate(0)
-assert(dijkstra_map.get_cost_at_point(0) == 0.0)
-assert(dijkstra_map.get_cost_at_point(1) == 1.0)
-assert(dijkstra_map.get_cost_at_point(2) == INF)
+assert_eq(dijkstra_map.get_cost_at_point(0), 0.0)
+assert_eq(dijkstra_map.get_cost_at_point(1), 1.0)
+assert_eq(dijkstra_map.get_cost_at_point(2), INF)
 ```
 ### <a id="func-recalculate"></a>func recalculate(origin: [Variant], optional_params: [Dictionary] (opt)) -> [int]
 ________
@@ -408,16 +408,14 @@ dijkstra_map.connect_points(0, 1)
 dijkstra_map.connect_points(1, 2, 10.0)
 var optional_params = {
     "terrain_weights": { 0: 1.0, 1: 2.0 },
-    "termination_points": null,
     "input_is_destination": true,
     "maximum_cost": 2.0,
-    "initial_costs": null,
 }
 dijkstra_map.recalculate(0, optional_params)
-assert(dijkstra_map.get_direction_at_point(0) == 0)
-assert(dijkstra_map.get_direction_at_point(1) == 0)
+assert_eq(dijkstra_map.get_direction_at_point(0), 0)
+assert_eq(dijkstra_map.get_direction_at_point(1), 0)
 # 2 is too far from 0, so because we set "maximum_cost" to 2.0, it is innaccessible.
-assert(dijkstra_map.get_direction_at_point(2) == -1)
+assert_eq(dijkstra_map.get_direction_at_point(2), -1)
 ```
 ### <a id="func-get_direction_at_points"></a>func get_direction_at_points(points: [PoolIntArray]) -> [PoolIntArray]
 ________
@@ -436,7 +434,7 @@ dijkstra_map.add_point(1)
 dijkstra_map.add_point(2)
 dijkstra_map.connect_points(0, 1)
 dijkstra_map.recalculate(0)
-assert(Array(dijkstra_map.get_direction_at_points(PoolIntArray([0, 1, 2]))) == [0, 0, -1])
+assert_eq(Array(dijkstra_map.get_direction_at_points(PoolIntArray([0, 1, 2]))), [0, 0, -1])
 ```
 ### <a id="func-get_cost_at_points"></a>func get_cost_at_points(points: [PoolIntArray]) -> [PoolRealArray]
 ________
@@ -455,7 +453,7 @@ dijkstra_map.add_point(1)
 dijkstra_map.add_point(2)
 dijkstra_map.connect_points(0, 1)
 dijkstra_map.recalculate(0)
-assert(Array(dijkstra_map.get_cost_at_points(PoolIntArray([0, 1, 2]))) == [0.0, 1.0, INF])
+assert_eq(Array(dijkstra_map.get_cost_at_points(PoolIntArray([0, 1, 2]))), [0.0, 1.0, INF])
 ```
 ### <a id="func-get_cost_map"></a>func get_cost_map() -> [Dictionary]
 ________
@@ -477,7 +475,7 @@ dijkstra_map.recalculate(0)
 var cost_map = { 0: 0.0, 1: 1.0 }
 var computed_cost_map = dijkstra_map.get_cost_map()
 for id in computed_cost_map.keys():
-    assert(computed_cost_map[id] == cost_map[id])
+    assert_eq(computed_cost_map[id], cost_map[id])
 ```
 ### <a id="func-get_direction_map"></a>func get_direction_map() -> [Dictionary]
 ________
@@ -502,7 +500,7 @@ dijkstra_map.recalculate(0)
 var direction_map = { 0: 0, 1: 0 }
 var computed_direction_map = dijkstra_map.get_direction_map()
 for id in computed_direction_map.keys():
-    assert(computed_direction_map[id] == direction_map[id])
+    assert_eq(computed_direction_map[id], direction_map[id])
 ```
 ### <a id="func-get_all_points_with_cost_between"></a>func get_all_points_with_cost_between(min_cost: [float], max_cost: [float]) -> [PoolIntArray]
 ________
@@ -520,7 +518,7 @@ dijkstra_map.add_point(1)
 dijkstra_map.add_point(2)
 dijkstra_map.connect_points(0, 1)
 dijkstra_map.recalculate(0)
-assert(Array(dijkstra_map.get_all_points_with_cost_between(0.5, 1.5)) == [1])
+assert_eq(Array(dijkstra_map.get_all_points_with_cost_between(0.5, 1.5)), [1])
 ```
 ### <a id="func-get_shortest_path_from_point"></a>func get_shortest_path_from_point(point_id: [int]) -> [PoolIntArray]
 ________

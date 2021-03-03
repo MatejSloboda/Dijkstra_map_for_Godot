@@ -1,5 +1,3 @@
-
-
 Implementation of [Dijkstra's algorithm](https://en.wikipedia.org/wiki/Dijkstra's_algorithm) in Rust.
 
 `DijkstraMap` is a general-purpose pathfinding class. It is intended

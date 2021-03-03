@@ -16,14 +16,14 @@ Interface exported to Godot
     the paths. [recalculate](#func-recalculate) support a variety of
     inputs and optional arguments that affect the end result.
     
-    Unlike [`AStar`], which calculates a single shortest path between
+    Unlike [AStar], which calculates a single shortest path between
     two given points, `DijkstraMap` supports multiple origin points,
     multiple destination points, with initial priorities, both
     directions, custom terrain weights and ability to terminate
     the algorithm early based on distance or specified termination
     points.
     
-    Performance is expected to be slightly worse than [`AStar`],
+    Performance is expected to be slightly worse than [AStar],
     because of the extra functionality.
 3. Access shortest path using `get_***` methods:
     [get_direction_at_point](#func-get_direction_at_point),
@@ -100,8 +100,8 @@ If `source_instance` is a `DijkstraMap`, it is cloned into
 `self`.
 #### Errors
 
-This function returns [`FAILED`] if `source_instance` is not a
-`DijkstraMap`, else [`OK`].
+This function returns [FAILED] if `source_instance` is not a
+`DijkstraMap`, else [OK].
 #### Example
 ```gdscript
 var dijkstra_map = DijkstraMap.new()
@@ -131,7 +131,7 @@ If `terrain_type` is not specified, `-1` is used.
 #### Errors
 
 If a point with the given id already exists, the map is unchanged and
-[`FAILED`] is returned, else it returns [`OK`].
+[FAILED] is returned, else it returns [OK].
 #### Example
 ```gdscript
 var dijkstra_map = DijkstraMap.new()
@@ -147,8 +147,8 @@ Set the terrain type for `point_id`.
 If `terrain_id` is not specified, `-1` is used.
 #### Errors
 
-If the given id does not exists in the map, [`FAILED`] is returned, else
-[`OK`].
+If the given id does not exists in the map, [FAILED] is returned, else
+[OK].
 #### Example
 ```gdscript
 var dijkstra_map = DijkstraMap.new()
@@ -183,8 +183,8 @@ ________
 Removes a point from the map.
 #### Errors
 
-Returns [`FAILED`] if the point does not exists in the map, else
-[`OK`].
+Returns [FAILED] if the point does not exists in the map, else
+[OK].
 #### Example
 ```gdscript
 var dijkstra_map = DijkstraMap.new()
@@ -196,7 +196,7 @@ assert_eq(dijkstra_map.remove_point(0), 1)
 ________
 
 
-Returns [`true`] if the map contains the given point.
+Returns [true] if the map contains the given point.
 ### <a id="func-disable_point"></a>func disable_point(point_id: [int]) -> [int]
 ________
 
@@ -204,7 +204,7 @@ ________
 Disable the given point for pathfinding.
 #### Errors
 
-Returns [`FAILED`] if the point does not exists in the map, else [`OK`].
+Returns [FAILED] if the point does not exists in the map, else [OK].
 #### Example
 ```gdscript
 var dijkstra_map = DijkstraMap.new()
@@ -219,7 +219,7 @@ ________
 Enables the given point for pathfinding.
 #### Errors
 
-Returns [`FAILED`] if the point does not exists in the map, else [`OK`].
+Returns [FAILED] if the point does not exists in the map, else [OK].
 #### Note
 
 Points are enabled by default.
@@ -234,8 +234,8 @@ assert_eq(dijkstra_map.enable_point(1), 1)
 ________
 
 
-Returns [`true`] if the point exists and is disabled, otherwise
-returns [`false`].
+Returns [true] if the point exists and is disabled, otherwise
+returns [false].
 #### Example
 ```gdscript
 var dijkstra_map = DijkstraMap.new()
@@ -255,11 +255,11 @@ Connects the two given points.
 - `source`: source point of the connection.
 - `target`: target point of the connection.
 - `weight` (default : `1.0`): weight of the connection.
-- `bidirectional` (default : [`true`]): whether or not the
+- `bidirectional` (default : [true]): whether or not the
     reciprocal connection should be made.
 #### Errors
 
-Return [`FAILED`] if one of the points does not exists in the map.
+Return [FAILED] if one of the points does not exists in the map.
 #### Example
 ```gdscript
 var dijkstra_map = DijkstraMap.new()
@@ -281,11 +281,11 @@ Remove a connection between the two given points.
 #### Parameters
 - `source`: source point of the connection.
 - `target`: target point of the connection.
-- `bidirectional` (default : [`true`]): if [`true`], also removes
+- `bidirectional` (default : [true]): if [true], also removes
     connection from target to source.
 #### Errors
 
-Returns [`FAILED`] if one of the points does not exist.
+Returns [FAILED] if one of the points does not exist.
 #### Example
 ```gdscript
 var dijkstra_map = DijkstraMap.new()
@@ -303,7 +303,7 @@ assert(dijkstra_map.has_connection(1, 0))
 ________
 
 
-Returns [`true`] if there is a connection from `source` to
+Returns [true] if there is a connection from `source` to
 `target` (and they both exist).
 #### Example
 ```gdscript
@@ -344,7 +344,7 @@ ________
 Returns the cost of the shortest path from this point to the
 target.
 
-If there is no path, the cost is [`INF`].
+If there is no path, the cost is [INF].
 #### Example
 ```gdscript
 var dijkstra_map = DijkstraMap.new()
@@ -368,37 +368,37 @@ This is the central function of the library, the one that
 actually uses Dijkstra's algorithm.
 #### Parameters
 - `origin` : ID of the origin point, or array of IDs (preferably
-    [`Int32Array`]).
-- `optional_params: `[`Dictionary`] : Specifies optional arguments.  \
+    [Int32Array]).
+- `optional_params:` [Dictionary] : Specifies optional arguments.  \
     Valid arguments are :
-    - `"input_is_destination": `[`bool`] (default : [`true`]) :  \
+    - `"input_is_destination":` [bool] (default : [true]) :  \
         Wether or not the `origin` points are seen as destination.
-    - `"maximum_cost": `[`float`] (default : [`INF`]) :  \
+    - `"maximum_cost":` [float] (default : [INF]) :  \
         Specifies maximum cost. Once all the shortest paths no
         longer than the maximum cost are found, the algorithm
         terminates. All points with cost bigger than this are treated as
         inaccessible.
-    - `"initial_costs": `[`float`] [`Array`] (default : empty) :  \
+    - `"initial_costs":` [float] [Array] (default : empty) :  \
         Specifies initial costs for the given `origin`s. Values are
         paired with corresponding indices in the origin argument. Every
         unspecified cost is defaulted to `0.0`.  \
         Can be used to weigh the `origin`s with a preference.
-    - `"terrain_weights": `[`Dictionary`] (default : empty) :  \
+    - `"terrain_weights":` [Dictionary] (default : empty) :  \
         Specifies weights of terrain types. Keys are terrain type
         IDs and values are floats. Unspecified terrains will have
         [infinite](https://docs.godotengine.org/en/stable/classes/class_@gdscript.html#constants) weight.  \
         Note that `-1` correspond to the default terrain (which have
         a weight of `1.0`), and will thus be ignored if it appears in
         the keys.
-    - `"termination_points": `[`int`] OR [`int`] [`Array`] (default : empty) :  \
+    - `"termination_points":` [int] OR [int] [Array] (default : empty) :  \
         A set of points that stop the computation if they are
         reached by the algorithm.  \
         Note that keys of incorrect types are ignored with a warning.
 #### Errors
 
-[`FAILED`] is returned if :
+[FAILED] is returned if :
 - One of the keys in `optional_params` is invalid.
-- `origin` is neither an [`int`], a [`PoolIntArray`] or a [`Array`].
+- `origin` is neither an [int], a [PoolIntArray] or a [Array].
 #### Example
 ```gdscript
 var dijkstra_map = DijkstraMap.new()
@@ -445,7 +445,7 @@ For each point in the given array, returns the cost of the
 shortest path from this point to the target.
 
 If there is no path from a point to the target, the cost is
-[`INF`].
+[INF].
 #### Example
 ```gdscript
 var dijkstra_map = DijkstraMap.new()
@@ -540,21 +540,21 @@ ________
 Adds a square grid of connected points.
 #### Parameters
 - `bounds` : Dimensions of the grid. At the moment, only
-    [`Rect2`] is supported.
+    [Rect2] is supported.
 - `terrain_type` (default : `-1`) : Terrain to use for all
     points of the grid.
 - `orthogonal_cost` (default : `1.0`) : specifies cost of
     orthogonal connections (up, down, right and left).  \
-    If `orthogonal_cost` is [`INF`] or [`NAN`], orthogonal
+    If `orthogonal_cost` is [INF] or [NAN], orthogonal
     connections are disabled.
-- `diagonal_cost` (default : [`INF`]) : specifies cost of
+- `diagonal_cost` (default : [INF]) : specifies cost of
     diagonal connections.  \
-    If `diagonal_cost` is [`INF`] or [`NAN`], diagonal connections
+    If `diagonal_cost` is [INF] or [NAN], diagonal connections
     are disabled.
 #### Returns
 
-This function returns a `Dictionary` where keys are coordinates
-of points ([`Vector2`]) and values are their corresponding point
+This function returns a [Dictionary] where keys are coordinates
+of points ([Vector2]) and values are their corresponding point
 IDs.
 ### <a id="func-add_hexagonal_grid"></a>func add_hexagonal_grid(bounds: [Variant], terrain_type: [int] (opt), weight: [float] (opt)) -> [Dictionary]
 ________
@@ -567,8 +567,8 @@ Adds a hexagonal grid of connected points.
 - `weight` (default : `1.0`) : specifies cost of connections.
 #### Returns
 
-This function returns a [`Dictionary`] where keys are
-coordinates of points ([`Vector2`]) and values are their
+This function returns a [Dictionary] where keys are
+coordinates of points ([Vector2]) and values are their
 corresponding point IDs.
 #### Note
 
@@ -577,7 +577,7 @@ below).
 
 To switch to "flat" orientation, swap `width` and `height`, and
 switch `x` and `y` coordinates of the keys in the return
-`Dictionary`. ([`Transform2D`] may be convenient there)
+`Dictionary`. ([Transform2D] may be convenient there)
 #### Example
 
 This is what `dijkstra_map.add_hexagonal_grid(Rect2(1, 4, 2, 3), ...)` would produce:
@@ -595,29 +595,24 @@ This is what `dijkstra_map.add_hexagonal_grid(Rect2(1, 4, 2, 3), ...)` would pro
     \ /     \ /
 ```
 
+[AStar]: https://docs.godotengine.org/en/stable/classes/class_astar.html
+[Array]: https://docs.godotengine.org/en/stable/classes/class_array.html
 [Dictionary]: https://docs.godotengine.org/en/stable/classes/class_dictionary.html
+[FAILED]: https://docs.godotengine.org/en/stable/classes/class_@globalscope.html#enum-globalscope-error
+[INF]: https://docs.godotengine.org/en/stable/classes/class_@gdscript.html#constants
+[Int32Array]: https://docs.godotengine.org/en/stable/classes/class_poolintarray.html
+[NAN]: https://docs.godotengine.org/en/stable/classes/class_@gdscript.html#constants
+[OK]: https://docs.godotengine.org/en/stable/classes/class_@globalscope.html#enum-globalscope-error
 [PoolIntArray]: https://docs.godotengine.org/en/stable/classes/class_poolintarray.html
 [PoolRealArray]: https://docs.godotengine.org/en/stable/classes/class_poolrealarray.html
+[Rect2]: https://docs.godotengine.org/en/stable/classes/class_rect2.html
 [Reference]: https://docs.godotengine.org/en/stable/classes/class_reference.html
+[Transform2D]: https://docs.godotengine.org/en/stable/classes/class_transform2d.html
 [Variant]: https://docs.godotengine.org/en/stable/classes/class_variant.html
-[`AStar`]: https://docs.godotengine.org/en/stable/classes/class_astar.html
-[`Array`]: https://docs.godotengine.org/en/stable/classes/class_array.html
-[`Dictionary`]: https://docs.godotengine.org/en/stable/classes/class_dictionary.html
-[`FAILED`]: https://docs.godotengine.org/en/stable/classes/class_@globalscope.html#enum-globalscope-error
-[`INF`]: https://docs.godotengine.org/en/stable/classes/class_@gdscript.html#constants
-[`Int32Array`]: https://docs.godotengine.org/en/stable/classes/class_poolintarray.html
-[`NAN`]: https://docs.godotengine.org/en/stable/classes/class_@gdscript.html#constants
-[`OK`]: https://docs.godotengine.org/en/stable/classes/class_@globalscope.html#enum-globalscope-error
-[`PoolIntArray`]: https://docs.godotengine.org/en/stable/classes/class_poolintarray.html
-[`Rect2`]: https://docs.godotengine.org/en/stable/classes/class_rect2.html
-[`Transform2D`]: https://docs.godotengine.org/en/stable/classes/class_transform2d.html
-[`Vector2`]: https://docs.godotengine.org/en/stable/classes/class_vector2.html
-[`bool`]: https://docs.godotengine.org/en/stable/classes/class_bool.html
-[`false`]: https://docs.godotengine.org/en/stable/classes/class_bool.html
-[`float`]: https://docs.godotengine.org/en/stable/classes/class_float.html
-[`int`]: https://docs.godotengine.org/en/stable/classes/class_int.html
-[`true`]: https://docs.godotengine.org/en/stable/classes/class_bool.html
+[Vector2]: https://docs.godotengine.org/en/stable/classes/class_vector2.html
 [array]: https://docs.godotengine.org/en/stable/classes/class_poolintarray.html
 [bool]: https://docs.godotengine.org/en/stable/classes/class_bool.html
+[false]: https://docs.godotengine.org/en/stable/classes/class_bool.html
 [float]: https://docs.godotengine.org/en/stable/classes/class_float.html
 [int]: https://docs.godotengine.org/en/stable/classes/class_int.html
+[true]: https://docs.godotengine.org/en/stable/classes/class_bool.html

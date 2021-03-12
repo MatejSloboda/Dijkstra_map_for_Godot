@@ -1,5 +1,6 @@
 # Dijkstra Algorithm for Godot
 
+![](assets/icon.png)
 
 ## What it does
 
@@ -16,30 +17,51 @@ Note that the [API](./addons/dijkstra-map/DOCUMENTATION.md) is now stable! Some 
 
 ## Installing
 
-This repository contains pre-compiled binaries for Windows x64, Linux x64 and Macos x86. The project should just run after downloading on these platforms. The binaries may be slightly out-of-date, depending on branch in question. For other platforms you will have to compile the project yourself (process described below).
+### Method 1: from the asset store (recommended)
 
-You will have to: 
-* [Install rust compiler](https://www.rust-lang.org/tools/install) and you will most likely have to install the dependencies described in [GDNative bindings for Rust](https://github.com/GodotNativeTools/godot-rust).
+This will work for linux x64, macos x86 and windows x64 :
+1. In the godot editor, go to the `AssetLib` tab
 
-* Once you do that, open a terminal, navigate to the directory containing Cargo.toml and run "cargo build --release" command.
+    ![](assets/godot-outline-assetlib.png)
 
-It will compile the DLL binary file (or equivalent) and put it into "res://target/release/" directory (first time around, it may take several minutes, because it has to automatically download and compile all the dependencies). 
+    And search for `Dijkstra Map Pathfinding`
 
-* Preferably, you should move the binary to /Dijkstra_map_library/ directory to keep all the binaries organized.
+2. Download and install the files
 
-* Open Godot and add path to the binary file into the "Dijkstra_map_library/dijkstra_map_library.tres" GDNativeLibrary resource. This resource tells Godot which binary to use for which system. For more info see the [GDNative C example in Godot's documentation](https://docs.godotengine.org/en/stable/tutorials/plugins/gdnative/gdnative-c-example.html).
+    ![](assets/assetlib-dijkstra_map_pathfinding-download.png)
+    ![](assets/assetlib-dijkstra_map_pathfinding-install.png)
 
-## Getting Started
+    This will install the files in `res://addons/dijkstra-map`.
 
-After having followed *Installing* instructions, open the Godot project:
-*  Run the main scene (F5)
-*  Open and run /Project_Example/project_example.tscn
-*  Open and run /Project_Example/Turn based.tscn
-Toy around with it, the code of project_example is heavily commented. Mess with the exports variable in demo.tscn (click on the root node and tweak the values at the top of the inspector)
+### Method 2: from Github
 
-You can also look at the unit tests in Tests/unit/*
+**Note**: on linux x64, macos x86 or windows x64, you may skip steps 2-4 and use the pre-compiled libraries in `addons/dijkstra-map/Dijkstra_map_library/bin/<os-name>`. They may be slightly outdated though.
 
-To use the Dijkstra Map in your own projects, you can copy the /Dijkstra_map_library/ directory to the root of your project (warning: putting it to subdirectories may crash Godot, because paths in GDNativeLibrary resource are not relative).
+1. Clone this repository
+2. Install the [Rust compiler](https://www.rust-lang.org/tools/install)
+3. Install the dependencies for the [GDNative bindings for Rust](https://github.com/GodotNativeTools/godot-rust).
+4. Run `cargo build --release`. This will build the library in `target/release` (for exampe, on windows: `target/release/dijkstra_map_gd.dll`).
+    
+	Note that this might take some time as it compiles all the dependencies for the first time.
+
+    Copy the resulting library to `addons/dijkstra-map/Dijkstra_map_library/bin/<os-name>`.
+5. Copy the `addons/dijkstra-map` directory into your project's `res://addons` directory.
+6. Open Godot and add path to the binary file into the `res://addons/dijkstra-map/Dijkstra_map_library/dijkstra_map_library.tres` GDNativeLibrary resource. This resource tells Godot which binary to use for which system. For more info see the [GDNative C example in Godot's documentation](https://docs.godotengine.org/en/stable/tutorials/plugins/gdnative/gdnative-c-example.html).
+
+## Examples
+
+There are 3 examples scenes in the github repository:
+* `addons/dijkstra-map/visualization demo/visualisation.tscn`
+
+    Also available through the [asset store installation](#method-1-from-the-asset-store-recommended)
+* `Project_Example/project_example.tscn`
+* `Project_Example/Turn based.tscn`
+
+    The `knight` node contains exports variable that can be tweaked
+
+And heavily commented code in `Project_Example/dependancy/`.
+
+You can also look at the unit tests in `Tests/unit/*`.
 
 ## Features && How-To's
 

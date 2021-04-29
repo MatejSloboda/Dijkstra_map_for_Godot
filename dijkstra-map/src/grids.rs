@@ -1,4 +1,4 @@
-use super::{DijkstraMap, FnvHashMap, PointID, TerrainType, Weight};
+use super::{DijkstraMap, FnvHashMap, PointId, TerrainType, Weight};
 use euclid::Vector2D;
 
 impl DijkstraMap {
@@ -27,14 +27,14 @@ impl DijkstraMap {
         width: usize,
         height: usize,
         terrain_type_default: TerrainType,
-    ) -> FnvHashMap<Vector2D<i32, i32>, PointID> {
+    ) -> FnvHashMap<Vector2D<i32, i32>, PointId> {
         let mut id = self.get_available_id(None);
-        let mut pos_to_id = FnvHashMap::<Vector2D<i32, i32>, PointID>::default();
+        let mut pos_to_id = FnvHashMap::<Vector2D<i32, i32>, PointId>::default();
 
         for x in x_offset..width + x_offset {
             for y in y_offset..height + y_offset {
                 let pos = Vector2D::<i32, i32>::from((x as i32, y as i32));
-                id = self.get_available_id(Some(PointID(i32::from(id) + 1)));
+                id = self.get_available_id(Some(PointId(i32::from(id) + 1)));
                 self.add_point_replace(id, terrain_type_default);
                 pos_to_id.insert(pos, id);
             }
@@ -72,7 +72,7 @@ impl DijkstraMap {
         default_terrain: TerrainType,
         orthogonal_cost: Option<Weight>,
         diagonal_cost: Option<Weight>,
-    ) -> FnvHashMap<Vector2D<i32, i32>, PointID> {
+    ) -> FnvHashMap<Vector2D<i32, i32>, PointId> {
         let initial_offset = initial_offset.unwrap_or_default();
         let pos_to_id = self.add_grid_internal(
             initial_offset.x,
@@ -170,7 +170,7 @@ impl DijkstraMap {
         initial_offset: Option<Vector2D<usize, usize>>,
         default_terrain: TerrainType,
         weight: Option<Weight>,
-    ) -> FnvHashMap<Vector2D<i32, i32>, PointID> {
+    ) -> FnvHashMap<Vector2D<i32, i32>, PointId> {
         let initial_offset = initial_offset.unwrap_or_default();
         let pos_to_id = self.add_grid_internal(
             initial_offset.x,

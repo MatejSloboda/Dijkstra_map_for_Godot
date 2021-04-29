@@ -1,4 +1,4 @@
-use super::{DijkstraMap, FnvHashMap, FnvHashSet, PointID, PointInfo, TerrainType, Weight};
+use super::{DijkstraMap, FnvHashMap, FnvHashSet, PointId, PointInfo, TerrainType, Weight};
 
 impl Default for DijkstraMap {
     fn default() -> Self {
@@ -12,7 +12,7 @@ impl DijkstraMap {
         DijkstraMap {
             points: FnvHashMap::default(),
             computed_info: FnvHashMap::default(),
-            sorted_points: Vec::<PointID>::new(),
+            sorted_points: Vec::<PointId>::new(),
             disabled_points: FnvHashSet::default(),
         }
     }
@@ -33,7 +33,7 @@ impl DijkstraMap {
     ///
     /// If a point with that ID already exists, returns [`Err`] without
     /// modifying the map.
-    pub fn add_point(&mut self, id: PointID, terrain_type: TerrainType) -> Result<(), ()> {
+    pub fn add_point(&mut self, id: PointId, terrain_type: TerrainType) -> Result<(), ()> {
         if self.has_point(id) {
             Err(())
         } else {
@@ -52,7 +52,7 @@ impl DijkstraMap {
     /// Adds new point with given ID and terrain type into the graph.
     ///
     /// If a point was already associated with `id`, it is replaced.
-    pub fn add_point_replace(&mut self, id: PointID, terrain_type: TerrainType) {
+    pub fn add_point_replace(&mut self, id: PointId, terrain_type: TerrainType) {
         self.points.insert(
             id,
             PointInfo {
@@ -68,7 +68,7 @@ impl DijkstraMap {
     /// # Errors
     ///
     /// Returns [`Err`] if `point` doesn't exist in the map.
-    pub fn remove_point(&mut self, point: PointID) -> Result<(), ()> {
+    pub fn remove_point(&mut self, point: PointId) -> Result<(), ()> {
         self.disabled_points.remove(&point);
         // remove this point's entry from connections
         match self.points.remove(&point) {
@@ -104,7 +104,7 @@ impl DijkstraMap {
     /// ## Note
     ///
     /// Points are enabled by default.
-    pub fn disable_point(&mut self, point: PointID) -> Result<(), ()> {
+    pub fn disable_point(&mut self, point: PointId) -> Result<(), ()> {
         if self.points.contains_key(&point) {
             self.disabled_points.insert(point);
             Ok(())
@@ -125,7 +125,7 @@ impl DijkstraMap {
     /// ## Note
     ///
     /// Points are enabled by default.
-    pub fn enable_point(&mut self, point: PointID) -> Result<(), ()> {
+    pub fn enable_point(&mut self, point: PointId) -> Result<(), ()> {
         if self.points.contains_key(&point) {
             self.disabled_points.remove(&point);
             Ok(())
@@ -142,12 +142,12 @@ impl DijkstraMap {
     #[allow(clippy::type_complexity)]
     fn get_connections_and_reverse(
         &mut self,
-        source: PointID,
-        target: PointID,
+        source: PointId,
+        target: PointId,
     ) -> Result<
         (
-            &mut FnvHashMap<PointID, Weight>,
-            &mut FnvHashMap<PointID, Weight>,
+            &mut FnvHashMap<PointId, Weight>,
+            &mut FnvHashMap<PointId, Weight>,
         ),
         (),
     > {
@@ -185,8 +185,8 @@ impl DijkstraMap {
     /// Returns [`Err`] if one of the point does not exist.
     pub fn connect_points(
         &mut self,
-        source: PointID,
-        target: PointID,
+        source: PointId,
+        target: PointId,
         weight: Option<Weight>,
         bidirectional: Option<bool>,
     ) -> Result<(), ()> {
@@ -218,8 +218,8 @@ impl DijkstraMap {
     /// Returns [`Err`] if one of the point does not exist.
     pub fn remove_connection(
         &mut self,
-        source: PointID,
-        target: PointID,
+        source: PointId,
+        target: PointId,
         bidirectional: Option<bool>,
     ) -> Result<(), ()> {
         let bidirectional = bidirectional.unwrap_or(true);
@@ -242,7 +242,7 @@ impl DijkstraMap {
     /// Returns [`Err`] if the point does not exist.
     pub fn set_terrain_for_point(
         &mut self,
-        point: PointID,
+        point: PointId,
         terrain_type: TerrainType,
     ) -> Result<(), ()> {
         match self.points.get_mut(&point) {
@@ -261,9 +261,9 @@ impl DijkstraMap {
 #[cfg(test)]
 mod test {
     use super::*;
-    const ID0: PointID = PointID(0);
-    const ID1: PointID = PointID(1);
-    const ID2: PointID = PointID(2);
+    const ID0: PointId = PointId(0);
+    const ID1: PointId = PointId(1);
+    const ID2: PointId = PointId(2);
     const TERRAIN: TerrainType = TerrainType::DefaultTerrain;
 
     /// Creates a new `DijkstraMap` with 3 non connected points.

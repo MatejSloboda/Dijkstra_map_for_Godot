@@ -16,7 +16,7 @@
 //! Users have to store that information themselves, if they want it;
 //! for example, in a [Dictionary].
 
-use dijkstra_map::{Cost, DijkstraMap, PointID, Read, TerrainType, Weight};
+use dijkstra_map::{Cost, DijkstraMap, PointId, Read, TerrainType, Weight};
 use fnv::FnvHashMap;
 use fnv::FnvHashSet;
 use gdnative::prelude::*;
@@ -470,7 +470,7 @@ impl Interface {
     pub fn get_direction_at_point(&mut self, _owner: &Reference, point_id: i32) -> i32 {
         self.dijkstra
             .get_direction_at_point(point_id.into())
-            .unwrap_or(PointID(-1))
+            .unwrap_or(PointId(-1))
             .into()
     }
 
@@ -637,7 +637,7 @@ impl Interface {
         }
 
         // get origin points
-        let mut res_origins = Vec::<PointID>::new();
+        let mut res_origins = Vec::<PointId>::new();
         match origin.get_type() {
             gdnative::core_types::VariantType::I64 => {
                 res_origins.push((origin.to_i64() as i32).into())
@@ -653,7 +653,7 @@ impl Interface {
             gdnative::core_types::VariantType::VariantArray => {
                 for i in origin.to_array().iter() {
                     match i.try_to_i64() {
-                        Some(intval) => res_origins.push(PointID(intval as i32)),
+                        Some(intval) => res_origins.push(PointId(intval as i32)),
                         None => type_warning(
                             "element of 'origin'",
                             VariantType::I64,
@@ -794,13 +794,13 @@ impl Interface {
             let value = optional_params.get(TERMINATION_POINTS);
             match value.get_type() {
                 gdnative::core_types::VariantType::I64 => {
-                    std::iter::once(PointID(value.to_i64() as i32)).collect()
+                    std::iter::once(PointId(value.to_i64() as i32)).collect()
                 }
                 gdnative::core_types::VariantType::Int32Array => value
                     .to_int32_array()
                     .read()
                     .iter()
-                    .map(|&x| PointID::from(x))
+                    .map(|&x| PointId::from(x))
                     .collect(),
                 gdnative::core_types::VariantType::VariantArray => value
                     .to_array()
@@ -817,7 +817,7 @@ impl Interface {
                         }
                         int
                     })
-                    .map(|ival| PointID(ival as i32))
+                    .map(|ival| PointId(ival as i32))
                     .collect(),
                 incorrect_type => {
                     type_warning(
@@ -826,7 +826,7 @@ impl Interface {
                         incorrect_type,
                         line!(),
                     );
-                    FnvHashSet::<PointID>::default()
+                    FnvHashSet::<PointId>::default()
                 }
             }
         } else {
@@ -872,8 +872,8 @@ impl Interface {
                 .iter()
                 .map(|int: &i32| {
                     self.dijkstra
-                        .get_direction_at_point(PointID::from(*int))
-                        .unwrap_or(PointID(-1))
+                        .get_direction_at_point(PointId::from(*int))
+                        .unwrap_or(PointId(-1))
                         .into()
                 })
                 .collect(),
@@ -908,7 +908,7 @@ impl Interface {
                 .iter()
                 .map(|point: &i32| {
                     self.dijkstra
-                        .get_cost_at_point(PointID::from(*point))
+                        .get_cost_at_point(PointId::from(*point))
                         .into()
                 })
                 .collect(),
@@ -1004,7 +1004,7 @@ impl Interface {
             .dijkstra
             .get_all_points_with_cost_between(min_cost.into(), max_cost.into())
             .iter()
-            .map(|id: &PointID| (*id).into())
+            .map(|id: &PointId| (*id).into())
             .collect::<Vec<i32>>();
         Int32Array::from_vec(res)
     }
@@ -1029,7 +1029,7 @@ impl Interface {
             .dijkstra
             .get_shortest_path_from_point(point_id.into())
             .into_iter()
-            .map(|id: PointID| id.into())
+            .map(|id: PointId| id.into())
             .collect::<Vec<i32>>();
         Int32Array::from_vec(res)
     }

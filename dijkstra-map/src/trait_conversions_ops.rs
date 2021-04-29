@@ -111,19 +111,19 @@ mod weight {
     }
 }
 
-/// Implementations for [`PointID`].
+/// Implementations for [`PointId`].
 mod point_id {
     use super::*;
 
-    impl From<PointID> for i32 {
-        fn from(point: PointID) -> i32 {
+    impl From<PointId> for i32 {
+        fn from(point: PointId) -> i32 {
             point.0
         }
     }
 
-    impl From<i32> for PointID {
+    impl From<i32> for PointId {
         fn from(x: i32) -> Self {
-            PointID(x)
+            PointId(x)
         }
     }
 }

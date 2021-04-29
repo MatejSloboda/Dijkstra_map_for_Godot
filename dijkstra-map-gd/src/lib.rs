@@ -22,9 +22,9 @@ use fnv::FnvHashSet;
 use gdnative::prelude::*;
 
 /// Integer representing success in gdscript
-const GODOT_SUCCESS: i64 = 0;
+const OK: i64 = 0;
 /// Integer representing failure in gdscript
-const GODOT_ERROR: i64 = 1;
+const FAILED: i64 = 1;
 
 /// Interface exported to Godot
 ///
@@ -76,10 +76,10 @@ pub struct Interface {
 /// to Godot).
 ///
 /// [`Ok`] becomes `0`, and [`Err`] becomes `1`.
-fn result_to_int(res: Result<(), ()>) -> i64 {
+fn result_to_int<E>(res: Result<(), E>) -> i64 {
     match res {
-        Ok(()) => GODOT_SUCCESS,
-        Err(()) => GODOT_ERROR,
+        Ok(()) => OK,
+        Err(_) => FAILED,
     }
 }
 
@@ -155,10 +155,10 @@ impl Interface {
                     })
                     .ok()
             }) {
-            Some(_) => GODOT_SUCCESS,
+            Some(_) => OK,
             None => {
                 godot_error!("Failed to convert Variant to DijkstraMap.");
-                GODOT_ERROR
+                FAILED
             }
         }
     }
@@ -278,7 +278,11 @@ impl Interface {
     /// ```
     pub fn remove_point(&mut self, _owner: &Reference, point_id: i32) -> i64 {
         let res = self.dijkstra.remove_point(point_id.into());
-        result_to_int(res)
+        if res.is_some() {
+            OK
+        } else {
+            FAILED
+        }
     }
 
     #[export]
@@ -632,7 +636,7 @@ impl Interface {
             let string: String = k.to_string();
             if !VALID_KEYS.contains(&string.as_str()) {
                 godot_error!("Invalid Key `{}` in parameter", string);
-                return GODOT_ERROR;
+                return FAILED;
             }
         }
 
@@ -665,7 +669,7 @@ impl Interface {
             }
             _ => {
                 godot_error!("Invalid argument type : Expected int or Array of ints");
-                return GODOT_ERROR;
+                return FAILED;
             }
         };
 
@@ -841,7 +845,7 @@ impl Interface {
             terrain_weights,
             termination_points,
         );
-        GODOT_SUCCESS
+        OK
     }
 
     #[export]

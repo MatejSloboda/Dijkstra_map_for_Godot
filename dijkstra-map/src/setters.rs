@@ -6,6 +6,16 @@ impl Default for DijkstraMap {
     }
 }
 
+/// Error returned by some of [`DijkstraMap`]'s methods when a point ID is not
+/// found.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct PointNotFound;
+
+/// Error returned by [`DijkstraMap::add_point`] when trying to add a preexisting
+/// point.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct PointAlreadyExists;
+
 impl DijkstraMap {
     /// Creates a new empty `DijkstraMap`.
     pub fn new() -> Self {
@@ -33,9 +43,13 @@ impl DijkstraMap {
     ///
     /// If a point with that ID already exists, returns [`Err`] without
     /// modifying the map.
-    pub fn add_point(&mut self, id: PointId, terrain_type: TerrainType) -> Result<(), ()> {
+    pub fn add_point(
+        &mut self,
+        id: PointId,
+        terrain_type: TerrainType,
+    ) -> Result<(), PointAlreadyExists> {
         if self.has_point(id) {
-            Err(())
+            Err(PointAlreadyExists)
         } else {
             self.points.insert(
                 id,
@@ -65,32 +79,27 @@ impl DijkstraMap {
 
     /// Removes point from graph along with all of its connections.
     ///
-    /// # Errors
-    ///
-    /// Returns [`Err`] if `point` doesn't exist in the map.
-    pub fn remove_point(&mut self, point: PointId) -> Result<(), ()> {
+    /// If the point exists in the map, removes it and returns the associated
+    /// `PointInfo`. Else, returns `None`.
+    pub fn remove_point(&mut self, point: PointId) -> Option<PointInfo> {
         self.disabled_points.remove(&point);
         // remove this point's entry from connections
         match self.points.remove(&point) {
-            None => Err(()),
-            Some(PointInfo {
-                connections,
-                reverse_connections,
-                terrain_type: _,
-            }) => {
+            None => None,
+            Some(point_info) => {
                 // remove reverse connections to this point from neighbours
-                for nbr in connections.keys() {
-                    if let Some(point_info) = self.points.get_mut(nbr) {
-                        point_info.reverse_connections.remove(&point);
+                for nbr in point_info.connections.keys() {
+                    if let Some(point_info_nbr) = self.points.get_mut(nbr) {
+                        point_info_nbr.reverse_connections.remove(&point);
                     }
                 }
                 // remove connections to this point from reverse neighbours
-                for nbr in reverse_connections.keys() {
-                    if let Some(point_info) = self.points.get_mut(nbr) {
-                        point_info.connections.remove(&point);
+                for nbr in point_info.reverse_connections.keys() {
+                    if let Some(point_info_nbr) = self.points.get_mut(nbr) {
+                        point_info_nbr.connections.remove(&point);
                     }
                 }
-                Ok(())
+                Some(point_info)
             }
         }
     }
@@ -104,12 +113,12 @@ impl DijkstraMap {
     /// ## Note
     ///
     /// Points are enabled by default.
-    pub fn disable_point(&mut self, point: PointId) -> Result<(), ()> {
+    pub fn disable_point(&mut self, point: PointId) -> Result<(), PointNotFound> {
         if self.points.contains_key(&point) {
             self.disabled_points.insert(point);
             Ok(())
         } else {
-            Err(())
+            Err(PointNotFound)
         }
     }
 
@@ -125,12 +134,12 @@ impl DijkstraMap {
     /// ## Note
     ///
     /// Points are enabled by default.
-    pub fn enable_point(&mut self, point: PointId) -> Result<(), ()> {
+    pub fn enable_point(&mut self, point: PointId) -> Result<(), PointNotFound> {
         if self.points.contains_key(&point) {
             self.disabled_points.remove(&point);
             Ok(())
         } else {
-            Err(())
+            Err(PointNotFound)
         }
     }
 
@@ -149,7 +158,7 @@ impl DijkstraMap {
             &mut FnvHashMap<PointId, Weight>,
             &mut FnvHashMap<PointId, Weight>,
         ),
-        (),
+        PointNotFound,
     > {
         /// Transmute limited to the lifetime.
         ///
@@ -159,13 +168,13 @@ impl DijkstraMap {
             std::mem::transmute(e)
         }
 
-        let PointInfo { connections, .. } = self.points.get_mut(&source).ok_or(())?;
+        let PointInfo { connections, .. } = self.points.get_mut(&source).ok_or(PointNotFound)?;
         // this is safe, because `connections` and `reverse_connections` are always disjoints, and we make no changes to `self.points`.
         let connections: &'static mut _ = unsafe { transmute_lifetime(connections) };
         let PointInfo {
             reverse_connections,
             ..
-        } = self.points.get_mut(&target).ok_or(())?;
+        } = self.points.get_mut(&target).ok_or(PointNotFound)?;
         Ok((connections, reverse_connections))
     }
 
@@ -189,7 +198,7 @@ impl DijkstraMap {
         target: PointId,
         weight: Option<Weight>,
         bidirectional: Option<bool>,
-    ) -> Result<(), ()> {
+    ) -> Result<(), PointNotFound> {
         let bidirectional = bidirectional.unwrap_or(true);
         let weight = weight.unwrap_or(Weight(1.0));
         if bidirectional {
@@ -221,7 +230,7 @@ impl DijkstraMap {
         source: PointId,
         target: PointId,
         bidirectional: Option<bool>,
-    ) -> Result<(), ()> {
+    ) -> Result<(), PointNotFound> {
         let bidirectional = bidirectional.unwrap_or(true);
         if bidirectional {
             self.remove_connection(source, target, Some(false))
@@ -244,7 +253,7 @@ impl DijkstraMap {
         &mut self,
         point: PointId,
         terrain_type: TerrainType,
-    ) -> Result<(), ()> {
+    ) -> Result<(), PointNotFound> {
         match self.points.get_mut(&point) {
             Some(PointInfo {
                 terrain_type: terrain,
@@ -253,7 +262,7 @@ impl DijkstraMap {
                 *terrain = terrain_type;
                 Ok(())
             }
-            None => Err(()),
+            None => Err(PointNotFound),
         }
     }
 }

@@ -218,26 +218,20 @@ impl DijkstraMap {
 }
 
 #[cfg(test)]
-#[allow(dead_code)]
 mod test {
     use super::*;
-    const ID0: PointID = PointID(0);
-    const ID1: PointID = PointID(1);
-    const ID2: PointID = PointID(2);
-    const TERRAIN: TerrainType = TerrainType::DefaultTerrain;
-
-    fn setup_add012() -> DijkstraMap {
-        let mut djikstra = DijkstraMap::new();
-        djikstra.add_point(ID0, TERRAIN).unwrap();
-        djikstra.add_point(ID1, TERRAIN).unwrap();
-        djikstra.add_point(ID2, TERRAIN).unwrap();
-        djikstra
-    }
 
     #[test]
     fn square_grid_works() {
         let mut d = DijkstraMap::new();
-        let dico = d.add_square_grid(5, 5, Some((3, 2).into()), TERRAIN, None, None);
+        let dico = d.add_square_grid(
+            5,
+            5,
+            Some((3, 2).into()),
+            TerrainType::DefaultTerrain,
+            None,
+            None,
+        );
         // verify we can access a pos for every pos(x in 0..5, y in 0..5)
         for x in 3..5 + 3 {
             for y in 2..5 + 2 {

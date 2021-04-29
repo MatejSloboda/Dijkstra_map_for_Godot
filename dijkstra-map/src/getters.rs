@@ -60,7 +60,7 @@ impl DijkstraMap {
         self.computed_info
             .get(&point)
             .map(|PointComputedInfo { cost, .. }| *cost)
-            .unwrap_or(Cost::infinity())
+            .unwrap_or_else(Cost::infinity)
     }
 
     /// Returns an iterator over the components of the shortest path from the

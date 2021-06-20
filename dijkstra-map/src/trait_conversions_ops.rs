@@ -56,10 +56,9 @@ mod cost {
         }
     }
 
-    impl Into<f32> for Cost {
-        fn into(self) -> f32 {
-            let Cost(x) = self;
-            x
+    impl From<Cost> for f32 {
+        fn from(cost: Cost) -> Self {
+            cost.0
         }
     }
 }
@@ -112,19 +111,19 @@ mod weight {
     }
 }
 
-/// Implementations for [`PointID`].
+/// Implementations for [`PointId`].
 mod point_id {
     use super::*;
 
-    impl From<PointID> for i32 {
-        fn from(point: PointID) -> i32 {
+    impl From<PointId> for i32 {
+        fn from(point: PointId) -> i32 {
             point.0
         }
     }
 
-    impl From<i32> for PointID {
+    impl From<i32> for PointId {
         fn from(x: i32) -> Self {
-            PointID(x)
+            PointId(x)
         }
     }
 }
@@ -149,9 +148,9 @@ mod terrain_type {
         }
     }
 
-    impl Into<i32> for TerrainType {
-        fn into(self) -> i32 {
-            match self {
+    impl From<TerrainType> for i32 {
+        fn from(terrain_type: TerrainType) -> Self {
+            match terrain_type {
                 TerrainType::DefaultTerrain => -1,
                 TerrainType::Terrain(x) => x,
             }

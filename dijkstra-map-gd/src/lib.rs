@@ -16,15 +16,15 @@
 //! Users have to store that information themselves, if they want it;
 //! for example, in a [Dictionary].
 
-use dijkstra_map::{Cost, DijkstraMap, PointID, Read, TerrainType, Weight};
+use dijkstra_map::{Cost, DijkstraMap, PointId, Read, TerrainType, Weight};
 use fnv::FnvHashMap;
 use fnv::FnvHashSet;
 use gdnative::prelude::*;
 
 /// Integer representing success in gdscript
-const GODOT_SUCCESS: i64 = 0;
+const OK: i64 = 0;
 /// Integer representing failure in gdscript
-const GODOT_ERROR: i64 = 1;
+const FAILED: i64 = 1;
 
 /// Interface exported to Godot
 ///
@@ -76,10 +76,10 @@ pub struct Interface {
 /// to Godot).
 ///
 /// [`Ok`] becomes `0`, and [`Err`] becomes `1`.
-fn result_to_int(res: Result<(), ()>) -> i64 {
+fn result_to_int<E>(res: Result<(), E>) -> i64 {
     match res {
-        Ok(()) => GODOT_SUCCESS,
-        Err(()) => GODOT_ERROR,
+        Ok(()) => OK,
+        Err(_) => FAILED,
     }
 }
 
@@ -155,10 +155,10 @@ impl Interface {
                     })
                     .ok()
             }) {
-            Some(_) => GODOT_SUCCESS,
+            Some(_) => OK,
             None => {
                 godot_error!("Failed to convert Variant to DijkstraMap.");
-                GODOT_ERROR
+                FAILED
             }
         }
     }
@@ -278,7 +278,11 @@ impl Interface {
     /// ```
     pub fn remove_point(&mut self, _owner: &Reference, point_id: i32) -> i64 {
         let res = self.dijkstra.remove_point(point_id.into());
-        result_to_int(res)
+        if res.is_some() {
+            OK
+        } else {
+            FAILED
+        }
     }
 
     #[export]
@@ -470,7 +474,7 @@ impl Interface {
     pub fn get_direction_at_point(&mut self, _owner: &Reference, point_id: i32) -> i32 {
         self.dijkstra
             .get_direction_at_point(point_id.into())
-            .unwrap_or(PointID(-1))
+            .unwrap_or(PointId(-1))
             .into()
     }
 
@@ -632,12 +636,12 @@ impl Interface {
             let string: String = k.to_string();
             if !VALID_KEYS.contains(&string.as_str()) {
                 godot_error!("Invalid Key `{}` in parameter", string);
-                return GODOT_ERROR;
+                return FAILED;
             }
         }
 
         // get origin points
-        let mut res_origins = Vec::<PointID>::new();
+        let mut res_origins = Vec::<PointId>::new();
         match origin.get_type() {
             gdnative::core_types::VariantType::I64 => {
                 res_origins.push((origin.to_i64() as i32).into())
@@ -653,7 +657,7 @@ impl Interface {
             gdnative::core_types::VariantType::VariantArray => {
                 for i in origin.to_array().iter() {
                     match i.try_to_i64() {
-                        Some(intval) => res_origins.push(PointID(intval as i32)),
+                        Some(intval) => res_origins.push(PointId(intval as i32)),
                         None => type_warning(
                             "element of 'origin'",
                             VariantType::I64,
@@ -665,7 +669,7 @@ impl Interface {
             }
             _ => {
                 godot_error!("Invalid argument type : Expected int or Array of ints");
-                return GODOT_ERROR;
+                return FAILED;
             }
         };
 
@@ -794,13 +798,13 @@ impl Interface {
             let value = optional_params.get(TERMINATION_POINTS);
             match value.get_type() {
                 gdnative::core_types::VariantType::I64 => {
-                    std::iter::once(PointID(value.to_i64() as i32)).collect()
+                    std::iter::once(PointId(value.to_i64() as i32)).collect()
                 }
                 gdnative::core_types::VariantType::Int32Array => value
                     .to_int32_array()
                     .read()
                     .iter()
-                    .map(|&x| PointID::from(x))
+                    .map(|&x| PointId::from(x))
                     .collect(),
                 gdnative::core_types::VariantType::VariantArray => value
                     .to_array()
@@ -817,7 +821,7 @@ impl Interface {
                         }
                         int
                     })
-                    .map(|ival| PointID(ival as i32))
+                    .map(|ival| PointId(ival as i32))
                     .collect(),
                 incorrect_type => {
                     type_warning(
@@ -826,7 +830,7 @@ impl Interface {
                         incorrect_type,
                         line!(),
                     );
-                    FnvHashSet::<PointID>::default()
+                    FnvHashSet::<PointId>::default()
                 }
             }
         } else {
@@ -841,7 +845,7 @@ impl Interface {
             terrain_weights,
             termination_points,
         );
-        GODOT_SUCCESS
+        OK
     }
 
     #[export]
@@ -872,8 +876,8 @@ impl Interface {
                 .iter()
                 .map(|int: &i32| {
                     self.dijkstra
-                        .get_direction_at_point(PointID::from(*int))
-                        .unwrap_or(PointID(-1))
+                        .get_direction_at_point(PointId::from(*int))
+                        .unwrap_or(PointId(-1))
                         .into()
                 })
                 .collect(),
@@ -908,7 +912,7 @@ impl Interface {
                 .iter()
                 .map(|point: &i32| {
                     self.dijkstra
-                        .get_cost_at_point(PointID::from(*point))
+                        .get_cost_at_point(PointId::from(*point))
                         .into()
                 })
                 .collect(),
@@ -1004,7 +1008,7 @@ impl Interface {
             .dijkstra
             .get_all_points_with_cost_between(min_cost.into(), max_cost.into())
             .iter()
-            .map(|id: &PointID| (*id).into())
+            .map(|id: &PointId| (*id).into())
             .collect::<Vec<i32>>();
         Int32Array::from_vec(res)
     }
@@ -1029,7 +1033,7 @@ impl Interface {
             .dijkstra
             .get_shortest_path_from_point(point_id.into())
             .into_iter()
-            .map(|id: PointID| id.into())
+            .map(|id: PointId| id.into())
             .collect::<Vec<i32>>();
         Int32Array::from_vec(res)
     }

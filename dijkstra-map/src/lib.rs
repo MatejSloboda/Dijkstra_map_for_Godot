@@ -17,7 +17,7 @@ mod grids;
 /// Various 'setter' method for [`DijkstraMap`].
 mod setters;
 /// contains trait that allows explicit conversion, operations, defaut values
-/// on custom struct [`Weight`], [`PointID`] and [`Cost`].
+/// on custom struct [`Weight`], [`PointId`] and [`Cost`].
 mod trait_conversions_ops;
 
 /// Weight of a connection between two points of the Dijkstra map.
@@ -30,7 +30,7 @@ pub struct Weight(pub f32);
 ///
 /// Wraps a [`i32`].
 #[derive(PartialEq, PartialOrd, Ord, Copy, Clone, Eq, Hash, Debug)]
-pub struct PointID(pub i32);
+pub struct PointId(pub i32);
 
 /// Cost of a path.
 ///
@@ -81,7 +81,7 @@ pub enum Read {
 #[derive(Copy, Clone, PartialEq)]
 struct QueuePriority {
     /// Secondary comparison, used is `cost`s are equal
-    id: PointID,
+    id: PointId,
     /// Primary comparison
     cost: Cost,
 }
@@ -110,9 +110,9 @@ impl Eq for QueuePriority {}
 #[derive(Clone, Debug, PartialEq)]
 pub struct PointInfo {
     /// Connections from this point to others.
-    connections: FnvHashMap<PointID, Weight>,
+    connections: FnvHashMap<PointId, Weight>,
     /// Connections from other points to this one.
-    reverse_connections: FnvHashMap<PointID, Weight>,
+    reverse_connections: FnvHashMap<PointId, Weight>,
     /// The point's [`TerrainType`].
     terrain_type: TerrainType,
 }
@@ -124,7 +124,7 @@ pub struct PointComputedInfo {
     /// Cost of this point's shortest path
     pub cost: Cost,
     /// Next point along the shortest path
-    pub direction: PointID,
+    pub direction: PointId,
 }
 
 /// Representation of the map.
@@ -138,13 +138,13 @@ pub struct PointComputedInfo {
 #[derive(Debug, Clone)]
 pub struct DijkstraMap {
     /// Map a point to its informations
-    points: FnvHashMap<PointID, PointInfo>,
+    points: FnvHashMap<PointId, PointInfo>,
     /// All the points in the map, sorted by their cost.
-    sorted_points: Vec<PointID>,
+    sorted_points: Vec<PointId>,
     /// Cost and direction information for each point.
-    computed_info: FnvHashMap<PointID, PointComputedInfo>,
+    computed_info: FnvHashMap<PointId, PointComputedInfo>,
     /// Points not treated by the algorithm.
-    disabled_points: FnvHashSet<PointID>,
+    disabled_points: FnvHashSet<PointId>,
 }
 
 impl DijkstraMap {
@@ -177,12 +177,12 @@ impl DijkstraMap {
     /// they are reached.
     pub fn recalculate(
         &mut self,
-        origins: &[PointID],
+        origins: &[PointId],
         read: Option<Read>,
         max_cost: Option<Cost>,
         initial_costs: Vec<Cost>,
         terrain_weights: FnvHashMap<TerrainType, Weight>,
-        termination_points: FnvHashSet<PointID>,
+        termination_points: FnvHashSet<PointId>,
     ) {
         let read = read.unwrap_or(Read::InputIsDestination);
         let max_cost = max_cost.unwrap_or(Cost(std::f32::INFINITY));
@@ -196,11 +196,11 @@ impl DijkstraMap {
             origins.len(),
         );
         let mut open_queue =
-            priority_queue::PriorityQueue::<PointID, QueuePriority>::with_capacity(capacity);
+            priority_queue::PriorityQueue::<PointId, QueuePriority>::with_capacity(capacity);
 
         // switches direction of connections
         let points = &self.points;
-        let connections = |src: &PointID| -> Option<&FnvHashMap<PointID, Weight>> {
+        let connections = |src: &PointId| -> Option<&FnvHashMap<PointId, Weight>> {
             points.get(src).map(|info| match read {
                 Read::InputIsDestination => &info.reverse_connections,
                 Read::InputIsOrigin => &info.connections,
@@ -306,33 +306,33 @@ mod tests {
         fn create_map(reverse_order: bool) -> DijkstraMap {
             let mut dijkstra_map = DijkstraMap::new();
             dijkstra_map
-                .add_point(PointID(0), TerrainType::DefaultTerrain)
+                .add_point(PointId(0), TerrainType::DefaultTerrain)
                 .unwrap();
             dijkstra_map
-                .add_point(PointID(3), TerrainType::DefaultTerrain)
+                .add_point(PointId(3), TerrainType::DefaultTerrain)
                 .unwrap();
             if reverse_order {
                 for i in (1..=2).rev() {
                     dijkstra_map
-                        .add_point(PointID(i), TerrainType::DefaultTerrain)
+                        .add_point(PointId(i), TerrainType::DefaultTerrain)
                         .unwrap();
                     dijkstra_map
-                        .connect_points(PointID(0), PointID(i), None, None)
+                        .connect_points(PointId(0), PointId(i), None, None)
                         .unwrap();
                     dijkstra_map
-                        .connect_points(PointID(3), PointID(i), None, None)
+                        .connect_points(PointId(3), PointId(i), None, None)
                         .unwrap();
                 }
             } else {
                 for i in 1..=2 {
                     dijkstra_map
-                        .add_point(PointID(i), TerrainType::DefaultTerrain)
+                        .add_point(PointId(i), TerrainType::DefaultTerrain)
                         .unwrap();
                     dijkstra_map
-                        .connect_points(PointID(3), PointID(i), None, None)
+                        .connect_points(PointId(3), PointId(i), None, None)
                         .unwrap();
                     dijkstra_map
-                        .connect_points(PointID(0), PointID(i), None, None)
+                        .connect_points(PointId(0), PointId(i), None, None)
                         .unwrap();
                 }
             }
@@ -347,7 +347,7 @@ mod tests {
         let mut dijkstra_map = create_map(false);
 
         dijkstra_map.recalculate(
-            &[PointID(0)],
+            &[PointId(0)],
             None,
             None,
             Vec::new(),
@@ -359,7 +359,7 @@ mod tests {
             // mess up the order of creation.
             let mut dijkstra_map = create_map(i % 2 == 0);
             dijkstra_map.recalculate(
-                &[PointID(0)],
+                &[PointId(0)],
                 None,
                 None,
                 Vec::new(),

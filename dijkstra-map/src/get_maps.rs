@@ -1,14 +1,14 @@
-use super::{Cost, DijkstraMap, PointComputedInfo, PointID};
+use super::{Cost, DijkstraMap, PointComputedInfo, PointId};
 use fnv::FnvHashMap;
 
 impl DijkstraMap {
     /// Returns the entire Dijkstra map of directions and costs.
-    pub fn get_direction_and_cost_map(&mut self) -> &FnvHashMap<PointID, PointComputedInfo> {
+    pub fn get_direction_and_cost_map(&mut self) -> &FnvHashMap<PointId, PointComputedInfo> {
         &self.computed_info
     }
 
     /// Returns a slice of all points with costs between `min_cost` and `max_cost` (inclusive), sorted by cost.
-    pub fn get_all_points_with_cost_between(&self, min_cost: Cost, max_cost: Cost) -> &[PointID] {
+    pub fn get_all_points_with_cost_between(&self, min_cost: Cost, max_cost: Cost) -> &[PointId] {
         let start_point = match self.sorted_points.binary_search_by(|a| {
             if self.get_cost_at_point(*a) < min_cost {
                 std::cmp::Ordering::Less
@@ -37,9 +37,9 @@ mod test {
     use crate::{Read, TerrainType, Weight};
     use fnv::FnvHashSet;
 
-    const ID0: PointID = PointID(0);
-    const ID1: PointID = PointID(1);
-    const ID2: PointID = PointID(2);
+    const ID0: PointId = PointId(0);
+    const ID1: PointId = PointId(1);
+    const ID2: PointId = PointId(2);
     const DEFAULT_TERRAIN: TerrainType = TerrainType::DefaultTerrain;
 
     /// Create a new `DijkstraMap` with the connections :
@@ -210,7 +210,7 @@ mod test {
     fn unreacheable_point() {
         let mut dijkstra = setup_id012_connect0to1_1to2();
         dijkstra
-            .add_point(PointID(3), TerrainType::DefaultTerrain)
+            .add_point(PointId(3), TerrainType::DefaultTerrain)
             .unwrap();
         dijkstra.recalculate(
             &[ID0],
@@ -222,6 +222,6 @@ mod test {
         );
 
         // unreacheable points are not in the computed map.
-        assert_eq!(dijkstra.get_direction_and_cost_map().get(&PointID(3)), None)
+        assert_eq!(dijkstra.get_direction_and_cost_map().get(&PointId(3)), None)
     }
 }

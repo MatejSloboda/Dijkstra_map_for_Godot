@@ -6,7 +6,7 @@
 
 Howdy !
 
-This is a GDNative project for Godot game engine, that introduces Dijktra Map pathfinding node. It provides a much needed versatility currently absent from the build-in AStar pathfinding. Its main feature is the ability to populate the entire graph with shortest paths towards a given origin point. Total lengths of shortest paths and directions can then be easily looked up for any point in the graph.
+This is a GDNative project for Godot game engine, that introduces Dijkstra Map pathfinding node. It provides a much needed versatility currently absent from the build-in AStar pathfinding. Its main feature is the ability to populate the entire graph with shortest paths towards a given origin point. Total lengths of shortest paths and directions can then be easily looked up for any point in the graph.
 
 Common use cases include: pre-computing pathfinding for tower-defense games, RTS games and roguelikes; listing available moves for turn-based games; aiding in movement-related AI behaviour. You can find more examples in [this amazing article](http://www.roguebasin.com/index.php?title=Dijkstra_Maps_Visualized).
 
@@ -40,7 +40,7 @@ This will work for linux x64, macos x86 and windows x64 :
 1. Clone this repository
 2. Install the [Rust compiler](https://www.rust-lang.org/tools/install)
 3. Install the dependencies for the [GDNative bindings for Rust](https://github.com/GodotNativeTools/godot-rust).
-4. Run `cargo build --release`. This will build the library in `target/release` (for exampe, on windows: `target/release/dijkstra_map_gd.dll`).
+4. Run `cargo build --release`. This will build the library in `target/release` (for example, on windows: `target/release/dijkstra_map_gd.dll`).
     
 	Note that this might take some time as it compiles all the dependencies for the first time.
 
@@ -68,7 +68,7 @@ You can also look at the unit tests in `Tests/unit/*`.
 #### Basic Behaviour
 
 In Godot project you start by creating a new DijkstraMap Node.
-* First you need to specify the graph by adding points (vertices) and connections between them (edges). Unlike build-in AStar, DijkstraMap does not keep positions of the points (it only ever refers to them by their ID) and the costs of the connections need to be explicitly specified. It is user reponsibility to keep track of points' position. You can do so manually with the `add_point` and `connect_points` methods or automatically with `add_*_grid` methods (`add_square_grid` or `add_hexagonal_grid` ...)
+* First you need to specify the graph by adding points (vertices) and connections between them (edges). Unlike build-in AStar, DijkstraMap does not keep positions of the points (it only ever refers to them by their ID) and the costs of the connections need to be explicitly specified. It is user responsibility to keep track of points' position. You can do so manually with the `add_point` and `connect_points` methods or automatically with `add_*_grid` methods (`add_square_grid` or `add_hexagonal_grid` ...)
 
 * Once you've done that, you can enable or disable any points you want from the pathfinding by passing its id to `enable_point` or `disable_point` (points are enabled by default).
 

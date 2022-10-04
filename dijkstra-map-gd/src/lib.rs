@@ -19,6 +19,7 @@
 use dijkstra_map::{Cost, DijkstraMap, PointId, Read, TerrainType, Weight};
 use fnv::FnvHashMap;
 use fnv::FnvHashSet;
+use gdnative::init::*;
 use gdnative::prelude::*;
 
 /// Integer representing success in gdscript
@@ -67,7 +68,7 @@ const FAILED: i64 = 1;
 /// point towards the destination and inspected points are assumed to be
 /// origins.
 #[derive(NativeClass)]
-#[inherit(Reference)]
+// #[inherit(Reference)]
 pub struct Interface {
     dijkstra: DijkstraMap,
 }
@@ -91,16 +92,20 @@ fn result_to_int<E>(res: Result<(), E>) -> i64 {
 ///
 /// `(x_offset, y_offset, width, height)`
 fn variant_to_width_and_height(bounds: Variant) -> Option<(usize, usize, usize, usize)> {
-    bounds.try_to_rect2().map(|rect| {
-        (
-            rect.origin.x as usize,
-            rect.origin.y as usize,
-            rect.size.width as usize,
-            rect.size.height as usize,
-        )
-    })
+    bounds
+        .try_to()
+        .map(|rect: Rect2| {
+            {
+                (
+                    rect.position.x as usize,
+                    rect.position.y as usize,
+                    rect.size.x as usize,
+                    rect.size.y as usize,
+                )
+            }
+        })
+        .ok()
 }
-
 #[methods]
 impl Interface {
     /// Create a new empty `DijkstraMap`.
@@ -109,13 +114,13 @@ impl Interface {
     /// ```gdscript
     /// var dijkstra_map = DijkstraMap.new()
     /// ```
-    pub fn new(_owner: &Reference) -> Self {
+    #[method]
+    pub fn new(&self) -> Self {
         Interface {
             dijkstra: DijkstraMap::default(),
         }
     }
 
-    #[export]
     /// Clears the `DijkstraMap` of all points and connections.
     ///
     /// # Example
@@ -123,11 +128,11 @@ impl Interface {
     /// var dijkstra_map = DijkstraMap.new()
     /// dijkstra_map.clear()
     /// ```
+    #[method]
     pub fn clear(&mut self, _owner: &Reference) {
         self.dijkstra.clear()
     }
 
-    #[export]
     /// If `source_instance` is a `DijkstraMap`, it is cloned into
     /// `self`.
     ///
@@ -143,17 +148,21 @@ impl Interface {
     /// var dijkstra_map_copy = DijkstraMap.new()
     /// dijkstra_map_copy.duplicate_graph_from(dijkstra_map)
     /// ```
+    #[method]
     pub fn duplicate_graph_from(&mut self, _owner: &Reference, source_instance: Variant) -> i64 {
+        let source_instance = source_instance.to_object::<Reference>().unwrap();
+        unsafe {
+            let source_instance = source_instance.assume_unique().assume_shared();
+        }
         match source_instance
-            .try_to_object::<Reference>()
-            .as_ref()
-            .and_then(|reference| unsafe { reference.assume_safe() }.cast_instance::<Interface>())
+            .to_owned()
+            .cast_instance::<Interface>()
+            // .as_ref()
+            // .and_then(|reference| unsafe { reference.assume_safe() }.cast_instance::<Interface>())
             .and_then(|interface| {
-                interface
-                    .map(|interface, _| {
-                        self.dijkstra = interface.dijkstra.clone();
-                    })
-                    .ok()
+                interface.map(|interface, _| {
+                    self.dijkstra = interface.dijkstra.clone();
+                })
             }) {
             Some(_) => OK,
             None => {
@@ -162,8 +171,6 @@ impl Interface {
             }
         }
     }
-
-    #[export]
     /// Returns the first positive available id.
     ///
     /// # Example
@@ -173,11 +180,11 @@ impl Interface {
     /// dijkstra_map.add_point(1)
     /// assert_eq(dijkstra_map.get_available_point_id(), 2)
     /// ```
+    #[method]
     pub fn get_available_point_id(&mut self, _owner: &Reference) -> i32 {
         self.dijkstra.get_available_id(None).into()
     }
 
-    #[export]
     /// Add a new point with the given `terrain_type`.
     ///
     /// If `terrain_type` is not specified, `-1` is used.
@@ -193,18 +200,13 @@ impl Interface {
     /// dijkstra_map.add_point(0) # terrain_type is -1
     /// dijkstra_map.add_point(1, 0) # terrain_type is 0
     /// ```
-    pub fn add_point(
-        &mut self,
-        _owner: &Reference,
-        point_id: i32,
-        #[opt] terrain_type: Option<i32>,
-    ) -> i64 {
+    #[method]
+    pub fn add_point(&mut self, point_id: i32, #[opt] terrain_type: Option<i32>) -> i64 {
         let terrain_type: TerrainType = terrain_type.unwrap_or(-1).into();
         let res = self.dijkstra.add_point(point_id.into(), terrain_type);
         result_to_int(res)
     }
 
-    #[export]
     /// Set the terrain type for `point_id`.
     ///
     /// If `terrain_id` is not specified, `-1` is used.
@@ -222,12 +224,8 @@ impl Interface {
     /// dijkstra_map.set_terrain_for_point(0)
     /// assert_eq(dijkstra_map.get_terrain_for_point(0), -1)
     /// ```
-    pub fn set_terrain_for_point(
-        &mut self,
-        _owner: &Reference,
-        point_id: i32,
-        #[opt] terrain_id: Option<i32>,
-    ) -> i64 {
+    #[method]
+    pub fn set_terrain_for_point(&mut self, point_id: i32, #[opt] terrain_id: Option<i32>) -> i64 {
         let terrain_id = terrain_id.unwrap_or(-1);
         let terrain: TerrainType = terrain_id.into();
         let res = self
@@ -236,7 +234,6 @@ impl Interface {
         result_to_int(res)
     }
 
-    #[export]
     /// Get the terrain type for the given point.
     ///
     /// This function returns `-1` if no point with the given id exists in the
@@ -252,6 +249,7 @@ impl Interface {
     /// # `2` is not in the map, so this returns `-1`
     /// assert_eq(dijkstra_map.get_terrain_for_point(2), -1)
     /// ```
+    #[method]
     pub fn get_terrain_for_point(&mut self, _owner: &Reference, point_id: i32) -> i32 {
         // TODO : TerrainType::DefaultTerrain also convert into -1, so this function cannot separate points that exists and have a default terrain, and those that do not exist.
         // We need a different convention here.
@@ -261,7 +259,6 @@ impl Interface {
             .into()
     }
 
-    #[export]
     /// Removes a point from the map.
     ///
     /// # Errors
@@ -276,6 +273,7 @@ impl Interface {
     /// assert_eq(dijkstra_map.remove_point(0), 0)
     /// assert_eq(dijkstra_map.remove_point(0), 1)
     /// ```
+    #[method]
     pub fn remove_point(&mut self, _owner: &Reference, point_id: i32) -> i64 {
         let res = self.dijkstra.remove_point(point_id.into());
         if res.is_some() {
@@ -285,13 +283,12 @@ impl Interface {
         }
     }
 
-    #[export]
     /// Returns [true] if the map contains the given point.
+    #[method]
     pub fn has_point(&mut self, _owner: &Reference, point_id: i32) -> bool {
         self.dijkstra.has_point(point_id.into())
     }
 
-    #[export]
     /// Disable the given point for pathfinding.
     ///
     /// # Errors
@@ -305,12 +302,12 @@ impl Interface {
     /// assert_eq(dijkstra_map.disable_point(0), 0)
     /// assert_eq(dijkstra_map.disable_point(1), 1)
     /// ```
+    #[method]
     pub fn disable_point(&mut self, _owner: &Reference, point_id: i32) -> i64 {
         let res = self.dijkstra.disable_point(point_id.into());
         result_to_int(res)
     }
 
-    #[export]
     /// Enables the given point for pathfinding.
     ///
     /// # Errors
@@ -326,12 +323,12 @@ impl Interface {
     /// assert_eq(dijkstra_map.enable_point(0), 0)
     /// assert_eq(dijkstra_map.enable_point(1), 1)
     /// ```
+    #[method]
     pub fn enable_point(&mut self, _owner: &Reference, point_id: i32) -> i64 {
         let res = self.dijkstra.enable_point(point_id.into());
         result_to_int(res)
     }
 
-    #[export]
     /// Returns [true] if the point exists and is disabled, otherwise
     /// returns [false].
     ///
@@ -345,11 +342,11 @@ impl Interface {
     /// assert(!dijkstra_map.is_point_disabled(1)) # not disabled
     /// assert(!dijkstra_map.is_point_disabled(2)) # not in the map
     /// ```
+    #[method]
     pub fn is_point_disabled(&mut self, _owner: &Reference, point_id: i32) -> bool {
         self.dijkstra.is_point_disabled(point_id.into())
     }
 
-    #[export]
     /// Connects the two given points.
     ///
     /// # Parameters
@@ -376,9 +373,9 @@ impl Interface {
     /// #    2.0     1.0
     /// assert_eq(dijkstra_map.connect_points(1, 3), 1) # 3 does not exists in the map
     /// ```
+    #[method]
     pub fn connect_points(
         &mut self,
-        _owner: &Reference,
         source: i32,
         target: i32,
         #[opt] weight: Option<f32>,
@@ -392,7 +389,6 @@ impl Interface {
         ))
     }
 
-    #[export]
     /// Remove a connection between the two given points.
     ///
     /// # Parameters
@@ -419,9 +415,9 @@ impl Interface {
     /// dijkstra_map.remove_connection(0, 1, false)
     /// assert(dijkstra_map.has_connection(1, 0))
     /// ```
+    #[method]
     pub fn remove_connection(
         &mut self,
-        _owner: &Reference,
         source: i32,
         target: i32,
         #[opt] bidirectional: Option<bool>,
@@ -432,7 +428,6 @@ impl Interface {
         )
     }
 
-    #[export]
     /// Returns [true] if there is a connection from `source` to
     /// `target` (and they both exist).
     ///
@@ -446,11 +441,11 @@ impl Interface {
     /// assert(!dijkstra_map.has_connection(1, 0))
     /// assert(!dijkstra_map.has_connection(0, 2))
     /// ```
+    #[method]
     pub fn has_connection(&mut self, _owner: &Reference, source: i32, target: i32) -> bool {
         self.dijkstra.has_connection(source.into(), target.into())
     }
 
-    #[export]
     /// Given a point, returns the id of the next point along the
     /// shortest path toward the target.
     ///
@@ -471,6 +466,7 @@ impl Interface {
     /// assert_eq(dijkstra_map.get_direction_at_point(1), 0)
     /// assert_eq(dijkstra_map.get_direction_at_point(2), -1)
     /// ```
+    #[method]
     pub fn get_direction_at_point(&mut self, _owner: &Reference, point_id: i32) -> i32 {
         self.dijkstra
             .get_direction_at_point(point_id.into())
@@ -478,7 +474,6 @@ impl Interface {
             .into()
     }
 
-    #[export]
     /// Returns the cost of the shortest path from this point to the
     /// target.
     ///
@@ -496,11 +491,11 @@ impl Interface {
     /// assert_eq(dijkstra_map.get_cost_at_point(1), 1.0)
     /// assert_eq(dijkstra_map.get_cost_at_point(2), INF)
     /// ```
+    #[method]
     pub fn get_cost_at_point(&mut self, _owner: &Reference, point_id: i32) -> f32 {
         self.dijkstra.get_cost_at_point(point_id.into()).into()
     }
 
-    #[export]
     /// Recalculates cost map and direction map information for each
     /// point, overriding previous results.
     ///
@@ -562,9 +557,9 @@ impl Interface {
     /// # 2 is too far from 0, so because we set "maximum_cost" to 2.0, it is inaccessible.
     /// assert_eq(dijkstra_map.get_direction_at_point(2), -1)
     /// ```
+    #[method]
     pub fn recalculate(
         &mut self,
-        _owner: &Reference,
         origin: gdnative::core_types::Variant,
         #[opt] optional_params: Option<Dictionary>,
     ) -> i64 {
@@ -644,19 +639,24 @@ impl Interface {
         let mut res_origins = Vec::<PointId>::new();
         match origin.get_type() {
             gdnative::core_types::VariantType::I64 => {
-                res_origins.push((origin.to_i64() as i32).into())
+                res_origins.push((origin.to::<i64>().unwrap() as i32).into())
             }
             gdnative::core_types::VariantType::Int32Array => {
                 res_origins = origin
-                    .to_int32_array()
+                    .to::<gdnative::core_types::Int32Array>()
+                    .unwrap()
                     .read()
                     .iter()
                     .map(|&x| x.into())
                     .collect();
             }
             gdnative::core_types::VariantType::VariantArray => {
-                for i in origin.to_array().iter() {
-                    match i.try_to_i64() {
+                for i in origin
+                    .to::<gdnative::core_types::VariantArray>()
+                    .unwrap()
+                    .iter()
+                {
+                    match i.to::<i64>() {
                         Some(intval) => res_origins.push(PointId(intval as i32)),
                         None => type_warning(
                             "element of 'origin'",
@@ -680,8 +680,8 @@ impl Interface {
             // we need to check that the parameter exists first, because
             // `optional_params.get` will create a `Nil` entry if it does not.
             if optional_params.contains(INPUT_IS_DESTINATION) {
-                let value = optional_params.get(INPUT_IS_DESTINATION);
-                match value.try_to_bool() {
+                let value = optional_params.get(INPUT_IS_DESTINATION).unwrap();
+                match value.to::<bool>() {
                     Some(b) => Some(if b {
                         Read::InputIsDestination
                     } else {
@@ -704,8 +704,8 @@ impl Interface {
 
         let max_cost: Option<Cost> = {
             if optional_params.contains(MAXIMUM_COST) {
-                let value = optional_params.get(MAXIMUM_COST);
-                match value.try_to_f64() {
+                let value = optional_params.get(MAXIMUM_COST).unwrap();
+                match value.to::<f64>() {
                     Some(f) => Some(Cost(f as f32)),
                     None => {
                         type_warning(
@@ -725,16 +725,25 @@ impl Interface {
         let initial_costs: Vec<Cost> = {
             if optional_params.contains(INITIAL_COSTS) {
                 let mut initial_costs = Vec::<Cost>::new();
-                let value = optional_params.get(INITIAL_COSTS);
+                let value = optional_params.get(INITIAL_COSTS).unwrap();
                 match value.get_type() {
                     gdnative::core_types::VariantType::Float32Array => {
-                        for f in value.to_float32_array().read().iter() {
+                        for f in value
+                            .to::<gdnative::core_types::Float32Array>()
+                            .unwrap()
+                            .read()
+                            .iter()
+                        {
                             initial_costs.push(Cost(*f))
                         }
                     }
                     gdnative::core_types::VariantType::VariantArray => {
-                        for f in value.to_array().iter() {
-                            initial_costs.push(match f.try_to_f64() {
+                        for f in value
+                            .to::<gdnative::core_types::VariantArray>()
+                            .unwrap()
+                            .iter()
+                        {
+                            initial_costs.push(match f.to::<f64>() {
                                 Some(fval) => Cost(fval as f32),
                                 None => {
                                     type_warning(
@@ -763,13 +772,13 @@ impl Interface {
 
         let mut terrain_weights = FnvHashMap::<TerrainType, Weight>::default();
         if optional_params.contains(TERRAIN_WEIGHT) {
-            let value = optional_params.get(TERRAIN_WEIGHT);
-            if let Some(dict) = value.try_to_dictionary() {
+            let value = optional_params.get(TERRAIN_WEIGHT).unwrap();
+            if let Some(dict) = value.to::<gdnative::core_types::Dictionary>() {
                 for key in dict.keys() {
-                    if let Some(id) = key.try_to_i64() {
+                    if let Some(id) = key.to::<i64>() {
                         terrain_weights.insert(
                             TerrainType::from(id as i32),
-                            Weight(dict.get(key).try_to_f64().unwrap_or(1.0) as f32),
+                            Weight(dict.get(key).unwrap().to::<f64>().unwrap_or(1.0) as f32),
                         );
                     } else {
                         type_warning(
@@ -795,22 +804,24 @@ impl Interface {
         }
 
         let termination_points = if optional_params.contains(TERMINATION_POINTS) {
-            let value = optional_params.get(TERMINATION_POINTS);
+            let value = optional_params.get(TERMINATION_POINTS).unwrap();
             match value.get_type() {
                 gdnative::core_types::VariantType::I64 => {
-                    std::iter::once(PointId(value.to_i64() as i32)).collect()
+                    std::iter::once(PointId(value.to::<i64>().unwrap() as i32)).collect()
                 }
                 gdnative::core_types::VariantType::Int32Array => value
-                    .to_int32_array()
+                    .to::<gdnative::core_types::Int32Array>()
+                    .unwrap()
                     .read()
                     .iter()
                     .map(|&x| PointId::from(x))
                     .collect(),
                 gdnative::core_types::VariantType::VariantArray => value
-                    .to_array()
+                    .to::<gdnative::core_types::VariantArray>()
+                    .unwrap()
                     .iter()
                     .filter_map(|i| {
-                        let int = i.try_to_i64();
+                        let int = i.to::<i64>();
                         if int.is_none() {
                             type_warning(
                                 "value in 'termination_points'",
@@ -848,7 +859,6 @@ impl Interface {
         OK
     }
 
-    #[export]
     /// For each point in the given array, returns the id of the next
     /// point along the shortest path toward the target.
     ///
@@ -865,11 +875,8 @@ impl Interface {
     /// dijkstra_map.recalculate(0)
     /// assert_eq(Array(dijkstra_map.get_direction_at_points(PoolIntArray([0, 1, 2]))), [0, 0, -1])
     /// ```
-    pub fn get_direction_at_points(
-        &mut self,
-        _owner: &Reference,
-        points: Int32Array,
-    ) -> Int32Array {
+    #[method]
+    pub fn get_direction_at_points(&mut self, points: Int32Array) -> Int32Array {
         Int32Array::from_vec(
             points
                 .read()
@@ -884,7 +891,6 @@ impl Interface {
         )
     }
 
-    #[export]
     /// For each point in the given array, returns the cost of the
     /// shortest path from this point to the target.
     ///
@@ -901,9 +907,9 @@ impl Interface {
     /// dijkstra_map.recalculate(0)
     /// assert_eq(Array(dijkstra_map.get_cost_at_points(PoolIntArray([0, 1, 2]))), [0.0, 1.0, INF])
     /// ```
+    #[method]
     pub fn get_cost_at_points(
         &mut self,
-        _owner: &Reference,
         points: gdnative::core_types::Int32Array,
     ) -> gdnative::core_types::Float32Array {
         Float32Array::from_vec(
@@ -919,7 +925,6 @@ impl Interface {
         )
     }
 
-    #[export]
     /// Returns the entire Dijkstra map of costs in form of a
     /// `Dictionary`.
     ///
@@ -939,6 +944,7 @@ impl Interface {
     /// for id in computed_cost_map.keys():
     ///     assert_eq(computed_cost_map[id], cost_map[id])
     /// ```
+    #[method]
     pub fn get_cost_map(&mut self, _owner: &Reference) -> Dictionary {
         let dict = Dictionary::new();
         for (&point, info) in self.dijkstra.get_direction_and_cost_map().iter() {
@@ -949,7 +955,6 @@ impl Interface {
         dict.into_shared()
     }
 
-    #[export]
     /// Returns the entire Dijkstra map of directions in form of a
     /// `Dictionary`.
     ///
@@ -972,6 +977,7 @@ impl Interface {
     /// for id in computed_direction_map.keys():
     ///     assert_eq(computed_direction_map[id], direction_map[id])
     /// ```
+    #[method]
     pub fn get_direction_map(&mut self, _owner: &Reference) -> Dictionary {
         let dict = Dictionary::new();
         for (&point, info) in self.dijkstra.get_direction_and_cost_map().iter() {
@@ -982,7 +988,6 @@ impl Interface {
         dict.into_shared()
     }
 
-    #[export]
     /// Returns an array of all the points whose cost is between
     /// `min_cost` and `max_cost`.
     ///
@@ -998,9 +1003,9 @@ impl Interface {
     /// dijkstra_map.recalculate(0)
     /// assert_eq(Array(dijkstra_map.get_all_points_with_cost_between(0.5, 1.5)), [1])
     /// ```
+    #[method]
     pub fn get_all_points_with_cost_between(
         &mut self,
-        _owner: &Reference,
         min_cost: f32,
         max_cost: f32,
     ) -> gdnative::core_types::Int32Array {
@@ -1013,7 +1018,6 @@ impl Interface {
         Int32Array::from_vec(res)
     }
 
-    #[export]
     /// Returns an [array] of points describing the shortest path from a
     /// starting point.
     ///
@@ -1024,9 +1028,9 @@ impl Interface {
     /// The starting point itself is not included.
     ///
     /// [array]: gdnative::core_types::Int32Array
+    #[method]
     pub fn get_shortest_path_from_point(
         &mut self,
-        _owner: &Reference,
         point_id: i32,
     ) -> gdnative::core_types::Int32Array {
         let res = self
@@ -1038,7 +1042,6 @@ impl Interface {
         Int32Array::from_vec(res)
     }
 
-    #[export]
     /// Adds a square grid of connected points.
     ///
     /// # Parameters
@@ -1061,9 +1064,9 @@ impl Interface {
     /// This function returns a [Dictionary] where keys are coordinates
     /// of points ([Vector2]) and values are their corresponding point
     /// IDs.
+    #[method]
     pub fn add_square_grid(
         &mut self,
-        _owner: &Reference,
         bounds: Variant,
         #[opt] terrain_type: Option<i32>,
         #[opt] orthogonal_cost: Option<f32>,
@@ -1085,14 +1088,13 @@ impl Interface {
             .iter()
         {
             dict.insert(
-                Variant::from_vector2(&Vector2::from((k.x as f32, k.y as f32))),
+                Vector2::new(k.x as f32, k.y as f32).to_variant(),
                 i32::from(v),
             );
         }
         dict.into_shared()
     }
 
-    #[export]
     /// Adds a hexagonal grid of connected points.
     ///
     /// # Parameters
@@ -1133,9 +1135,9 @@ impl Interface {
     ///  \     / \     /
     ///    \ /     \ /
     ///```
+    #[method]
     pub fn add_hexagonal_grid(
         &mut self,
-        _owner: &Reference,
         bounds: Variant,
         #[opt] terrain_type: Option<i32>,
         #[opt] weight: Option<f32>,
@@ -1155,7 +1157,7 @@ impl Interface {
             .iter()
         {
             dict.insert(
-                Variant::from_vector2(&Vector2::from((k.x as f32, k.y as f32))),
+                Vector2::new(k.x as f32, k.y as f32).to_variant(),
                 i32::from(v),
             );
         }

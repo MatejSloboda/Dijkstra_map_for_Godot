@@ -559,7 +559,7 @@ impl Interface {
     /// dijkstra_map.recalculate(0, optional_params)
     /// assert_eq(dijkstra_map.get_direction_at_point(0), 0)
     /// assert_eq(dijkstra_map.get_direction_at_point(1), 0)
-    /// # 2 is too far from 0, so because we set "maximum_cost" to 2.0, it is innaccessible.
+    /// # 2 is too far from 0, so because we set "maximum_cost" to 2.0, it is inaccessible.
     /// assert_eq(dijkstra_map.get_direction_at_point(2), -1)
     /// ```
     pub fn recalculate(
@@ -920,7 +920,7 @@ impl Interface {
     }
 
     #[export]
-    /// Returns the entire Dijktra map of costs in form of a
+    /// Returns the entire Dijkstra map of costs in form of a
     /// `Dictionary`.
     ///
     /// Keys are points' IDs, and values are costs. Inaccessible points
@@ -957,7 +957,7 @@ impl Interface {
     /// shortest path.
     ///
     /// ## Note
-    /// Unreacheable points are not present in the map.
+    /// Unreachable points are not present in the map.
     ///
     /// # Example
     /// ```gdscript
@@ -1070,7 +1070,7 @@ impl Interface {
         #[opt] diagonal_cost: Option<f32>,
     ) -> Dictionary {
         let (x_offset, y_offset, width, height) =
-            variant_to_width_and_height(bounds).expect("couldnt use bounds variant");
+            variant_to_width_and_height(bounds).expect("couldn't use bounds variant");
         let dict = Dictionary::new();
         for (&k, &v) in self
             .dijkstra
@@ -1109,7 +1109,7 @@ impl Interface {
     ///
     /// # Note
     ///
-    /// Hexgrid is in the "pointy" orentation by default (see example
+    /// Hexgrid is in the "pointy" orientation by default (see example
     /// below).
     ///
     /// To switch to "flat" orientation, swap `width` and `height`, and
@@ -1141,7 +1141,7 @@ impl Interface {
         #[opt] weight: Option<f32>,
     ) -> Dictionary {
         let (x_offset, y_offset, width, height) =
-            variant_to_width_and_height(bounds).expect("couldnt use bounds variant");
+            variant_to_width_and_height(bounds).expect("couldn't use bounds variant");
         let dict = Dictionary::new();
         for (&k, &v) in self
             .dijkstra

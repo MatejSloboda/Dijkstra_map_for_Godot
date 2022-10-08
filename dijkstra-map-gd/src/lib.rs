@@ -153,22 +153,23 @@ impl Interface {
         unsafe {
             let source_instance = source_instance.assume_safe().assume_shared();
         }
-        match source_instance
-            .to_owned()
-            .cast_instance::<Interface>()
-            // .as_ref()
-            // .and_then(|reference| unsafe { reference.assume_safe() }.cast_instance::<Interface>())
-            .and_then(|interface| {
-                interface.map(|interface, _| {
-                    self.dijkstra = interface.dijkstra.clone();
-                })
-            }) {
-            Some(_) => OK,
-            None => {
-                godot_error!("Failed to convert Variant to DijkstraMap.");
-                FAILED
-            }
-        }
+        todo!();
+        // match source_instance
+        //     .to_owned()
+        //     .cast_instance::<Interface>()
+        //     // .as_ref()
+        //     // .and_then(|reference| unsafe { reference.assume_safe() }.cast_instance::<Interface>())
+        //     .and_then(|interface| {
+        //         interface.map(|interface, _| {
+        //             self.dijkstra = interface.dijkstra.clone();
+        //         })
+        //     }) {
+        //     Some(_) => OK,
+        //     None => {
+        //         godot_error!("Failed to convert Variant to DijkstraMap.");
+        //         FAILED
+        //     }
+        // }
     }
     /// Returns the first positive available id.
     ///

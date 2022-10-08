@@ -68,7 +68,7 @@ const FAILED: i64 = 1;
 /// point towards the destination and inspected points are assumed to be
 /// origins.
 #[derive(NativeClass)]
-// #[inherit(Reference)]
+// #[no_constructor]
 pub struct Interface {
     dijkstra: DijkstraMap,
 }
@@ -114,9 +114,8 @@ impl Interface {
     /// ```gdscript
     /// var dijkstra_map = DijkstraMap.new()
     /// ```
-    #[method]
-    pub fn new(&self) -> Self {
-        Interface {
+    fn new(_: &Reference) -> Self {
+        Self {
             dijkstra: DijkstraMap::default(),
         }
     }
@@ -129,7 +128,7 @@ impl Interface {
     /// dijkstra_map.clear()
     /// ```
     #[method]
-    pub fn clear(&mut self, _owner: &Reference) {
+    pub fn clear(&mut self) {
         self.dijkstra.clear()
     }
 
@@ -149,10 +148,10 @@ impl Interface {
     /// dijkstra_map_copy.duplicate_graph_from(dijkstra_map)
     /// ```
     #[method]
-    pub fn duplicate_graph_from(&mut self, _owner: &Reference, source_instance: Variant) -> i64 {
+    pub fn duplicate_graph_from(&mut self, source_instance: Variant) -> i64 {
         let source_instance = source_instance.to_object::<Reference>().unwrap();
         unsafe {
-            let source_instance = source_instance.assume_unique().assume_shared();
+            let source_instance = source_instance.assume_safe().assume_shared();
         }
         match source_instance
             .to_owned()
@@ -181,7 +180,7 @@ impl Interface {
     /// assert_eq(dijkstra_map.get_available_point_id(), 2)
     /// ```
     #[method]
-    pub fn get_available_point_id(&mut self, _owner: &Reference) -> i32 {
+    pub fn get_available_point_id(&mut self) -> i32 {
         self.dijkstra.get_available_id(None).into()
     }
 
@@ -250,7 +249,7 @@ impl Interface {
     /// assert_eq(dijkstra_map.get_terrain_for_point(2), -1)
     /// ```
     #[method]
-    pub fn get_terrain_for_point(&mut self, _owner: &Reference, point_id: i32) -> i32 {
+    pub fn get_terrain_for_point(&mut self, point_id: i32) -> i32 {
         // TODO : TerrainType::DefaultTerrain also convert into -1, so this function cannot separate points that exists and have a default terrain, and those that do not exist.
         // We need a different convention here.
         self.dijkstra
@@ -274,7 +273,7 @@ impl Interface {
     /// assert_eq(dijkstra_map.remove_point(0), 1)
     /// ```
     #[method]
-    pub fn remove_point(&mut self, _owner: &Reference, point_id: i32) -> i64 {
+    pub fn remove_point(&mut self, point_id: i32) -> i64 {
         let res = self.dijkstra.remove_point(point_id.into());
         if res.is_some() {
             OK
@@ -285,7 +284,7 @@ impl Interface {
 
     /// Returns [true] if the map contains the given point.
     #[method]
-    pub fn has_point(&mut self, _owner: &Reference, point_id: i32) -> bool {
+    pub fn has_point(&mut self, point_id: i32) -> bool {
         self.dijkstra.has_point(point_id.into())
     }
 
@@ -303,7 +302,7 @@ impl Interface {
     /// assert_eq(dijkstra_map.disable_point(1), 1)
     /// ```
     #[method]
-    pub fn disable_point(&mut self, _owner: &Reference, point_id: i32) -> i64 {
+    pub fn disable_point(&mut self, point_id: i32) -> i64 {
         let res = self.dijkstra.disable_point(point_id.into());
         result_to_int(res)
     }
@@ -324,7 +323,7 @@ impl Interface {
     /// assert_eq(dijkstra_map.enable_point(1), 1)
     /// ```
     #[method]
-    pub fn enable_point(&mut self, _owner: &Reference, point_id: i32) -> i64 {
+    pub fn enable_point(&mut self, point_id: i32) -> i64 {
         let res = self.dijkstra.enable_point(point_id.into());
         result_to_int(res)
     }
@@ -343,7 +342,7 @@ impl Interface {
     /// assert(!dijkstra_map.is_point_disabled(2)) # not in the map
     /// ```
     #[method]
-    pub fn is_point_disabled(&mut self, _owner: &Reference, point_id: i32) -> bool {
+    pub fn is_point_disabled(&mut self, point_id: i32) -> bool {
         self.dijkstra.is_point_disabled(point_id.into())
     }
 
@@ -442,7 +441,7 @@ impl Interface {
     /// assert(!dijkstra_map.has_connection(0, 2))
     /// ```
     #[method]
-    pub fn has_connection(&mut self, _owner: &Reference, source: i32, target: i32) -> bool {
+    pub fn has_connection(&mut self, source: i32, target: i32) -> bool {
         self.dijkstra.has_connection(source.into(), target.into())
     }
 
@@ -467,7 +466,7 @@ impl Interface {
     /// assert_eq(dijkstra_map.get_direction_at_point(2), -1)
     /// ```
     #[method]
-    pub fn get_direction_at_point(&mut self, _owner: &Reference, point_id: i32) -> i32 {
+    pub fn get_direction_at_point(&mut self, point_id: i32) -> i32 {
         self.dijkstra
             .get_direction_at_point(point_id.into())
             .unwrap_or(PointId(-1))
@@ -492,7 +491,7 @@ impl Interface {
     /// assert_eq(dijkstra_map.get_cost_at_point(2), INF)
     /// ```
     #[method]
-    pub fn get_cost_at_point(&mut self, _owner: &Reference, point_id: i32) -> f32 {
+    pub fn get_cost_at_point(&mut self, point_id: i32) -> f32 {
         self.dijkstra.get_cost_at_point(point_id.into()).into()
     }
 
@@ -945,7 +944,7 @@ impl Interface {
     ///     assert_eq(computed_cost_map[id], cost_map[id])
     /// ```
     #[method]
-    pub fn get_cost_map(&mut self, _owner: &Reference) -> Dictionary {
+    pub fn get_cost_map(&mut self) -> Dictionary {
         let dict = Dictionary::new();
         for (&point, info) in self.dijkstra.get_direction_and_cost_map().iter() {
             let point: i32 = point.into();
@@ -978,7 +977,7 @@ impl Interface {
     ///     assert_eq(computed_direction_map[id], direction_map[id])
     /// ```
     #[method]
-    pub fn get_direction_map(&mut self, _owner: &Reference) -> Dictionary {
+    pub fn get_direction_map(&mut self) -> Dictionary {
         let dict = Dictionary::new();
         for (&point, info) in self.dijkstra.get_direction_and_cost_map().iter() {
             let point: i32 = point.into();

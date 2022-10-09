@@ -35,6 +35,8 @@ This will work for linux x64, macos x86 and windows x64 :
 
 ### Method 2: from Github
 
+You must currently use this in order to support Godot 3.5.1
+
 **Note**: on linux x64, macos x86 or windows x64, you may skip steps 2-4 and use the pre-compiled libraries in `addons/dijkstra-map/Dijkstra_map_library/bin/<os-name>`. They may be slightly outdated though.
 
 1. Clone this repository
@@ -112,7 +114,7 @@ my_dijkstra_map.recalculate(origin_point, {"terrain_weights": {TERRAIN_ID_FOREST
 ```
 Now, during this recalculation, connection costs of forest points are doubled* (ie. movement speed is halved) and the shortest paths will try avoid forest points, to minimize travel time. Specifically, path segments will only lead trough forests, if they are half the length of alternative paths. 
 
-* *important note, if terrain_weights doesn't specify a terrain present in the dijkstra, this terrain will be innacessible (cost = inf)
+* *important note, if terrain_weights doesn't specify a terrain present in the dijkstra, this terrain will be inaccessible (cost = inf)
 * *note: connection costs between two points are multiplied by the average of their respective weights. All terrain weights that remain unspecified in the argument have default terrain weight of `1.0`.
 
 When recalculating the DijkstraMap for the Wagon, we specify "terrain weights" optional argument as follows:
@@ -147,7 +149,7 @@ Before doing that pull request, if you modified the rust code be sure you have b
 
 ## TODO
 
-* if performance on djikstra is a real heavy consideration, consider implementing threading 
+* if performance on dijkstra is a real heavy consideration, consider implementing threading 
 
 ## Acknowledgments
 KohuGaly

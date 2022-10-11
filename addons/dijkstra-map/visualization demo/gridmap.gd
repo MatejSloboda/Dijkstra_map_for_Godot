@@ -11,7 +11,8 @@ var dragging: bool = false
 func _ready() -> void:
 	var event: InputEventMouseButton = InputEventMouseButton.new()
 	event.button_index = BUTTON_LEFT
-	InputMap.add_action("left_mouse_button")
+	if not InputMap.has_action("left_mouse_button"):
+		InputMap.add_action("left_mouse_button")
 	InputMap.action_add_event("left_mouse_button", event)
 
 	dijkstramap = DijkstraMap.new()

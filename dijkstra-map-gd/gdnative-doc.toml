@@ -1,1 +1,2 @@
 rename_classes = { Interface = "DijkstraMap" }
+godot_version = "3.5"

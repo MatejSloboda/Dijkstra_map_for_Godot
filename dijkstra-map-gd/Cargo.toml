@@ -13,4 +13,4 @@ gdnative = "0.11.0"
 dijkstra_map = { path = "../dijkstra-map" }
 
 [build-dependencies]
-gdnative-doc = "0.0.4"
+gdnative-doc = "0.0.6"

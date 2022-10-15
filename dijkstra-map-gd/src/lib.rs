@@ -114,7 +114,7 @@ impl Interface {
     /// ```gdscript
     /// var dijkstra_map = DijkstraMap.new()
     /// ```
-    fn new(_: &Reference) -> Self {
+    pub fn new(_: &Reference) -> Self {
         Self {
             dijkstra: DijkstraMap::default(),
         }

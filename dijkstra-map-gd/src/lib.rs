@@ -144,8 +144,18 @@ impl Interface {
     /// ```gdscript
     /// var dijkstra_map = DijkstraMap.new()
     /// # fill dijkstra_map
+    /// dijkstra_map.add_point(1)
+    /// dijkstra_map.add_point(2)
+    /// dijkstra_map.add_point(3)
+    /// dijkstra_map.connect_points(1, 2, 1.0)
     /// var dijkstra_map_copy = DijkstraMap.new()
     /// dijkstra_map_copy.duplicate_graph_from(dijkstra_map)
+    /// dijkstra_map.add_point(4)
+    /// assert_true(dijkstra_map_copy.has_point(1))
+    /// assert_true(dijkstra_map_copy.has_point(2))
+    /// assert_true(dijkstra_map_copy.has_point(3))
+    /// assert_true(dijkstra_map_copy.has_connection(1, 2))
+    /// assert_false(dijkstra_map_copy.has_point(4))
     /// ```
     #[method]
     pub fn duplicate_graph_from(&mut self, source_instance: Variant) -> i64 {
@@ -192,9 +202,16 @@ impl Interface {
     ///
     /// # Example
     /// ```gdscript
+    /// var res: int
     /// var dijkstra_map = DijkstraMap.new()
-    /// dijkstra_map.add_point(0) # terrain_type is -1
-    /// dijkstra_map.add_point(1, 0) # terrain_type is 0
+    /// res = dijkstra_map.add_point(0) # default terrain_type is -1
+    /// assert_eq(res, OK)
+    /// res = dijkstra_map.add_point(1, 0) # terrain_type is 0
+    /// assert_eq(res, OK, "you may add a point once")
+    /// res = dijkstra_map.add_point(1, 0)
+    /// assert_eq(res, FAILED, "but not twice")
+    /// res = dijkstra_map.add_point(1, 1)
+    /// assert_eq(res, FAILED, "you cannot even change the terrain this way")
     /// ```
     #[method]
     pub fn add_point(&mut self, point_id: i32, #[opt] terrain_type: Option<i32>) -> i64 {
@@ -213,12 +230,15 @@ impl Interface {
     ///
     /// # Example
     /// ```gdscript
+    /// var res: int
     /// var dijkstra_map = DijkstraMap.new()
     /// dijkstra_map.add_point(0, 2)
-    /// dijkstra_map.set_terrain_for_point(0, 1)
-    /// assert_eq(dijkstra_map.get_terrain_for_point(0), 1)
-    /// dijkstra_map.set_terrain_for_point(0)
-    /// assert_eq(dijkstra_map.get_terrain_for_point(0), -1)
+    /// res = dijkstra_map.set_terrain_for_point(0, 1)
+    /// assert_eq(res, OK, "you can set the point's terrain")
+    /// assert_eq(dijkstra_map.get_terrain_for_point(0), 1, "the terrain corresponds")
+    /// res = dijkstra_map.set_terrain_for_point(0)
+    /// assert_eq(res, OK, "multiple times if you want")
+    /// assert_eq(dijkstra_map.get_terrain_for_point(0), -1, "default terrain is -1")
     /// ```
     #[method]
     pub fn set_terrain_for_point(&mut self, point_id: i32, #[opt] terrain_id: Option<i32>) -> i64 {
@@ -266,8 +286,8 @@ impl Interface {
     /// ```gdscript
     /// var dijkstra_map = DijkstraMap.new()
     /// dijkstra_map.add_point(0)
-    /// assert_eq(dijkstra_map.remove_point(0), 0)
-    /// assert_eq(dijkstra_map.remove_point(0), 1)
+    /// assert_eq(dijkstra_map.remove_point(0), OK)
+    /// assert_eq(dijkstra_map.remove_point(0), FAILED)
     /// ```
     #[method]
     pub fn remove_point(&mut self, point_id: i32) -> i64 {
@@ -280,6 +300,16 @@ impl Interface {
     }
 
     /// Returns [true] if the map contains the given point.
+    ///
+    /// # Example
+    /// ```gdscript
+    /// var dijkstra_map = DijkstraMap.new()
+    /// dijkstra_map.add_point(0)
+    /// dijkstra_map.add_point(1)
+    /// assert_true(dijkstra_map.has_point(0))
+    /// assert_true(dijkstra_map.has_point(1))
+    /// assert_false(dijkstra_map.has_point(2))
+    /// ```
     #[method]
     pub fn has_point(&mut self, point_id: i32) -> bool {
         self.dijkstra.has_point(point_id.into())
@@ -295,8 +325,8 @@ impl Interface {
     /// ```gdscript
     /// var dijkstra_map = DijkstraMap.new()
     /// dijkstra_map.add_point(0)
-    /// assert_eq(dijkstra_map.disable_point(0), 0)
-    /// assert_eq(dijkstra_map.disable_point(1), 1)
+    /// assert_eq(dijkstra_map.disable_point(0), OK)
+    /// assert_eq(dijkstra_map.disable_point(1), FAILED)
     /// ```
     #[method]
     pub fn disable_point(&mut self, point_id: i32) -> i64 {
@@ -316,8 +346,8 @@ impl Interface {
     /// ```gdscript
     /// var dijkstra_map = DijkstraMap.new()
     /// dijkstra_map.add_point(0)
-    /// assert_eq(dijkstra_map.enable_point(0), 0)
-    /// assert_eq(dijkstra_map.enable_point(1), 1)
+    /// assert_eq(dijkstra_map.enable_point(0), OK)
+    /// assert_eq(dijkstra_map.enable_point(1), FAILED)
     /// ```
     #[method]
     pub fn enable_point(&mut self, point_id: i32) -> i64 {
@@ -334,9 +364,9 @@ impl Interface {
     /// dijkstra_map.add_point(0)
     /// dijkstra_map.add_point(1)
     /// dijkstra_map.disable_point(0)
-    /// assert(dijkstra_map.is_point_disabled(0))
-    /// assert(!dijkstra_map.is_point_disabled(1)) # not disabled
-    /// assert(!dijkstra_map.is_point_disabled(2)) # not in the map
+    /// assert_true(dijkstra_map.is_point_disabled(0))
+    /// assert_false(dijkstra_map.is_point_disabled(1)) # not disabled
+    /// assert_false(dijkstra_map.is_point_disabled(2)) # not in the map
     /// ```
     #[method]
     pub fn is_point_disabled(&mut self, point_id: i32) -> bool {
@@ -362,12 +392,18 @@ impl Interface {
     /// dijkstra_map.add_point(0)
     /// dijkstra_map.add_point(1)
     /// dijkstra_map.add_point(2)
-    /// dijkstra_map.connect_points(0, 1, 2.0)
-    /// dijkstra_map.connect_points(1, 2, 1.0, false)
+    /// dijkstra_map.add_point(3)
+    /// # bidirectional is enabled by default
+    /// assert_eq(dijkstra_map.connect_points(0, 1, 2.0), OK)
+    /// # default weight is 1.0
+    /// assert_eq(dijkstra_map.connect_points(1, 2), OK)
+    /// assert_eq(dijkstra_map.connect_points(1, 3, 1.0, false), OK)
     /// # produces the graph :
-    /// # 0 <---> 1 ----> 2
-    /// #    2.0     1.0
-    /// assert_eq(dijkstra_map.connect_points(1, 3), 1) # 3 does not exists in the map
+    /// # 0 <---> 1 <---> 2 ----> 3
+    /// #    2.0     1.0     1.0
+    /// assert_eq(dijkstra_map.connect_points(1, 4), FAILED, "4 does not exists in the map")
+    /// assert_eq(dijkstra_map.connect_points(1, 5, 1.0), FAILED, "5 does not exists in the map")
+    /// assert_eq(dijkstra_map.connect_points(1, 6, 1.0, true), FAILED, "6 does not exists in the map")
     /// ```
     #[method]
     pub fn connect_points(
@@ -396,7 +432,7 @@ impl Interface {
     ///
     /// # Errors
     ///
-    /// Returns [FAILED] if one of the points does not exist.
+    /// Returns [FAILED] if one of the points does not exist. Else, returns [OK].
     ///
     /// # Example
     /// ```gdscript
@@ -404,12 +440,12 @@ impl Interface {
     /// dijkstra_map.add_point(0)
     /// dijkstra_map.add_point(1)
     /// dijkstra_map.connect_points(0, 1)
-    /// dijkstra_map.remove_connection(0, 1)
-    /// assert_eq(dijkstra_map.remove_connection(0, 2), 1) # 2 does not exists in the map
+    /// assert_eq(dijkstra_map.remove_connection(0, 1), OK)
+    /// assert_eq(dijkstra_map.remove_connection(0, 2), FAILED) # 2 does not exists in the map
     /// dijkstra_map.connect_points(0, 1)
     /// # only removes connection from 0 to 1
-    /// dijkstra_map.remove_connection(0, 1, false)
-    /// assert(dijkstra_map.has_connection(1, 0))
+    /// assert_eq(dijkstra_map.remove_connection(0, 1, false), OK)
+    /// assert_true(dijkstra_map.has_connection(1, 0))
     /// ```
     #[method]
     pub fn remove_connection(
@@ -433,9 +469,9 @@ impl Interface {
     /// dijkstra_map.add_point(0)
     /// dijkstra_map.add_point(1)
     /// dijkstra_map.connect_points(0, 1, 1.0, false)
-    /// assert(dijkstra_map.has_connection(0, 1))
-    /// assert(!dijkstra_map.has_connection(1, 0))
-    /// assert(!dijkstra_map.has_connection(0, 2))
+    /// assert_true(dijkstra_map.has_connection(0, 1))
+    /// assert_false(dijkstra_map.has_connection(1, 0))
+    /// assert_false(dijkstra_map.has_connection(0, 2))
     /// ```
     #[method]
     pub fn has_connection(&mut self, source: i32, target: i32) -> bool {

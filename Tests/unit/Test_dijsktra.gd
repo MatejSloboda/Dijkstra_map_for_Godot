@@ -18,96 +18,47 @@ func after_each() -> void:
 	gut.p("#------End Test------#")
 
 
-func test_add_point() -> void:
-	res = map.add_point(3, 0)
-	assert_eq(res, OK, "you can add a point once")
-	res = map.add_point(3, 0)
-	assert_eq(res, FAILED, "but not twice")
-	res = map.add_point(3, 1)
-	assert_eq(res, FAILED, "you cannot even change the terrain this way")
-
-
-func test_set_terrain() -> void:
-	res = map.set_terrain_for_point(0, 1)
-	assert_eq(res, OK, "you can set the point terrain")
-	assert_eq(map.get_terrain_for_point(0), 1, "the terrain corresponds")
-
-	res = map.set_terrain_for_point(0, 2)
-	assert_eq(res, OK, "has much as you want")
-	assert_eq(map.get_terrain_for_point(0), 2, "the terrain corresponds")
-
-	res = map.set_terrain_for_point(0)  # default terrain
-	assert_eq(res, OK, "has much as you want")
-	assert_eq(map.get_terrain_for_point(0), -1, "the default terrain corresponds")
-
-
-func test_has_points() -> void:
-	assert_true(map.has_point(1))
-	assert_true(map.has_point(2))
-	assert_false(map.has_point(3))
-
-
-func test_connect_points() -> void:
-	res = map.connect_points(1, 3, 1.0, false)
-	assert_eq(res, FAILED, "id absent should failed")
-
-	res = map.connect_points(1, 4, 1.0, true)
-	assert_eq(res, FAILED, "id absent should failed")
-
-	res = map.connect_points(1, 2, 1.0, false)
-	assert_eq(res, OK, "id both exist, connects ok")
-
-
-func test_connect_defaut_args() -> void:
-	res = map.connect_points(1, 3)
-	assert_eq(res, FAILED, "id absent should failed")
-
-	res = map.connect_points(1, 4)
-	assert_eq(res, FAILED, "id absent should failed")
-
-	res = map.connect_points(1, 2)
-	assert_eq(res, OK, "id both exist, connects ok")
-
-
 func test_connect_points_recalculate() -> void:
+	var cost_res: float
 	gut.p("reversed, unilateral : point as target from which you start")
 	res = map.connect_points(1, 2, 1.0, false)
 	assert_eq(res, OK, "connected 1 -> 2 succesfully")
 
 	res = map.recalculate(1, {"input_is_destination": false})
-	assert_eq(res, 0)
+	assert_eq(res, OK)
 
-	res = map.get_cost_at_point(2)
-	assert_eq(res, 1.0, "1 is target where the search starts 1->2 costs 1")
+	cost_res = map.get_cost_at_point(2)
+	assert_eq(cost_res, 1.0, "1 is target where the search starts 1->2 costs 1")
 
 	gut.p(map.get_cost_map())
 
 	gut.p("reversed, unilateral : point as target from which you start")
 	map.recalculate(2, {"input_is_destination": true})
 
-	res = map.get_cost_at_point(1)
-	assert_eq(res, 1.0, "2 is where you want to go\n1->2 costs 1.0")
+	cost_res = map.get_cost_at_point(1)
+	assert_eq(cost_res, 1.0, "2 is where you want to go\n1->2 costs 1.0")
 
-	res = map.get_cost_at_point(2)
-	assert_eq(res, 0.0, "2 is where you want to be, cost 0.0")
+	cost_res = map.get_cost_at_point(2)
+	assert_eq(cost_res, 0.0, "2 is where you want to be, cost 0.0")
 	gut.p(map.get_cost_map())
 
 
 func test_recalculate_fails_if_nonsensical_key() -> void:
 	res = map.recalculate(0, {"some str": 4})
-	assert_eq(res, 1)
+	assert_eq(res, FAILED)
 
 
 func test_connect_points_recalculate_default_args() -> void:
-	res = map.connect_points(2, 1, 1.0, false)
+	var cost_res: float
+	assert_eq(map.connect_points(2, 1, 1.0, false), OK)
 	var other_res: int = map.recalculate(1)
-	assert_eq(other_res, 0, "recalculate successful")
+	assert_eq(other_res, OK, "recalculate successful")
 
-	res = map.get_cost_at_point(1)
-	assert_eq(res, 0.0, "1 is where you wanna go\ncosts 0.0")
+	cost_res = map.get_cost_at_point(1)
+	assert_eq(cost_res, 0.0, "1 is where you wanna go\ncosts 0.0")
 
-	res = map.get_cost_at_point(2)
-	assert_eq(res, 1.0, "2 is where you want to go, cost 1.0")
+	cost_res = map.get_cost_at_point(2)
+	assert_eq(cost_res, 1.0, "2 is where you want to go, cost 1.0")
 	gut.p(map.get_cost_map())
 
 
@@ -180,19 +131,3 @@ func test_get_points_with_cost_between() -> void:
 	map.recalculate(0)
 	gut.p(map.get_all_points_with_cost_between(0.0, 5.0))
 	gut.p(map.get_cost_map())
-
-
-func test_duplicate_graph_from_works() -> void:
-	var d: DijkstraMap = DijkstraMap.new()
-	var copy: DijkstraMap = DijkstraMap.new()
-	d.add_point(1)
-	d.add_point(2)
-	d.add_point(3)
-	d.connect_points(1, 2, 1.0)
-	copy.duplicate_graph_from(d)
-	d.add_point(4)
-	assert_true(copy.has_point(1))
-	assert_true(copy.has_point(2))
-	assert_true(copy.has_point(3))
-	assert_true(copy.has_connection(1, 2))
-	assert_false(copy.has_point(4))

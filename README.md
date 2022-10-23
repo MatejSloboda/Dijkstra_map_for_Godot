@@ -17,6 +17,12 @@ Note that the [API](./addons/dijkstra-map/doc/index.md) is now stable! Some feat
 
 ## Installing
 
+Note: when installing pre-compiled libraries, we support
+
+- On linux: Ubuntu 20.04 or higher
+- On macos: The latest macOS version (11 at the time of writing)
+- On windows: Windows 10 or higher (presumably)
+
 ### Method 1: from the asset store (recommended)
 
 This will work for linux x64, macos x86 and windows x64 :

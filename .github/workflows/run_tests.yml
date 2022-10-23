@@ -27,15 +27,15 @@ jobs:
             target: x86_64-apple-darwin
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        target: ${{ matrix.target }}
-        default: true
-        override: true
-    - uses: Swatinem/rust-cache@v1
-    - uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --verbose --workspace
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+          default: true
+          override: true
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --verbose --workspace

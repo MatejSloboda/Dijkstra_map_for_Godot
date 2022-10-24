@@ -25,7 +25,7 @@ Note: when installing pre-compiled libraries, we support
 
 ### Method 1: from the asset store (recommended)
 
-This will work for linux x64, macos x86 and windows x64 :
+This will work for linux x64, macos x86 and windows x64 for godot 3.5.1 (for another godot version you'll probably have to use the second method):
 1. In the godot editor, go to the `AssetLib` tab
 
     ![](assets/godot-outline-assetlib.png)
@@ -40,8 +40,6 @@ This will work for linux x64, macos x86 and windows x64 :
     This will install the files in `res://addons/dijkstra-map`.
 
 ### Method 2: from Github
-
-You must currently use this in order to support Godot 3.5.1
 
 **Note**: on linux x64, macos x86 or windows x64, you may skip steps 2-4 and use the pre-compiled libraries in `addons/dijkstra-map/Dijkstra_map_library/bin/<os-name>`. They may be slightly outdated though.
 

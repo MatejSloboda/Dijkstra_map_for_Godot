@@ -1,0 +1,31 @@
+name: Do not manually update the binaries
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  check_no_binary:
+    name: Do not include release binaries in a pull request
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      - shell: bash
+        id: check_binary_files_changed
+        env:
+          LINUX_BINARY: addons/dijkstra-map/Dijkstra_map_library/bin/linux/libdijkstra_map_gd.so
+          WINDOWS_BINARY: addons/dijkstra-map/Dijkstra_map_library/bin/windows/dijkstra_map_gd.dll
+          MACOS_BINARY: addons/dijkstra-map/Dijkstra_map_library/bin/macos/libdijkstra_map_gd.dylib
+        run: |
+          DIFF_LIST=$(git diff --name-only HEAD^ HEAD)
+          if [[ $DIFF_LIST == *$LINUX_BINARY* ]] || [[ $DIFF_LIST == *$WINDOWS_BINARY* ]] || [[ $DIFF_LIST == *$MACOS_BINARY* ]] ; then
+              FILE_CHANGED=True
+              exit 1
+          else
+              FILE_CHANGED=False
+              exit 0
+          fi

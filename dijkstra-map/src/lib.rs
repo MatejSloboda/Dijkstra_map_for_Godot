@@ -20,6 +20,10 @@ mod setters;
 /// on custom struct [`Weight`], [`PointId`] and [`Cost`].
 mod trait_conversions_ops;
 
+/// All the operations that may be applied to the map.
+mod operation;
+use operation::Operation;
+
 /// Weight of a connection between two points of the Dijkstra map.
 ///
 /// Wraps a [`f32`].
@@ -57,6 +61,12 @@ pub enum TerrainType {
     ///
     /// Represented by `-1` in Godot.
     DefaultTerrain,
+}
+
+#[derive(PartialEq, PartialOrd, Ord, Copy, Clone, Eq, Hash, Debug)]
+pub enum Directional {
+    Unidirectional,
+    Bidirectional,
 }
 
 /// Controls the direction of the dijkstra map in
@@ -317,10 +327,10 @@ mod tests {
                         .add_point(PointId(i), TerrainType::DefaultTerrain)
                         .unwrap();
                     dijkstra_map
-                        .connect_points(PointId(0), PointId(i), None, None)
+                        .connect_points(PointId(0), PointId(i), None, true)
                         .unwrap();
                     dijkstra_map
-                        .connect_points(PointId(3), PointId(i), None, None)
+                        .connect_points(PointId(3), PointId(i), None, true)
                         .unwrap();
                 }
             } else {
@@ -329,10 +339,10 @@ mod tests {
                         .add_point(PointId(i), TerrainType::DefaultTerrain)
                         .unwrap();
                     dijkstra_map
-                        .connect_points(PointId(3), PointId(i), None, None)
+                        .connect_points(PointId(3), PointId(i), None, true)
                         .unwrap();
                     dijkstra_map
-                        .connect_points(PointId(0), PointId(i), None, None)
+                        .connect_points(PointId(0), PointId(i), None, true)
                         .unwrap();
                 }
             }

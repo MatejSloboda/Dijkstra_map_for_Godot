@@ -40,18 +40,19 @@ mod test {
     const ID0: PointId = PointId(0);
     const ID1: PointId = PointId(1);
     const ID2: PointId = PointId(2);
-    const DEFAULT_TERRAIN: TerrainType = TerrainType::DefaultTerrain;
 
     /// Create a new `DijkstraMap` with the connections :
     ///
     /// 0 -->₁ 1 -->₁ 2
     fn setup_id012_connect0to1_1to2() -> DijkstraMap {
         let mut d: DijkstraMap = DijkstraMap::new();
-        d.add_point(ID0, DEFAULT_TERRAIN).unwrap();
-        d.add_point(ID1, DEFAULT_TERRAIN).unwrap();
-        d.add_point(ID2, DEFAULT_TERRAIN).unwrap();
-        d.connect_points(ID0, ID1, None, Some(false)).unwrap();
-        d.connect_points(ID1, ID2, None, Some(false)).unwrap();
+        d.add_point(ID0, None).unwrap();
+        d.add_point(ID1, None).unwrap();
+        d.add_point(ID2, None).unwrap();
+        d.connect_points(ID0, ID1, None, Directional::Unidirectional)
+            .unwrap();
+        d.connect_points(ID1, ID2, None, Directional::Unidirectional)
+            .unwrap();
         d
     }
 

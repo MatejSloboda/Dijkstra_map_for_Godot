@@ -24,6 +24,9 @@ mod trait_conversions_ops;
 mod operation;
 use operation::Operation;
 
+/// Implementation of the remote feature.
+mod remote;
+pub use remote::{remote, RemoteMap};
 /// Weight of a connection between two points of the Dijkstra map.
 ///
 /// Wraps a [`f32`].
@@ -145,7 +148,7 @@ pub struct PointComputedInfo {
 /// - Populate the map with [`add_point`](DijkstraMap::add_point),
 /// [`connect_points`](DijkstraMap::connect_points)...
 /// - Compute the shortest paths with [`recalculate`](DijkstraMap::recalculate).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DijkstraMap {
     /// Map a point to its informations
     points: FnvHashMap<PointId, PointInfo>,

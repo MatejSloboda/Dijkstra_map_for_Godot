@@ -39,27 +39,25 @@ macro_rules! enum_operation {
                     pub fn $fn_name(&mut self, $($field: impl Into<$field_type>,)*) 
                     -> Result<$fn_name::OK,$fn_name::ERR>
                     {
-                    let res = self.apply_operation(&Operation::$variant_name { $($field : $field.into()),* });
-                    ifdef! {[$($okty)?] 
-                        {if let Ok(_x) = res {return _x.ok_or(());};} else 
-                        {if let Ok(_) = res {return Ok(());};}}
-                    ifdef! {[ $($error)? ] 
-                        {if let Err(_x) = res {return Err($fn_name::err());};} else 
-                        {if let Err(_) = res {return Err(());};}}
-                    unreachable!();
-                })*
+                        let res = self.apply_operation(&Operation::$variant_name { $($field : $field.into()),* });
+                        ifdef! {[$($okty)?] 
+                            {if let Ok(_x) = res {return _x.ok_or(());};} else 
+                            {if let Ok(_) = res {return Ok(());};}}
+                        ifdef! {[ $($error)? ] 
+                            {if let Err(_x) = res {return Err($fn_name::err());};} else 
+                            {if let Err(_) = res {return Err(());};}}
+                        unreachable!();
+                    })*
                 }
 
-<<<<<<< HEAD
-=======
-                impl RemoteMap{$(
-                /// Same function as the one in [DijkstraMap](DijkstraMap) 
-                /// but only applied to the remote map.
-                pub fn $fn_name(&mut self, $($field: impl Into<$field_type>,)*) 
-                    {
-                self.operations.push(Operation::$variant_name {$($field: $field.into(),)*});})*
+                impl RemoteMap{
+                    $(
+                        /// Same function as the one in [DijkstraMap](DijkstraMap) but only applied to the remote map.
+                        pub fn $fn_name(&mut self, $(
+                            $field: impl Into<$field_type>,
+                        )*) {self.operations.push(Operation::$variant_name {$($field: $field.into(),)*});}
+                    )*
                 }
->>>>>>> 6f85c24 (fmt)
             };
 }
 

@@ -34,7 +34,7 @@ impl DijkstraMap {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{Read, TerrainType, Weight};
+    use crate::{Directional, Read, TerrainType, Weight};
     use fnv::FnvHashSet;
 
     const ID0: PointId = PointId(0);
@@ -163,9 +163,9 @@ mod test {
             .expect("cant add point");
         d.add_point(ID2, TerrainType::Terrain(1))
             .expect("cant add point");
-        d.connect_points(ID0, ID1, None, Some(false))
+        d.connect_points(ID0, ID1, None, None)
             .expect("cant connect points");
-        d.connect_points(ID1, ID2, None, Some(false))
+        d.connect_points(ID1, ID2, None, None)
             .expect("cant connect points");
         let mut terrain_weights = FnvHashMap::<TerrainType, Weight>::default();
         terrain_weights.insert(TerrainType::Terrain(1), Weight(2.0));

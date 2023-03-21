@@ -155,6 +155,10 @@ Before doing that pull request, if you modified the rust code be sure you have b
 
 * if performance on dijkstra is a real heavy consideration, consider implementing threading 
 
+## Use in projects
+
+- [tacticalRPG](https://github.com/astrale-sharp/tacticalRPG) A in-development framework for creating a tactical rpg using Rust and possibly Godot. 
+
 ## Acknowledgments
 KohuGaly
 Astrale

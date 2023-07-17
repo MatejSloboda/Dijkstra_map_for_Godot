@@ -9,7 +9,7 @@
 config_version=4
 
 _global_script_classes=[ {
-"base": "Reference",
+"base": "",
 "class": "DijkstraMap",
 "language": "NativeScript",
 "path": "res://addons/dijkstra-map/Dijkstra_map_library/nativescript.gdns"
@@ -30,3 +30,7 @@ left_mouse_button={
 "events": [ Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"button_mask":0,"position":Vector2( 0, 0 ),"global_position":Vector2( 0, 0 ),"factor":1.0,"button_index":1,"pressed":false,"doubleclick":false,"script":null)
  ]
 }
+
+[mono]
+
+project/assembly_name="djikstra map for godot"

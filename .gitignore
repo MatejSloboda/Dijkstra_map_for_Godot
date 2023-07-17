@@ -2,3 +2,5 @@
 Cargo.lock
 .import/
 **.import
+/.mono/*
+/.idea/*

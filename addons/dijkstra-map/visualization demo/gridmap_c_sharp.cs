@@ -175,16 +175,4 @@ public class DijkstraMap : Node
     {
         _dijkstraMap.Call("set_terrain_for_point", pointId, terrain);
     }
-
-    public int[] GetAllPointsWithCostBetween(float min, float max)
-    {
-        return _dijkstraMap.Call("get_all_points_with_cost_between", min, max)
-            as int[];
-    }
-
-    public int[] GetShortestPathFromPoint(int pointId)
-    {
-        return _dijkstraMap.Call("get_shortest_path_from_point", pointId)
-            as int[];
-    }
 }

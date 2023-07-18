@@ -152,7 +152,6 @@ func _ready() -> void:
 
 [node name="visualisation_demo" type="Node2D"]
 script = SubResource( 1 )
-use_c_sharp = true
 
 [node name="gridmap" type="TileMap" parent="."]
 tile_set = SubResource( 2 )

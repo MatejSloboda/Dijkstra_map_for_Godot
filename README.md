@@ -59,13 +59,15 @@ This will work for linux x64, macos x86 and windows x64 for godot 3.5.1 (for ano
 There are 3 examples scenes in the github repository:
 * `addons/dijkstra-map/visualization demo/visualisation.tscn`
 
-    Also available through the [asset store installation](#method-1-from-the-asset-store-recommended). Includes C# code, [mono-based Godot](https://docs.godotengine.org/en/3.5/tutorials/scripting/c_sharp/c_sharp_basics.html) is needed to run this example. 
+    Also available through the [asset store installation](#method-1-from-the-asset-store-recommended). Includes C# code. 
 * `Project_Example/project_example.tscn`
 * `Project_Example/Turn based.tscn`
 
     The `knight` node contains exports variable that can be tweaked
 
 And heavily commented code in `Project_Example/dependancy/`.
+
+**Note**: all examples need [mono-based Godot](https://docs.godotengine.org/en/3.5/tutorials/scripting/c_sharp/c_sharp_basics.html) to run.
 
 You can also look at the unit tests in `Tests/unit/*`.
 

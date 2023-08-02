@@ -59,13 +59,15 @@ This will work for linux x64, macos x86 and windows x64 for godot 3.5.1 (for ano
 There are 3 examples scenes in the github repository:
 * `addons/dijkstra-map/visualization demo/visualisation.tscn`
 
-    Also available through the [asset store installation](#method-1-from-the-asset-store-recommended)
+    Also available through the [asset store installation](#method-1-from-the-asset-store-recommended). Includes C# code. 
 * `Project_Example/project_example.tscn`
 * `Project_Example/Turn based.tscn`
 
     The `knight` node contains exports variable that can be tweaked
 
 And heavily commented code in `Project_Example/dependancy/`.
+
+**Note**: all examples need [mono-based Godot](https://docs.godotengine.org/en/3.5/tutorials/scripting/c_sharp/c_sharp_basics.html) to run.
 
 You can also look at the unit tests in `Tests/unit/*`.
 
@@ -126,6 +128,31 @@ When recalculating the DijkstraMap for the Wagon, we specify "terrain weights" o
 my_dijkstra_map.recalculate(origin_point, {"terrain_weights": {TERRAIN_ID_FOREST:INF, TERRAIN_ID_OTHER:INF} } )
 ```
 Now, during this recalculation, all points, except roads, are completely inaccessible, because their connections have infinite cost. The calculated paths will only follow roads.
+
+## C# Support
+
+A wrapper located in `addons/dijkstra-map/Dijkstra_map_library/DijkstraMap.cs` can be used to interface with the library. [Example use](#examples) can be seen in `addons/dijkstra-map/visualization demo/visualisation.tscn`. The benefits of this wrapper: 
+
+* First-class development experience (same as GDScript).
+
+    In GDScript you can do:
+    ```GDScript
+    var bmp: Rect2 = Rect2(0, 0, 23, 19)
+    var dijkstramap = DijkstraMap.new()
+    dijkstramap.add_square_grid(bmp)
+    ```
+    And then the same in C# with the DijkstraMap wrapper:
+    ```C#
+    var bmp = new Rect2(0, 0, 23, 19);
+    var dijkstramap = new DijkstraMap();
+    dijkstramap.AddSquareGrid(bmp);
+    ```
+
+* Strongly typed inputs and outputs.
+
+* NativeScript setup is already done. 
+
+Make sure your C# code can find the `DijkstraMap.cs` file and its class.
 
 ## Notes
 

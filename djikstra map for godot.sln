@@ -1,0 +1,19 @@
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "djikstra map for godot", "djikstra map for godot.csproj", "{AE91DCF6-8C5D-4DFA-A38A-92FFE300F042}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+	Debug|Any CPU = Debug|Any CPU
+	ExportDebug|Any CPU = ExportDebug|Any CPU
+	ExportRelease|Any CPU = ExportRelease|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AE91DCF6-8C5D-4DFA-A38A-92FFE300F042}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE91DCF6-8C5D-4DFA-A38A-92FFE300F042}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE91DCF6-8C5D-4DFA-A38A-92FFE300F042}.ExportDebug|Any CPU.ActiveCfg = ExportDebug|Any CPU
+		{AE91DCF6-8C5D-4DFA-A38A-92FFE300F042}.ExportDebug|Any CPU.Build.0 = ExportDebug|Any CPU
+		{AE91DCF6-8C5D-4DFA-A38A-92FFE300F042}.ExportRelease|Any CPU.ActiveCfg = ExportRelease|Any CPU
+		{AE91DCF6-8C5D-4DFA-A38A-92FFE300F042}.ExportRelease|Any CPU.Build.0 = ExportRelease|Any CPU
+	EndGlobalSection
+EndGlobal

@@ -44,9 +44,15 @@ public class gridmap_c_sharp : TileMap
         {
             targetIds.Add(_posToId[pos]);
         }
+        
         _dijkstraMap.Recalculate(targetIds, new Dictionary<string, object>
         {
             { "terrain_weights", _terrainWeights }
+        });
+        // Alternatively, use the strongly typed option:
+        _dijkstraMap.Recalculate(targetIds, new IDijkstraMapRecalculateOptions[]
+        {
+            new TerrainWeights(_terrainWeights)
         });
         
         // Visualize

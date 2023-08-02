@@ -137,13 +137,15 @@ A wrapper located in `addons/dijkstra-map/Dijkstra_map_library/DijkstraMap.cs` c
 
     In GDScript you can do:
     ```GDScript
-    dijkstramap = DijkstraMap.new()
+    var bmp: Rect2 = Rect2(0, 0, 23, 19)
+    var dijkstramap = DijkstraMap.new()
     dijkstramap.add_square_grid(bmp)
     ```
     And then the same in C# with the DijkstraMap wrapper:
     ```C#
-    _dijkstramap = new DijkstraMap();
-    _dijkstramap.AddSquareGrid(bmp);
+    var bmp = new Rect2(0, 0, 23, 19);
+    var dijkstramap = new DijkstraMap();
+    dijkstramap.AddSquareGrid(bmp);
     ```
 
 * Strongly typed inputs and outputs.

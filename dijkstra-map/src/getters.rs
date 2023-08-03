@@ -1,4 +1,4 @@
-use super::{Cost, DijkstraMap, PointComputedInfo, PointId, PointInfo, TerrainType};
+use super::{Cost, DijkstraMap, PointComputedInfo, PointId, PointInfo, TerrainType, Weight};
 
 impl DijkstraMap {
     /// Gives the smallest [`PointId`] not yet used.
@@ -24,10 +24,25 @@ impl DijkstraMap {
 
     /// Returns [`true`] if both `source` and `target` exist, and there's a
     /// connection from `source` to `target`.
-    pub fn has_connection(&self, source: PointId, target: PointId) -> bool {
-        match self.points.get(&source) {
+    pub fn has_connection(&self, source: impl Into<PointId>, target: impl Into<PointId>) -> bool {
+        match self.points.get(&source.into()) {
             None => false,
-            Some(PointInfo { connections, .. }) => connections.contains_key(&target),
+            Some(PointInfo { connections, .. }) => connections.contains_key(&target.into()),
+        }
+    }
+
+    pub fn get_connection(
+        &self,
+        source: impl Into<PointId>,
+        target: impl Into<PointId>,
+    ) -> Option<Weight> {
+        match self.points.get(&source.into()) {
+            None => None,
+            Some(PointInfo {
+                connections,
+                reverse_connections: _,
+                terrain_type: _,
+            }) => connections.get(&target.into()).copied(),
         }
     }
 
@@ -39,26 +54,26 @@ impl DijkstraMap {
     }
 
     /// Returns [`true`] if `point` exists and is disabled.
-    pub fn is_point_disabled(&mut self, point: PointId) -> bool {
-        self.disabled_points.contains(&point)
+    pub fn is_point_disabled(&mut self, point: impl Into<PointId>) -> bool {
+        self.disabled_points.contains(&point.into())
     }
 
     /// Given a `point`, returns the id of the next point along the shortest
     /// path computed with [`recalculate`](DijkstraMap::recalculate).
     ///
     /// If there is no path, returns [`None`].
-    pub fn get_direction_at_point(&self, point: PointId) -> Option<PointId> {
+    pub fn get_direction_at_point(&self, point: impl Into<PointId>) -> Option<PointId> {
         self.computed_info
-            .get(&point)
+            .get(&point.into())
             .map(|PointComputedInfo { direction, .. }| *direction)
     }
 
     /// Returns the cost of the shortest path computed with [`recalculate`](DijkstraMap::recalculate).
     ///
     /// If there is no path, the cost is [`INFINITY`](Cost::infinity).
-    pub fn get_cost_at_point(&self, point: PointId) -> Cost {
+    pub fn get_cost_at_point(&self, point: impl Into<PointId>) -> Cost {
         self.computed_info
-            .get(&point)
+            .get(&point.into())
             .map(|PointComputedInfo { cost, .. }| *cost)
             .unwrap_or_else(Cost::infinity)
     }
@@ -105,7 +120,6 @@ impl<'a> Iterator for ShortestPathIterator<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    const TERRAIN: TerrainType = TerrainType::DefaultTerrain;
 
     #[test]
     fn available_id_works() {
@@ -118,7 +132,7 @@ mod test {
         for i in 0..100 {
             let id = d.get_available_id(None);
             assert_eq!(id, PointId(i));
-            d.add_point(id, TerrainType::DefaultTerrain).unwrap();
+            d.add_point(id, None).unwrap();
         }
     }
 
@@ -134,7 +148,7 @@ mod test {
         let mut d = DijkstraMap::new();
         let id = d.get_available_id(Some(PointId(4)));
         assert!(PointId(4) == id);
-        d.add_point(id, TERRAIN).unwrap();
+        d.add_point(id, None).unwrap();
     }
 
     #[test]
@@ -142,15 +156,15 @@ mod test {
         let mut d = DijkstraMap::new();
         let id = d.get_available_id(None);
         assert!(id == PointId(0));
-        d.add_point(id, TERRAIN).unwrap();
+        d.add_point(id, None).unwrap();
 
         let id = d.get_available_id(None);
         assert!(id == PointId(1));
-        d.add_point(id, TERRAIN).unwrap();
+        d.add_point(id, None).unwrap();
 
         let id = d.get_available_id(None);
         assert!(id == PointId(2));
-        d.add_point(id, TERRAIN).unwrap();
+        d.add_point(id, None).unwrap();
     }
 
     #[test]
@@ -163,7 +177,7 @@ mod test {
                 .unwrap();
         }
         for i in 0..4 {
-            d.connect_points(PointId(i + 1), PointId(i), None, Some(false))
+            d.connect_points(PointId(i + 1), PointId(i), None, false)
                 .unwrap();
         }
 

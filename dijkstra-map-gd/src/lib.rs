@@ -216,7 +216,7 @@ impl Interface {
     #[method]
     pub fn add_point(&mut self, point_id: i32, #[opt] terrain_type: Option<i32>) -> i64 {
         let terrain_type: TerrainType = terrain_type.unwrap_or(-1).into();
-        let res = self.dijkstra.add_point(point_id.into(), terrain_type);
+        let res = self.dijkstra.add_point(point_id, terrain_type);
         result_to_int(res)
     }
 
@@ -246,7 +246,7 @@ impl Interface {
         let terrain: TerrainType = terrain_id.into();
         let res = self
             .dijkstra
-            .set_terrain_for_point(point_id.into(), terrain);
+            .set_terrain_for_point(point_id, terrain);
         result_to_int(res)
     }
 
@@ -291,8 +291,8 @@ impl Interface {
     /// ```
     #[method]
     pub fn remove_point(&mut self, point_id: i32) -> i64 {
-        let res = self.dijkstra.remove_point(point_id.into());
-        if res.is_some() {
+        let res = self.dijkstra.remove_point(point_id);
+        if res.is_ok() {
             OK
         } else {
             FAILED
@@ -330,7 +330,7 @@ impl Interface {
     /// ```
     #[method]
     pub fn disable_point(&mut self, point_id: i32) -> i64 {
-        let res = self.dijkstra.disable_point(point_id.into());
+        let res = self.dijkstra.disable_point(point_id);
         result_to_int(res)
     }
 
@@ -351,7 +351,7 @@ impl Interface {
     /// ```
     #[method]
     pub fn enable_point(&mut self, point_id: i32) -> i64 {
-        let res = self.dijkstra.enable_point(point_id.into());
+        let res = self.dijkstra.enable_point(point_id);
         result_to_int(res)
     }
 
@@ -370,7 +370,7 @@ impl Interface {
     /// ```
     #[method]
     pub fn is_point_disabled(&mut self, point_id: i32) -> bool {
-        self.dijkstra.is_point_disabled(point_id.into())
+        self.dijkstra.is_point_disabled(point_id)
     }
 
     /// Connects the two given points.
@@ -414,8 +414,8 @@ impl Interface {
         #[opt] bidirectional: Option<bool>,
     ) -> i64 {
         result_to_int(self.dijkstra.connect_points(
-            source.into(),
-            target.into(),
+            source,
+            target,
             weight.map(Weight),
             bidirectional,
         ))
@@ -456,7 +456,7 @@ impl Interface {
     ) -> i64 {
         result_to_int(
             self.dijkstra
-                .remove_connection(source.into(), target.into(), bidirectional),
+                .remove_connection(source, target, bidirectional),
         )
     }
 
@@ -475,7 +475,7 @@ impl Interface {
     /// ```
     #[method]
     pub fn has_connection(&mut self, source: i32, target: i32) -> bool {
-        self.dijkstra.has_connection(source.into(), target.into())
+        self.dijkstra.has_connection(source, target)
     }
 
     /// Given a point, returns the id of the next point along the
@@ -501,7 +501,7 @@ impl Interface {
     #[method]
     pub fn get_direction_at_point(&mut self, point_id: i32) -> i32 {
         self.dijkstra
-            .get_direction_at_point(point_id.into())
+            .get_direction_at_point(point_id)
             .unwrap_or(PointId(-1))
             .into()
     }
@@ -525,7 +525,7 @@ impl Interface {
     /// ```
     #[method]
     pub fn get_cost_at_point(&mut self, point_id: i32) -> f32 {
-        self.dijkstra.get_cost_at_point(point_id.into()).into()
+        self.dijkstra.get_cost_at_point(point_id).into()
     }
 
     /// Recalculates cost map and direction map information for each

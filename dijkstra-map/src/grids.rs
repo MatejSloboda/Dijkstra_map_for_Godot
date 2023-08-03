@@ -35,7 +35,7 @@ impl DijkstraMap {
             for y in y_offset..height + y_offset {
                 let pos = Vector2D::<i32, i32>::from((x as i32, y as i32));
                 id = self.get_available_id(Some(PointId(i32::from(id) + 1)));
-                self.add_point_replace(id, terrain_type_default);
+                let _ = self.add_point_replace(id, terrain_type_default);
                 pos_to_id.insert(pos, id);
             }
         }
@@ -106,7 +106,7 @@ impl DijkstraMap {
                     let sum = offs + pos;
                     if let Some(&id_2) = pos_to_id.get(&sum) {
                         // ignore error, we know it succeeded
-                        let _ = self.connect_points(id_1, id_2, Some(orthogonal_cost), Some(false));
+                        let _ = self.connect_points(id_1, id_2, Some(orthogonal_cost), false);
                     }
                 }
             }
@@ -116,7 +116,7 @@ impl DijkstraMap {
                     let sum = offs + pos;
                     if let Some(&id_2) = pos_to_id.get(&sum) {
                         // ignore error, we know it succeeded
-                        let _ = self.connect_points(id_1, id_2, Some(diagonal_cost), Some(false));
+                        let _ = self.connect_points(id_1, id_2, Some(diagonal_cost), false);
                     }
                 }
             }
@@ -208,7 +208,7 @@ impl DijkstraMap {
                     let sum = offs + pos;
                     if let Some(id_2) = pos_to_id.get(&sum) {
                         // ignore error, we know it succeeded
-                        let _ = self.connect_points(id_1, *id_2, Some(weight), Some(false));
+                        let _ = self.connect_points(id_1, *id_2, weight, false);
                     }
                 }
             }
